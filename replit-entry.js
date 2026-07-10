@@ -42,6 +42,11 @@ function requireAuth(req, res, next) {
   res.redirect('/login');
 }
 
+function requireTopAdmin(req, res, next) {
+  if (req.session.adminLevel === 'top') return next();
+  res.status(403).send('只有👑可愛的管管們才能執行此操作');
+}
+
 app.get('/', (req, res) => {
   if (req.session.authenticated) return res.redirect('/dashboard');
   res.render('login', { error: null });
@@ -102,27 +107,39 @@ app.get('/auth/discord/callback', async (req, res) => {
       .map(g => g.id);
 
     let allowed = false;
+    let adminLevel = null;
+    const { isTopAdmin, isModerator } = require('./src/utils/permissions');
     const adminRoleIds = config.admin.roleIds;
 
-    if (adminRoleIds.length === 0) {
-      allowed = mutualGuilds.length > 0;
-    } else {
-      for (const guildId of mutualGuilds) {
-        const guild = client.guilds.cache.get(guildId);
-        if (!guild) continue;
-        const member = guild.members.cache.get(discordUser.id);
-        if (member && member.roles.cache.some(r => adminRoleIds.includes(r.id))) {
-          allowed = true;
-          break;
-        }
+    for (const guildId of mutualGuilds) {
+      const guild = client.guilds.cache.get(guildId);
+      if (!guild) continue;
+      const member = guild.members.cache.get(discordUser.id);
+      if (!member) continue;
+
+      if (isTopAdmin(member)) {
+        allowed = true;
+        adminLevel = 'top';
+        break;
+      }
+      if (isModerator(member)) {
+        allowed = true;
+        adminLevel = 'mod';
+        break;
+      }
+      if (adminRoleIds.length > 0 && member.roles.cache.some(r => adminRoleIds.includes(r.id))) {
+        allowed = true;
+        adminLevel = 'mod';
+        break;
       }
     }
 
     if (!allowed) {
-      return res.render('login', { error: '❌ 你沒有管理員權限（需要指定的身分組）' });
+      return res.render('login', { error: '❌ 你沒有管理員權限（需要可愛的管管們或可惡的管管們身分組）' });
     }
 
     req.session.authenticated = true;
+    req.session.adminLevel = adminLevel;
     req.session.discordUser = { id: discordUser.id, username: discordUser.username, avatar: discordUser.avatar, global_name: discordUser.global_name };
     res.redirect('/dashboard');
   } catch (err) {
@@ -149,11 +166,12 @@ app.get('/dashboard', requireAuth, (req, res) => {
   res.render('dashboard', {
     online: client.ws.status === 0, guilds, totalUsers, ping: client.ws.ping,
     user: req.session.discordUser || null,
+    adminLevel: req.session.adminLevel || null,
   });
 });
 
 app.get('/logs', requireAuth, (req, res) => {
-  res.render('logs', { logs: logCapture.getLogs() });
+  res.render('logs', { logs: logCapture.getLogs(), user: req.session.discordUser || null, adminLevel: req.session.adminLevel || null });
 });
 
 app.get('/api/logs/stream', requireAuth, (req, res) => {
@@ -169,7 +187,7 @@ app.get('/api/logs/stream', requireAuth, (req, res) => {
 app.get('/cmd', requireAuth, (req, res) => {
   const commands = [];
   for (const [, cmd] of client.commands) commands.push({ name: cmd.data.name, desc: cmd.data.description });
-  res.render('cmd', { commands });
+  res.render('cmd', { commands, user: req.session.discordUser || null, adminLevel: req.session.adminLevel || null });
 });
 
 app.get('/server/:id', requireAuth, async (req, res) => {
@@ -190,6 +208,7 @@ app.get('/server/:id', requireAuth, async (req, res) => {
     const owner = guild.members.cache.get(guild.ownerId);
 
     res.render('server', {
+      adminLevel: req.session.adminLevel || null,
       guild: {
         id: guild.id, name: guild.name, icon: guild.icon || '',
         memberCount: guild.memberCount,
@@ -241,7 +260,7 @@ app.get('/settings', requireAuth, async (req, res) => {
   res.render('settings', { guilds });
 });
 
-app.post('/api/settings/:guildId', requireAuth, (req, res) => {
+app.post('/api/settings/:guildId', requireAuth, requireTopAdmin, (req, res) => {
   const { type, channelId, message, enabled } = req.body;
   const gs = settings.getGuildSettings(req.params.guildId);
   gs[type] = { channelId: channelId || '', message: message || '', enabled: enabled === '1' || enabled === true };
@@ -249,7 +268,7 @@ app.post('/api/settings/:guildId', requireAuth, (req, res) => {
   res.redirect(`/server/${req.params.guildId}`);
 });
 
-app.post('/api/settings/:guildId/roles', requireAuth, (req, res) => {
+app.post('/api/settings/:guildId/roles', requireAuth, requireTopAdmin, (req, res) => {
   const selected = req.body.roles;
   const gs = settings.getGuildSettings(req.params.guildId);
   gs.selfRoles = Array.isArray(selected) ? selected : (selected ? [selected] : []);
@@ -257,7 +276,7 @@ app.post('/api/settings/:guildId/roles', requireAuth, (req, res) => {
   res.redirect(`/server/${req.params.guildId}`);
 });
 
-app.post('/api/settings/:guildId/autovoice', requireAuth, (req, res) => {
+app.post('/api/settings/:guildId/autovoice', requireAuth, requireTopAdmin, (req, res) => {
   const gs = settings.getGuildSettings(req.params.guildId);
   gs.autoVoice = { channelId: req.body.channelId || '' };
   settings.updateGuildSettings(req.params.guildId, gs);
@@ -300,7 +319,7 @@ app.post('/api/announce/send', requireAuth, async (req, res) => {
   }
 });
 
-app.post('/api/server/:id/send-panel', requireAuth, async (req, res) => {
+app.post('/api/server/:id/send-panel', requireAuth, requireTopAdmin, async (req, res) => {
   try {
     const guild = client.guilds.cache.get(req.params.id);
     if (!guild) return res.json({ success: false, error: '找不到伺服器' });

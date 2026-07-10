@@ -104,6 +104,13 @@
   <div class="top-bar">
     <a href="/dashboard" class="logo">Omni<span>Bot</span></a>
     <div class="right">
+      <% if (locals.user) { %>
+        <span style="display:flex;align-items:center;gap:6px;font-size:13px;color:#aaa;">
+          <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png?size=32" style="width:20px;height:20px;border-radius:50%;">
+          <%= user.global_name || user.username %>
+          <span style="font-size:11px;padding:1px 6px;border-radius:4px;<%= adminLevel === 'top' ? 'background:#7c6ff0;color:#fff' : 'background:#555;color:#ddd' %>"><%= adminLevel === 'top' ? '👑可愛' : '🔨可惡' %></span>
+        </span>
+      <% } %>
       <a href="/logs">📋 日誌</a>
       <a href="/cmd">⚡ 指令</a>
       <a href="/logout">登出</a>
@@ -124,12 +131,14 @@
   </div>
 
   <div class="tabs">
-    <a href="#" class="active" onclick="switchTab('welcome', event)">👋 歡迎</a>
-    <a href="#" onclick="switchTab('farewell', event)">👋 告別</a>
-    <a href="#" onclick="switchTab('roles', event)">🎭 身分組</a>
+    <a href="#" class="active" onclick="switchTab('channels', event)">📁 頻道</a>
+    <% if (adminLevel === 'top') { %>
+      <a href="#" onclick="switchTab('welcome', event)">👋 歡迎</a>
+      <a href="#" onclick="switchTab('farewell', event)">👋 告別</a>
+      <a href="#" onclick="switchTab('roles', event)">🎭 身分組</a>
+      <a href="#" onclick="switchTab('voice', event)">🔊 語音包房</a>
+    <% } %>
     <a href="#" onclick="switchTab('announce', event)">📢 公告</a>
-    <a href="#" onclick="switchTab('channels', event)">📁 頻道</a>
-    <a href="#" onclick="switchTab('voice', event)">🔊 語音包房</a>
   </div>
 
   <div class="tab-content">
