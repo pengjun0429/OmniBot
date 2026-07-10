@@ -5,7 +5,11 @@ module.exports = {
   category: '身分組',
   data: new SlashCommandBuilder()
     .setName('rolepanel')
-    .setDescription('發送身分組領取面板到當前頻道')
+    .setDescription('發送身分組領取面板到當前頻道（任何人點按鈕即可領取/移除）')
+    .addStringOption(option =>
+      option.setName('標題').setDescription('面板標題（預設：🎭 自助領取身分組）').setRequired(false))
+    .addStringOption(option =>
+      option.setName('說明').setDescription('面板說明文字（預設：點擊下方按鈕領取或移除身分組）').setRequired(false))
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
   async execute(interaction) {
     const gs = settings.getGuildSettings(interaction.guild.id);
@@ -24,10 +28,13 @@ module.exports = {
       return interaction.reply({ content: '可領取的身分組已不存在', ephemeral: true });
     }
 
+    const title = interaction.options.getString('標題') || '🎭 自助領取身分組';
+    const desc = interaction.options.getString('說明') || '點擊下方按鈕領取或移除身分組';
+
     const embed = new EmbedBuilder()
       .setColor(0x0099ff)
-      .setTitle('🎭 自助領取身分組')
-      .setDescription('點擊下方按鈕領取或移除身分組')
+      .setTitle(title)
+      .setDescription(desc)
       .setFooter({ text: interaction.guild.name })
       .setTimestamp();
 

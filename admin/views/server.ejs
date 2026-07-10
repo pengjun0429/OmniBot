@@ -206,6 +206,23 @@
           </div>
           <button type="submit" class="btn">儲存身分組設定</button>
         </form>
+
+        <div style="margin-top:20px;padding-top:20px;border-top:1px solid #232340;">
+          <h2 style="font-size:16px;color:#fff;margin-bottom:12px;">📨 發送身分組領取面板</h2>
+          <p style="font-size:13px;color:#888;margin-bottom:12px;">
+            選擇要發送的頻道，Bot 會發送一個永久按鈕面板，成員點擊按鈕即可領取/移除身分組
+          </p>
+          <form onsubmit="sendPanel(event)" style="display:flex;gap:8px;align-items:flex-start;">
+            <select id="panelChannel" style="width:220px;padding:8px 12px;background:#1e1e3a;border:1px solid #333;border-radius:6px;color:#fff;font-size:13px;">
+              <option value="">選擇頻道...</option>
+              <% guild.channels.forEach(c => { %>
+                <option value="<%= c.id %>">#<%= c.name %></option>
+              <% }); %>
+            </select>
+            <button type="submit" class="btn">發送面板</button>
+          </form>
+          <div id="panelStatus" class="status-msg" style="margin-top:8px;font-size:13px;"></div>
+        </div>
       </div>
     </div>
 
@@ -239,6 +256,22 @@
   </div>
 
   <script>
+    async function sendPanel(e) {
+      e.preventDefault();
+      const channelId = document.getElementById('panelChannel').value;
+      if (!channelId) return;
+      const status = document.getElementById('panelStatus');
+      status.textContent = '發送中...'; status.className = 'status-msg';
+      const res = await fetch('/api/server/<%= guild.id %>/send-panel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channelId }),
+      });
+      const data = await res.json();
+      status.textContent = data.success ? '✅ 面板已發送' : '❌ ' + data.error;
+      status.className = 'status-msg ' + (data.success ? 'ok' : 'err');
+    }
+
     function switchTab(name, e) {
       if (e) e.preventDefault();
       document.querySelectorAll('.tabs a').forEach(t => t.classList.remove('active'));

@@ -223,6 +223,47 @@ app.post('/api/announce/send', requireAuth, async (req, res) => {
   }
 });
 
+app.post('/api/server/:id/send-panel', requireAuth, async (req, res) => {
+  try {
+    const guild = client.guilds.cache.get(req.params.id);
+    if (!guild) return res.json({ success: false, error: '找不到伺服器' });
+
+    const channel = guild.channels.cache.get(req.body.channelId);
+    if (!channel) return res.json({ success: false, error: '找不到頻道' });
+
+    const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+    const gs = settings.getGuildSettings(guild.id);
+    const allowedIds = gs.selfRoles || [];
+
+    const roles = allowedIds.map(id => guild.roles.cache.get(id)).filter(Boolean).slice(0, 25);
+    if (roles.length === 0) return res.json({ success: false, error: '尚未設定可領取的身分組' });
+
+    const embed = new EmbedBuilder()
+      .setColor(0x0099ff)
+      .setTitle('🎭 自助領取身分組')
+      .setDescription('點擊下方按鈕領取或移除身分組')
+      .setFooter({ text: guild.name })
+      .setTimestamp();
+
+    const rows = [];
+    let row = new ActionRowBuilder();
+    for (const role of roles) {
+      const btn = new ButtonBuilder()
+        .setCustomId(`role_toggle_${guild.id}_${role.id}`)
+        .setLabel(role.name.length > 25 ? role.name.slice(0, 22) + '...' : role.name)
+        .setStyle(ButtonStyle.Secondary);
+      if (row.components.length >= 5) { rows.push(row); row = new ActionRowBuilder(); }
+      row.addComponents(btn);
+    }
+    if (row.components.length > 0) rows.push(row);
+
+    await channel.send({ embeds: [embed], components: rows });
+    res.json({ success: true });
+  } catch (err) {
+    res.json({ success: false, error: err.message });
+  }
+});
+
 app.listen(PORT, () => {
   logger.info(`管理後臺已啟動: 端口 ${PORT}`);
 });
