@@ -111,7 +111,7 @@
   </div>
 
   <div class="guild-header">
-    <div class="icon"><img src="https://cdn.discordapp.com/icons/<%= guild.id %>/<%= guild.icon %>.png?size=48" alt=""></div>
+    <div class="icon"><% if (guild.icon) { %><img src="https://cdn.discordapp.com/icons/<%= guild.id %>/<%= guild.icon %>.png?size=48" alt=""><% } else { %>🌐<% } %></div>
     <div class="info">
       <h1><%= guild.name %></h1>
       <div class="meta">ID: <%= guild.id %> · 擁有者: <%= guild.ownerTag %></div>

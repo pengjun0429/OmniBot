@@ -102,34 +102,38 @@ app.get('/cmd', requireAuth, (req, res) => {
 });
 
 app.get('/server/:id', requireAuth, async (req, res) => {
-  const guild = client.guilds.cache.get(req.params.id);
-  if (!guild) return res.status(404).send('找不到伺服器');
+  try {
+    const guild = client.guilds.cache.get(req.params.id);
+    if (!guild) return res.status(404).send('找不到伺服器');
 
-  await guild.channels.fetch();
-  await guild.members.fetch();
-  const owner = await guild.fetchOwner().catch(() => null);
-  const gs = settings.getGuildSettings(guild.id);
+    const gs = settings.getGuildSettings(guild.id);
 
-  const channels = guild.channels.cache.filter(c => c.type === 0).map(c => ({ id: c.id, name: c.name }));
-  const roles = guild.roles.cache
-    .filter(r => r.id !== guild.id && r.name !== '@everyone' && r.position < guild.members.me.roles.highest.position)
-    .map(r => ({ id: r.id, name: r.name, color: r.hexColor }))
-    .sort((a, b) => b.name.localeCompare(a.name));
+    await guild.channels.fetch().catch(() => {});
+    const channels = guild.channels.cache.filter(c => c.type === 0).map(c => ({ id: c.id, name: c.name }));
+    const roles = guild.roles.cache
+      .filter(r => r.id !== guild.id && r.name !== '@everyone' && r.position < guild.members.me.roles.highest.position)
+      .map(r => ({ id: r.id, name: r.name, color: r.hexColor }))
+      .sort((a, b) => a.name.localeCompare(b.name));
 
-  res.render('server', {
-    guild: {
-      id: guild.id, name: guild.name, icon: guild.icon || '',
-      memberCount: guild.memberCount,
-      ownerTag: owner?.user?.tag || '未知',
-      createdTimestamp: guild.createdTimestamp,
-      channels,
-      roles,
-      roleCount: roles.length,
-      selfRoles: gs.selfRoles || [],
-      welcome: gs.welcome || { enabled: false, channelId: '', message: '' },
-      farewell: gs.farewell || { enabled: false, channelId: '', message: '' },
-    },
-  });
+    const owner = guild.members.cache.get(guild.ownerId);
+
+    res.render('server', {
+      guild: {
+        id: guild.id, name: guild.name, icon: guild.icon || '',
+        memberCount: guild.memberCount,
+        roleCount: roles.length,
+        ownerTag: owner?.user?.tag || '未知',
+        channels,
+        roles,
+        selfRoles: gs.selfRoles || [],
+        welcome: gs.welcome || { enabled: false, channelId: '', message: '' },
+        farewell: gs.farewell || { enabled: false, channelId: '', message: '' },
+      },
+    });
+  } catch (err) {
+    logger.error('伺服器頁面錯誤:', err.message);
+    res.status(500).send('載入伺服器資料時發生錯誤');
+  }
 });
 
 app.post('/api/cmd/info', requireAuth, (req, res) => {
