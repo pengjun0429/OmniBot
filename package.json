@@ -13,12 +13,13 @@
     "lint": "oxlint"
   },
   "dependencies": {
-    "discord.js": "^14.18.0",
-    "express": "^5.1.0",
-    "express-session": "^1.18.1",
-    "ejs": "^3.1.10",
     "axios": "^1.7.9",
-    "dotenv": "^16.4.7"
+    "better-sqlite3": "^12.11.1",
+    "discord.js": "^14.18.0",
+    "dotenv": "^16.4.7",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "express-session": "^1.18.1"
   },
   "devDependencies": {
     "oxlint": "^0.16.0"

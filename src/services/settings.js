@@ -1,61 +1,87 @@
-const fs = require('fs');
+const Database = require('better-sqlite3');
 const path = require('path');
+const fs = require('fs');
 const logger = require('../utils/logger');
 
-const SETTINGS_PATH = path.join(__dirname, '..', '..', 'data', 'settings.json');
+const DB_PATH = path.join(__dirname, '..', '..', 'data', 'settings.db');
 
-let cache = null;
+let db;
 
-function ensureDir() {
-  const dir = path.dirname(SETTINGS_PATH);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+function getDb() {
+  if (!db) {
+    const dir = path.dirname(DB_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+
+    db = new Database(DB_PATH);
+    db.pragma('journal_mode = WAL');
+
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS guild_settings (
+        guild_id TEXT PRIMARY KEY,
+        settings TEXT NOT NULL
+      )
+    `);
+
+    logger.info(`SQLite 資料庫已連線: ${DB_PATH}`);
+  }
+  return db;
 }
 
-function load() {
-  if (cache) return cache;
-  ensureDir();
-  try {
-    if (fs.existsSync(SETTINGS_PATH)) {
-      cache = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'));
-    } else {
-      cache = {};
-      save();
-    }
-  } catch (err) {
-    logger.error('讀取設定檔失敗:', err.message);
-    cache = {};
-  }
-  return cache;
-}
-
-function save() {
-  ensureDir();
-  try {
-    fs.writeFileSync(SETTINGS_PATH, JSON.stringify(cache, null, 2), 'utf-8');
-  } catch (err) {
-    logger.error('儲存設定檔失敗:', err.message);
-  }
+function getDefaults() {
+  return {
+    welcome: { enabled: false, channelId: '', message: '' },
+    farewell: { enabled: false, channelId: '', message: '' },
+    selfRoles: [],
+    autoVoice: { channelId: '' },
+  };
 }
 
 function getGuildSettings(guildId) {
-  const data = load();
-  if (!data[guildId]) {
-    data[guildId] = {
-      welcome: { enabled: false, channelId: '', message: '' },
-      farewell: { enabled: false, channelId: '', message: '' },
-      selfRoles: [],
-      autoVoice: { channelId: '' },
-    };
-    save();
+  try {
+    const row = getDb().prepare('SELECT settings FROM guild_settings WHERE guild_id = ?').get(guildId);
+    if (row) {
+      return { ...getDefaults(), ...JSON.parse(row.settings) };
+    }
+    const defaults = getDefaults();
+    updateGuildSettings(guildId, defaults);
+    return defaults;
+  } catch (err) {
+    logger.error(`讀取設定失敗 (${guildId}):`, err.message);
+    return getDefaults();
   }
-  return data[guildId];
 }
 
 function updateGuildSettings(guildId, settings) {
-  const data = load();
-  data[guildId] = { ...data[guildId], ...settings };
-  save();
-  return data[guildId];
+  try {
+    getDb().prepare(
+      'INSERT INTO guild_settings (guild_id, settings) VALUES (?, ?) ON CONFLICT(guild_id) DO UPDATE SET settings = excluded.settings'
+    ).run(guildId, JSON.stringify(settings));
+    return settings;
+  } catch (err) {
+    logger.error(`儲存設定失敗 (${guildId}):`, err.message);
+    return settings;
+  }
 }
 
-module.exports = { load, getGuildSettings, updateGuildSettings };
+function load() {
+  try {
+    const rows = getDb().prepare('SELECT guild_id, settings FROM guild_settings').all();
+    const result = {};
+    for (const row of rows) {
+      result[row.guild_id] = JSON.parse(row.settings);
+    }
+    return result;
+  } catch (err) {
+    logger.error('載入所有設定失敗:', err.message);
+    return {};
+  }
+}
+
+function close() {
+  if (db) {
+    db.close();
+    db = null;
+  }
+}
+
+module.exports = { load, getGuildSettings, updateGuildSettings, close };
