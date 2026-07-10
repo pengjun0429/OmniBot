@@ -73,18 +73,11 @@ app.get('/health', (req, res) => {
 app.get('/dashboard', requireAuth, (req, res) => {
   const guilds = client.guilds.cache.map(g => ({
     id: g.id, name: g.name, memberCount: g.memberCount,
-    icon: g.icon ? `<img src="https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=32" style="width:36px;height:36px;border-radius:8px;">` : '🌐',
+    icon: g.icon ? `<img src="https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=48" style="width:48px;height:48px;border-radius:10px;">` : '🌐',
   }));
   const totalUsers = guilds.reduce((s, g) => s + g.memberCount, 0);
-  const commands = [];
-  for (const [, cmd] of client.commands) commands.push({ name: cmd.data.name, desc: cmd.data.description });
-  const uptime = process.uptime();
-  const hours = Math.floor(uptime / 3600);
-  const minutes = Math.floor((uptime % 3600) / 60);
   res.render('dashboard', {
-    online: client.ws.status === 0, guilds, totalUsers, commands,
-    ping: client.ws.ping, uptimeFormatted: hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`,
-    nodeVersion: process.version,
+    online: client.ws.status === 0, guilds, totalUsers, ping: client.ws.ping,
   });
 });
 
@@ -106,6 +99,37 @@ app.get('/cmd', requireAuth, (req, res) => {
   const commands = [];
   for (const [, cmd] of client.commands) commands.push({ name: cmd.data.name, desc: cmd.data.description });
   res.render('cmd', { commands });
+});
+
+app.get('/server/:id', requireAuth, async (req, res) => {
+  const guild = client.guilds.cache.get(req.params.id);
+  if (!guild) return res.status(404).send('找不到伺服器');
+
+  await guild.channels.fetch();
+  await guild.members.fetch();
+  const owner = await guild.fetchOwner().catch(() => null);
+  const gs = settings.getGuildSettings(guild.id);
+
+  const channels = guild.channels.cache.filter(c => c.type === 0).map(c => ({ id: c.id, name: c.name }));
+  const roles = guild.roles.cache
+    .filter(r => r.id !== guild.id && r.name !== '@everyone' && r.position < guild.members.me.roles.highest.position)
+    .map(r => ({ id: r.id, name: r.name, color: r.hexColor }))
+    .sort((a, b) => b.name.localeCompare(a.name));
+
+  res.render('server', {
+    guild: {
+      id: guild.id, name: guild.name, icon: guild.icon || '',
+      memberCount: guild.memberCount,
+      ownerTag: owner?.user?.tag || '未知',
+      createdTimestamp: guild.createdTimestamp,
+      channels,
+      roles,
+      roleCount: roles.length,
+      selfRoles: gs.selfRoles || [],
+      welcome: gs.welcome || { enabled: false, channelId: '', message: '' },
+      farewell: gs.farewell || { enabled: false, channelId: '', message: '' },
+    },
+  });
 });
 
 app.post('/api/cmd/info', requireAuth, (req, res) => {
@@ -180,34 +204,6 @@ app.get('/announce', requireAuth, async (req, res) => {
 });
 
 app.post('/api/announce/send', requireAuth, async (req, res) => {
-  const { channelId, message } = req.body;
-  try {
-    const channel = client.channels.cache.get(channelId);
-    if (!channel) return res.json({ success: false, error: '找不到頻道' });
-    await channel.send(message);
-    res.json({ success: true });
-  } catch (err) {
-    res.json({ success: false, error: err.message });
-  }
-});
-
-app.get('/guild/:id', requireAuth, async (req, res) => {
-  const guild = client.guilds.cache.get(req.params.id);
-  if (!guild) return res.status(404).send('找不到伺服器');
-  await guild.members.fetch();
-  const channels = guild.channels.cache.filter(c => c.type === 0).map(c => ({ id: c.id, name: c.name }));
-  const owner = await guild.fetchOwner().catch(() => null);
-  res.render('guild', {
-    guild: {
-      id: guild.id, name: guild.name, memberCount: guild.memberCount,
-      ownerTag: owner?.user?.tag || '未知',
-      createdAt: `<t:${Math.floor(guild.createdTimestamp / 1000)}:R>`,
-      channels,
-    },
-  });
-});
-
-app.post('/api/guild/:id/say', requireAuth, async (req, res) => {
   const { channelId, message } = req.body;
   try {
     const channel = client.channels.cache.get(channelId);
