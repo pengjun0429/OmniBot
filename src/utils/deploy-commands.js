@@ -37,7 +37,8 @@ async function deploy() {
       await rest.put(Routes.applicationGuildCommands(config.discord.clientId, guildId), {
         body: commands,
       });
-      logger.info(`已將 ${commands.length} 個指令註冊到伺服器 ${guildId}（即時生效）`);
+      await rest.put(Routes.applicationCommands(config.discord.clientId), { body: [] });
+      logger.info(`已將 ${commands.length} 個指令註冊到伺服器 ${guildId}（即時生效），並清除全域指令`);
     } else {
       await rest.put(Routes.applicationCommands(config.discord.clientId), {
         body: commands,
