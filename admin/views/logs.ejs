@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniBot - 日誌</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Courier New', monospace; background: #0f0f1a; color: #e0e0e0; display: flex; min-height: 100vh; }
+    .sidebar { width: 200px; background: #16162a; padding: 24px 14px; display: flex; flex-direction: column; border-right: 1px solid #232340; }
+    .sidebar .logo { font-size: 20px; font-weight: 800; margin-bottom: 28px; color: #fff; }
+    .sidebar .logo span { color: #7c6ff0; }
+    .sidebar nav a { display: block; padding: 8px 12px; color: #8888aa; text-decoration: none; border-radius: 8px; margin-bottom: 2px; font-size: 13px; }
+    .sidebar nav a:hover { background: #1e1e3a; color: #fff; }
+    .sidebar nav a.active { background: #2a2a4a; color: #fff; }
+    .sidebar .logout { margin-top: auto; color: #666; text-decoration: none; padding: 8px 12px; font-size: 12px; }
+    .main { flex: 1; padding: 24px; display: flex; flex-direction: column; }
+    h1 { font-size: 20px; margin-bottom: 16px; color: #fff; }
+    .controls { margin-bottom: 12px; display: flex; gap: 8px; align-items: center; }
+    .controls button { background: #2a2a4a; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+    .controls button:hover { background: #3a3a5a; }
+    .controls .count { color: #666; font-size: 12px; }
+    .log-container { flex: 1; background: #0a0a14; border: 1px solid #232340; border-radius: 10px; padding: 16px; overflow-y: auto; font-size: 12px; line-height: 1.6; max-height: calc(100vh - 140px); }
+    .log-entry { padding: 2px 0; border-bottom: 1px solid #111122; display: flex; gap: 8px; }
+    .log-time { color: #555; flex-shrink: 0; }
+    .log-level { flex-shrink: 0; width: 40px; }
+    .log-level.info { color: #4ade80; }
+    .log-level.warn { color: #facc15; }
+    .log-level.error { color: #ef4444; }
+    .log-msg { color: #ccc; word-break: break-all; }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="logo">Omni<span>Bot</span></div>
+    <nav>
+      <a href="/">儀表板</a>
+      <a href="/logs" class="active">📋 日誌</a>
+      <a href="/cmd">⚡ 指令</a>
+    </nav>
+    <a href="/logout" class="logout">登出</a>
+  </aside>
+  <div class="main">
+    <h1>📋 即時日誌</h1>
+    <div class="controls">
+      <button onclick="clearLogs()">清除</button>
+      <span class="count">顯示 <span id="count"><%= logs.length %></span> 筆</span>
+    </div>
+    <div class="log-container" id="logContainer">
+      <% logs.forEach(l => { %>
+        <div class="log-entry">
+          <span class="log-time"><%= l.time.slice(11,19) %></span>
+          <span class="log-level <%= l.level %>"><%= l.level.toUpperCase() %></span>
+          <span class="log-msg"><%= l.message.replace(/</g,'&lt;') %></span>
+        </div>
+      <% }); %>
+    </div>
+  </div>
+  <script>
+    const container = document.getElementById('logContainer');
+    const countEl = document.getElementById('count');
+    let index = <%= logs.length %>;
+    const evtSource = new EventSource('/api/logs/stream?index=' + index);
+    evtSource.onmessage = (e) => {
+      const logs = JSON.parse(e.data);
+      logs.forEach(l => {
+        const div = document.createElement('div');
+        div.className = 'log-entry';
+        div.innerHTML = '<span class="log-time">' + l.time.slice(11,19) + '</span><span class="log-level ' + l.level + '">' + l.level.toUpperCase() + '</span><span class="log-msg">' + l.message.replace(/</g,'&lt;') + '</span>';
+        container.appendChild(div);
+      });
+      index += logs.length;
+      countEl.textContent = index;
+      container.scrollTop = container.scrollHeight;
+    };
+    function clearLogs() {
+      container.innerHTML = '';
+      index = 0;
+      countEl.textContent = '0';
+    }
+  </script>
+</body>
+</html>
