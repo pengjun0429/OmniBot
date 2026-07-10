@@ -119,9 +119,15 @@ app.get('/settings', requireAuth, async (req, res) => {
   for (const g of client.guilds.cache.values()) {
     await g.channels.fetch();
     const gs = settings.getGuildSettings(g.id);
+    const allRoles = g.roles.cache
+      .filter(r => r.id !== g.id && r.name !== '@everyone' && r.position < g.members.me.roles.highest.position)
+      .map(r => ({ id: r.id, name: r.name, color: r.hexColor }))
+      .sort((a, b) => a.name.localeCompare(b.name));
     guilds.push({
       id: g.id, name: g.name,
       channels: g.channels.cache.filter(c => c.type === 0).map(c => ({ id: c.id, name: c.name })),
+      allRoles,
+      selfRoles: gs.selfRoles || [],
       welcomeChannel: gs?.welcome?.channelId || '',
       welcomeMessage: gs?.welcome?.message || '',
       welcomeEnabled: gs?.welcome?.enabled || false,
@@ -137,6 +143,14 @@ app.post('/api/settings/:guildId', requireAuth, (req, res) => {
   const { type, channelId, message, enabled } = req.body;
   const gs = settings.getGuildSettings(req.params.guildId);
   gs[type] = { channelId: channelId || '', message: message || '', enabled: enabled === '1' || enabled === true };
+  settings.updateGuildSettings(req.params.guildId, gs);
+  res.redirect('/settings');
+});
+
+app.post('/api/settings/:guildId/roles', requireAuth, (req, res) => {
+  const selected = req.body.roles;
+  const gs = settings.getGuildSettings(req.params.guildId);
+  gs.selfRoles = Array.isArray(selected) ? selected : (selected ? [selected] : []);
   settings.updateGuildSettings(req.params.guildId, gs);
   res.redirect('/settings');
 });

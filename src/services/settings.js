@@ -43,6 +43,7 @@ function getGuildSettings(guildId) {
     data[guildId] = {
       welcome: { enabled: false, channelId: '', message: '' },
       farewell: { enabled: false, channelId: '', message: '' },
+      selfRoles: [],
     };
     save();
   }

@@ -117,6 +117,23 @@
             <span id="msg-<%= g.id %>" class="success"></span>
           </form>
         </div>
+
+        <div class="card">
+          <h2>🎭 自助領取身分組 — <%= g.name %></h2>
+          <p style="font-size:13px;color:#888;margin-bottom:12px;">勾選以下身分組，讓成員可以用 <code>/role add</code> 和 <code>/role remove</code> 自行領取或移除</p>
+          <form method="POST" action="/api/settings/<%= g.id %>/roles">
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;max-height:300px;overflow-y:auto;background:#1e1e3a;padding:10px;border-radius:8px;margin-bottom:12px;">
+              <% g.allRoles.forEach(r => { %>
+                <label style="display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:4px;cursor:pointer;font-size:13px;">
+                  <input type="checkbox" name="roles" value="<%= r.id %>" <%= g.selfRoles.includes(r.id) ? 'checked' : '' %>>
+                  <span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:<%= r.color %>;"></span>
+                  <%= r.name %>
+                </label>
+              <% }); %>
+            </div>
+            <button type="submit" class="btn">儲存身分組設定</button>
+          </form>
+        </div>
       </div>
     <% }); %>
   </div>
