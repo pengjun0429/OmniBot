@@ -15,6 +15,7 @@ module.exports = {
       if (!channel) return;
 
       const msg = (gs?.welcome?.message || `歡迎加入 {server}！`)
+        .replace(/{mention}/g, `<@${member.id}>`)
         .replace(/{user}/g, member.user.tag)
         .replace(/{server}/g, member.guild.name);
 
