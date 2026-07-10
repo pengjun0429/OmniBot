@@ -109,7 +109,6 @@ app.get('/auth/discord/callback', async (req, res) => {
     let allowed = false;
     let adminLevel = null;
     const { isTopAdmin, isModerator } = require('./src/utils/permissions');
-    const adminRoleIds = config.admin.roleIds;
 
     for (const guildId of mutualGuilds) {
       const guild = client.guilds.cache.get(guildId);
@@ -117,17 +116,14 @@ app.get('/auth/discord/callback', async (req, res) => {
       const member = guild.members.cache.get(discordUser.id);
       if (!member) continue;
 
-      if (isTopAdmin(member)) {
+      const memberRoleIds = member.roles.cache.map(r => r.id);
+
+      if (isTopAdmin(member) || memberRoleIds.some(r => config.admin.topRoleIds.includes(r))) {
         allowed = true;
         adminLevel = 'top';
         break;
       }
-      if (isModerator(member)) {
-        allowed = true;
-        adminLevel = 'mod';
-        break;
-      }
-      if (adminRoleIds.length > 0 && member.roles.cache.some(r => adminRoleIds.includes(r.id))) {
+      if (isModerator(member) || memberRoleIds.some(r => config.admin.modRoleIds.includes(r))) {
         allowed = true;
         adminLevel = 'mod';
         break;
