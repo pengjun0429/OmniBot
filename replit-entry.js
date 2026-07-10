@@ -126,6 +126,7 @@ app.get('/server/:id', requireAuth, async (req, res) => {
         channels,
         roles,
         selfRoles: gs.selfRoles || [],
+        autoVoice: gs.autoVoice || { channelId: '' },
         welcome: gs.welcome || { enabled: false, channelId: '', message: '' },
         farewell: gs.farewell || { enabled: false, channelId: '', message: '' },
       },
