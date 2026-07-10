@@ -267,8 +267,8 @@
             <label>創建頻道</label>
             <select name="channelId">
               <option value="">不啟用</option>
-              <% guild.channels.forEach(c => { %>
-                <option value="<%= c.id %>" <%= guild.autoVoice.channelId === c.id ? 'selected' : '' %>>#<%= c.name %></option>
+              <% voiceChannels.forEach(c => { %>
+                <option value="<%= c.id %>" <%= guild.autoVoice.channelId === c.id ? 'selected' : '' %>>🔊 <%= c.name %></option>
               <% }); %>
             </select>
           </div>

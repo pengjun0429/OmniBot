@@ -110,6 +110,7 @@ app.get('/server/:id', requireAuth, async (req, res) => {
 
     await guild.channels.fetch().catch(() => {});
     const channels = guild.channels.cache.filter(c => c.type === 0).map(c => ({ id: c.id, name: c.name }));
+    const voiceChannels = guild.channels.cache.filter(c => c.type === 2).map(c => ({ id: c.id, name: c.name }));
     const roles = guild.roles.cache
       .filter(r => r.id !== guild.id && r.name !== '@everyone' && r.position < guild.members.me.roles.highest.position)
       .map(r => ({ id: r.id, name: r.name, color: r.hexColor }))
@@ -124,6 +125,7 @@ app.get('/server/:id', requireAuth, async (req, res) => {
         roleCount: roles.length,
         ownerTag: owner?.user?.tag || '未知',
         channels,
+        voiceChannels,
         roles,
         selfRoles: gs.selfRoles || [],
         autoVoice: gs.autoVoice || { channelId: '' },
