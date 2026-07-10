@@ -1,68 +1,107 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
 const settings = require('../../services/settings');
 
 module.exports = {
   category: '身分組',
   data: new SlashCommandBuilder()
     .setName('role')
-    .setDescription('自助領取或移除身分組')
-    .addSubcommand(sub =>
-      sub.setName('add')
-        .setDescription('領取身分組')
-        .addRoleOption(opt => opt.setName('身分組').setDescription('要領取的身分組').setRequired(true)))
-    .addSubcommand(sub =>
-      sub.setName('remove')
-        .setDescription('移除身分組')
-        .addRoleOption(opt => opt.setName('身分組').setDescription('要移除的身分組').setRequired(true)))
-    .addSubcommand(sub =>
-      sub.setName('list')
-        .setDescription('查看可領取的身分組列表')),
+    .setDescription('自助領取或移除身分組'),
   async execute(interaction) {
-    const sub = interaction.options.getSubcommand();
     const gs = settings.getGuildSettings(interaction.guild.id);
-    const allowedRoles = gs.selfRoles || [];
+    const allowedIds = gs.selfRoles || [];
 
-    if (sub === 'list') {
-      if (allowedRoles.length === 0) {
-        return interaction.reply({ content: '此伺服器尚未設定可領取的身分組', ephemeral: true });
-      }
-      const roles = allowedRoles
-        .map(id => interaction.guild.roles.cache.get(id))
-        .filter(Boolean)
-        .map(r => `${r.name}`);
-      const embed = new EmbedBuilder()
-        .setColor(0x0099ff)
-        .setTitle('📋 可領取的身分組')
-        .setDescription(roles.map(r => `• ${r}`).join('\n') || '無可用身分組')
-        .setFooter({ text: '使用 /role add 領取，/role remove 移除' })
-        .setTimestamp();
-      return interaction.reply({ embeds: [embed], ephemeral: true });
+    if (allowedIds.length === 0) {
+      return interaction.reply({ content: '此伺服器尚未設定可領取的身分組', ephemeral: true });
     }
 
-    const role = interaction.options.getRole('身分組');
+    const roles = allowedIds
+      .map(id => interaction.guild.roles.cache.get(id))
+      .filter(Boolean)
+      .slice(0, 25);
 
-    if (!allowedRoles.includes(role.id)) {
-      return interaction.reply({ content: '該身分組不在可領取清單中', ephemeral: true });
-    }
-
-    if (role.position >= interaction.guild.members.me.roles.highest.position) {
-      return interaction.reply({ content: '機器人權限不足以管理該身分組', ephemeral: true });
+    if (roles.length === 0) {
+      return interaction.reply({ content: '可領取的身分組已不存在', ephemeral: true });
     }
 
     const member = interaction.member;
+    const embed = new EmbedBuilder()
+      .setColor(0x0099ff)
+      .setTitle('🎭 自助領取身分組')
+      .setDescription('點擊按鈕領取或移除身分組\n🟢 已擁有　⚫ 未擁有')
+      .setTimestamp();
 
-    if (sub === 'add') {
-      if (member.roles.cache.has(role.id)) {
-        return interaction.reply({ content: `你已經有了 ${role.name} 身分組`, ephemeral: true });
+    const rows = [];
+    let currentRow = new ActionRowBuilder();
+
+    for (const role of roles) {
+      const has = member.roles.cache.has(role.id);
+      const btn = new ButtonBuilder()
+        .setCustomId(`role_${role.id}`)
+        .setLabel(role.name.length > 25 ? role.name.slice(0, 22) + '...' : role.name)
+        .setStyle(has ? ButtonStyle.Success : ButtonStyle.Secondary);
+
+      if (currentRow.components.length >= 5) {
+        rows.push(currentRow);
+        currentRow = new ActionRowBuilder();
       }
-      await member.roles.add(role);
-      await interaction.reply({ content: `✅ 已為你加入 ${role.name} 身分組`, ephemeral: true });
-    } else if (sub === 'remove') {
-      if (!member.roles.cache.has(role.id)) {
-        return interaction.reply({ content: `你目前沒有 ${role.name} 身分組`, ephemeral: true });
-      }
-      await member.roles.remove(role);
-      await interaction.reply({ content: `✅ 已為你移除 ${role.name} 身分組`, ephemeral: true });
+      currentRow.addComponents(btn);
     }
+    if (currentRow.components.length > 0) {
+      rows.push(currentRow);
+    }
+
+    const msg = await interaction.reply({ embeds: [embed], components: rows, ephemeral: true, fetchReply: true });
+
+    const collector = msg.createMessageComponentCollector({
+      componentType: ComponentType.Button,
+      time: 120_000,
+    });
+
+    collector.on('collect', async (btnInt) => {
+      if (btnInt.user.id !== interaction.user.id) {
+        return btnInt.reply({ content: '這不是你的選單', ephemeral: true });
+      }
+
+      const roleId = btnInt.customId.replace('role_', '');
+      const role = interaction.guild.roles.cache.get(roleId);
+      if (!role) return btnInt.reply({ content: '身分組已不存在', ephemeral: true });
+
+      const mem = btnInt.member;
+      const has = mem.roles.cache.has(roleId);
+
+      try {
+        if (has) {
+          await mem.roles.remove(role);
+          btnInt.update({
+            content: `✅ 已移除 ${role.name}`,
+            components: [],
+            embeds: [],
+          });
+        } else {
+          await mem.roles.add(role);
+          btnInt.update({
+            content: `✅ 已為你加入 ${role.name}`,
+            components: [],
+            embeds: [],
+          });
+        }
+      } catch {
+        btnInt.update({
+          content: '❌ 操作失敗，請確認機器人權限',
+          components: [],
+          embeds: [],
+        });
+      }
+    });
+
+    collector.on('end', async () => {
+      const expiredEmbed = new EmbedBuilder()
+        .setColor(0x888888)
+        .setTitle('🎭 選單已過期')
+        .setDescription('請重新輸入 `/role` 開啟新選單')
+        .setTimestamp();
+
+      await interaction.editReply({ embeds: [expiredEmbed], components: [] }).catch(() => {});
+    });
   },
 };
