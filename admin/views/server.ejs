@@ -129,6 +129,7 @@
     <a href="#" onclick="switchTab('roles', event)">🎭 身分組</a>
     <a href="#" onclick="switchTab('announce', event)">📢 公告</a>
     <a href="#" onclick="switchTab('channels', event)">📁 頻道</a>
+    <a href="#" onclick="switchTab('voice', event)">🔊 語音包房</a>
   </div>
 
   <div class="tab-content">
@@ -251,6 +252,28 @@
             <div class="channel-item">#<%= c.name %></div>
           <% }); %>
         </div>
+      </div>
+    </div>
+
+    <div class="tab-pane" id="tab-voice">
+      <div class="card">
+        <h2>🔊 自動語音包房</h2>
+        <p style="font-size:13px;color:#888;margin-bottom:12px;">
+          設定一個語音頻道作為「創建頻道」，成員加入後 Bot 會自動創建專屬包房並轉移過去。<br>
+          包房創建人可使用 <code>/voice</code> 指令管理（重新命名、鎖定、踢人、轉移所有權）。
+        </p>
+        <form method="POST" action="/api/settings/<%= guild.id %>/autovoice">
+          <div class="form-group">
+            <label>創建頻道</label>
+            <select name="channelId">
+              <option value="">不啟用</option>
+              <% guild.channels.forEach(c => { %>
+                <option value="<%= c.id %>" <%= guild.autoVoice.channelId === c.id ? 'selected' : '' %>>#<%= c.name %></option>
+              <% }); %>
+            </select>
+          </div>
+          <button type="submit" class="btn">儲存設定</button>
+        </form>
       </div>
     </div>
   </div>

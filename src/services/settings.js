@@ -44,6 +44,7 @@ function getGuildSettings(guildId) {
       welcome: { enabled: false, channelId: '', message: '' },
       farewell: { enabled: false, channelId: '', message: '' },
       selfRoles: [],
+      autoVoice: { channelId: '' },
     };
     save();
   }

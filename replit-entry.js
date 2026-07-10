@@ -183,6 +183,13 @@ app.post('/api/settings/:guildId/roles', requireAuth, (req, res) => {
   res.redirect(`/server/${req.params.guildId}`);
 });
 
+app.post('/api/settings/:guildId/autovoice', requireAuth, (req, res) => {
+  const gs = settings.getGuildSettings(req.params.guildId);
+  gs.autoVoice = { channelId: req.body.channelId || '' };
+  settings.updateGuildSettings(req.params.guildId, gs);
+  res.redirect(`/server/${req.params.guildId}`);
+});
+
 app.get('/api/channels', requireAuth, async (req, res) => {
   const result = [];
   for (const g of client.guilds.cache.values()) {
