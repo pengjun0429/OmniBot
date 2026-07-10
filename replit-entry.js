@@ -172,9 +172,7 @@ app.post('/api/settings/:guildId', requireAuth, (req, res) => {
   const gs = settings.getGuildSettings(req.params.guildId);
   gs[type] = { channelId: channelId || '', message: message || '', enabled: enabled === '1' || enabled === true };
   settings.updateGuildSettings(req.params.guildId, gs);
-  const referrer = req.get('Referrer') || '';
-  if (referrer.includes('/server/')) return res.redirect(`/server/${req.params.guildId}`);
-  res.redirect('/settings');
+  res.redirect(`/server/${req.params.guildId}`);
 });
 
 app.post('/api/settings/:guildId/roles', requireAuth, (req, res) => {
@@ -182,9 +180,7 @@ app.post('/api/settings/:guildId/roles', requireAuth, (req, res) => {
   const gs = settings.getGuildSettings(req.params.guildId);
   gs.selfRoles = Array.isArray(selected) ? selected : (selected ? [selected] : []);
   settings.updateGuildSettings(req.params.guildId, gs);
-  const referrer = req.get('Referrer') || '';
-  if (referrer.includes('/server/')) return res.redirect(`/server/${req.params.guildId}`);
-  res.redirect('/settings');
+  res.redirect(`/server/${req.params.guildId}`);
 });
 
 app.get('/api/channels', requireAuth, async (req, res) => {
