@@ -61,6 +61,76 @@ app.post('/login', (req, res) => {
   res.render('login', { error: '帳號或密碼錯誤' });
 });
 
+const axios = require('axios');
+
+app.get('/auth/discord', (req, res) => {
+  const clientId = config.discord.clientId;
+  const redirectUri = config.discord.redirectUri;
+  if (!clientId || !redirectUri) return res.render('login', { error: '未設定 Discord OAuth' });
+  const url = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=identify%20guilds`;
+  res.redirect(url);
+});
+
+app.get('/auth/discord/callback', async (req, res) => {
+  try {
+    const { code } = req.query;
+    if (!code) return res.render('login', { error: '缺少授權碼' });
+
+    const tokenRes = await axios.post('https://discord.com/api/oauth2/token',
+      new URLSearchParams({
+        client_id: config.discord.clientId,
+        client_secret: config.discord.clientSecret,
+        code,
+        grant_type: 'authorization_code',
+        redirect_uri: config.discord.redirectUri,
+        scope: 'identify guilds',
+      }),
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+    );
+
+    const accessToken = tokenRes.data.access_token;
+    const userRes = await axios.get('https://discord.com/api/users/@me', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    const discordUser = userRes.data;
+
+    const guildsRes = await axios.get('https://discord.com/api/users/@me/guilds', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    const mutualGuilds = guildsRes.data
+      .filter(g => client.guilds.cache.has(g.id))
+      .map(g => g.id);
+
+    let allowed = false;
+    const adminRoleIds = config.admin.roleIds;
+
+    if (adminRoleIds.length === 0) {
+      allowed = mutualGuilds.length > 0;
+    } else {
+      for (const guildId of mutualGuilds) {
+        const guild = client.guilds.cache.get(guildId);
+        if (!guild) continue;
+        const member = guild.members.cache.get(discordUser.id);
+        if (member && member.roles.cache.some(r => adminRoleIds.includes(r.id))) {
+          allowed = true;
+          break;
+        }
+      }
+    }
+
+    if (!allowed) {
+      return res.render('login', { error: '❌ 你沒有管理員權限（需要指定的身分組）' });
+    }
+
+    req.session.authenticated = true;
+    req.session.discordUser = { id: discordUser.id, username: discordUser.username, avatar: discordUser.avatar, global_name: discordUser.global_name };
+    res.redirect('/dashboard');
+  } catch (err) {
+    logger.error('Discord OAuth 失敗:', err.response?.data || err.message);
+    res.render('login', { error: 'Discord 登入失敗，請稍後再試' });
+  }
+});
+
 app.get('/logout', (req, res) => {
   req.session.destroy();
   res.redirect('/login');
@@ -78,6 +148,7 @@ app.get('/dashboard', requireAuth, (req, res) => {
   const totalUsers = guilds.reduce((s, g) => s + g.memberCount, 0);
   res.render('dashboard', {
     online: client.ws.status === 0, guilds, totalUsers, ping: client.ws.ping,
+    user: req.session.discordUser || null,
   });
 });
 

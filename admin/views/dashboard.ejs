@@ -58,6 +58,12 @@
   <div class="top-bar">
     <div class="logo">Omni<span>Bot</span></div>
     <div class="right">
+      <% if (locals.user) { %>
+        <span style="display:flex;align-items:center;gap:6px;font-size:13px;color:#aaa;">
+          <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png?size=32" style="width:20px;height:20px;border-radius:50%;">
+          <%= user.global_name || user.username %>
+        </span>
+      <% } %>
       <span class="status">
         <span class="dot <%= online ? 'on' : 'off' %>"></span>
         <%= online ? '連線中' : '離線' %> · <%= ping %>ms
