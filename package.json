@@ -1,0 +1,27 @@
+{
+  "name": "omnibot",
+  "version": "1.0.0",
+  "description": "OmniBot - 多功能 Discord 機器人",
+  "private": true,
+  "main": "src/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "admin": "node admin/server.js",
+    "lint": "oxlint"
+  },
+  "dependencies": {
+    "discord.js": "^14.18.0",
+    "firebase-admin": "^13.1.0",
+    "express": "^5.1.0",
+    "express-session": "^1.18.1",
+    "ejs": "^3.1.10",
+    "axios": "^1.7.9",
+    "node-cron": "^3.0.3",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "oxlint": "^0.16.0"
+  }
+}

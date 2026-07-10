@@ -1,0 +1,11 @@
+{
+  "$schema": "https://oxlintrc.com/schema.json",
+  "env": {
+    "node": true
+  },
+  "rules": {
+    "no-unused-vars": "warn",
+    "no-console": "off"
+  },
+  "ignorePatterns": ["node_modules/**", "admin/public/**"]
+}

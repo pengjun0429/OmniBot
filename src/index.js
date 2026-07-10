@@ -1,0 +1,28 @@
+const client = require('./client');
+const config = require('./config');
+const logger = require('./utils/logger');
+const { deploy } = require('./utils/deploy-commands');
+const { registerCommands, registerEvents } = require('./utils/command-handler');
+const firebase = require('./services/firebase');
+
+async function start() {
+  firebase.init();
+  registerCommands(client);
+  registerEvents(client);
+
+  await deploy();
+
+  try {
+    await client.login(config.discord.token);
+    logger.info('Bot 啟動完成');
+  } catch (err) {
+    logger.error('登入失敗:', err);
+    process.exit(1);
+  }
+}
+
+start();
+
+process.on('unhandledRejection', (err) => {
+  logger.error('未捕捉的 Promise 拒絕:', err);
+});
