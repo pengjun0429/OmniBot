@@ -3,6 +3,7 @@ const config = require('./src/config');
 const logger = require('./src/utils/logger');
 const { deploy } = require('./src/utils/deploy-commands');
 const { registerCommands, registerEvents } = require('./src/utils/command-handler');
+const path = require('path');
 
 registerCommands(client);
 registerEvents(client);
@@ -18,7 +19,6 @@ startBot().catch(err => {
 });
 
 const express = require('express');
-const path = require('path');
 const session = require('express-session');
 
 const app = express();
@@ -63,15 +63,38 @@ function requireAuth(req, res, next) {
 }
 
 app.get('/', requireAuth, (req, res) => {
+  const guilds = client.guilds.cache.map(g => ({
+    id: g.id,
+    name: g.name,
+    memberCount: g.memberCount,
+    icon: g.icon ? `<img src="https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=32" style="width:36px;height:36px;border-radius:8px;">` : '🌐',
+  }));
+
+  const totalUsers = guilds.reduce((sum, g) => sum + g.memberCount, 0);
+
+  const commands = [];
+  for (const [, cmd] of client.commands) {
+    commands.push({ name: cmd.data.name, desc: cmd.data.description });
+  }
+
+  const uptime = process.uptime();
+  const hours = Math.floor(uptime / 3600);
+  const minutes = Math.floor((uptime % 3600) / 60);
+  const uptimeFormatted = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+
   res.render('dashboard', {
-    botName: 'OmniBot',
+    online: client.ws.status === 0,
+    guilds,
+    totalUsers,
+    commands,
+    ping: client.ws.ping,
+    uptimeFormatted,
     nodeVersion: process.version,
-    uptime: Math.floor(process.uptime()),
   });
 });
 
 app.listen(PORT, () => {
-  logger.info(`管理後臺 + 健康檢查端點已啟動: 端口 ${PORT}`);
+  logger.info(`管理後臺已啟動: 端口 ${PORT}`);
 });
 
 process.on('unhandledRejection', (err) => {
