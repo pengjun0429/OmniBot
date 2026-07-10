@@ -9,6 +9,8 @@ module.exports = {
     const guild = newState.guild || oldState.guild;
     const gs = settings.getGuildSettings(guild.id);
     const creationId = gs?.autoVoice?.channelId;
+
+    logger.info(`[語音事件] user=${newState.member?.id || oldState.member?.id} old=${oldState.channelId} new=${newState.channelId} creationId=${creationId}`);
     if (!creationId) return;
 
     const member = newState.member || oldState.member;
