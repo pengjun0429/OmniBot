@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>伺服器管理</title>
+  <title>OmniBot 後臺</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -20,30 +20,11 @@
       display: block; padding: 10px 14px; color: #aaa;
       text-decoration: none; border-radius: 8px; margin-bottom: 4px;
     }
-    .sidebar nav a:hover, .sidebar nav a.active { background: #0f3460; color: #fff; }
-    .sidebar nav a.active { background: #0f3460; color: #fff; }
+    .sidebar nav a:hover { background: #0f3460; color: #fff; }
     .sidebar .logout { margin-top: auto; color: #e94560; text-decoration: none; padding: 10px 14px; }
     .sidebar .logout:hover { background: rgba(233,69,96,0.1); }
     .main { flex: 1; padding: 32px; }
     h1 { font-size: 28px; margin-bottom: 24px; }
-    .guild-card {
-      background: #16213e; border-radius: 12px; padding: 20px; margin-bottom: 16px;
-    }
-    .guild-card h3 { margin-bottom: 16px; color: #4fc3f7; }
-    .form-group { margin-bottom: 12px; }
-    label { display: block; margin-bottom: 4px; font-size: 13px; color: #aaa; }
-    input[type="text"], textarea {
-      width: 100%; padding: 8px 12px;
-      border: 1px solid #333; border-radius: 6px;
-      background: #0f3460; color: #eee; font-size: 14px;
-    }
-    textarea { resize: vertical; min-height: 60px; }
-    input[type="checkbox"] { margin-right: 6px; }
-    button {
-      background: #e94560; color: white; border: none;
-      padding: 8px 16px; border-radius: 6px; cursor: pointer;
-    }
-    button:hover { background: #c73650; }
     .empty { text-align: center; color: #666; padding: 40px; }
   </style>
 </head>
@@ -52,39 +33,12 @@
     <h2>🤖 OmniBot 後臺</h2>
     <nav>
       <a href="/">📊 儀表板</a>
-      <a href="/guilds" class="active">🛡️ 伺服器設定</a>
     </nav>
     <a href="/logout" class="logout">🚪 登出</a>
   </aside>
   <div class="main">
-    <h1>🛡️ 伺服器設定</h1>
-
-    <% if (guilds.length === 0) { %>
-      <div class="empty">目前無伺服器設定資料</div>
-    <% } %>
-
-    <% guilds.forEach(g => { %>
-      <div class="guild-card">
-        <h3>🆔 <%= g.id %></h3>
-        <form method="POST" action="/guilds/<%= g.id %>/welcome">
-          <div class="form-group">
-            <label>歡迎頻道 ID</label>
-            <input type="text" name="channelId" value="<%= g.welcome?.channelId || '' %>">
-          </div>
-          <div class="form-group">
-            <label>歡迎訊息</label>
-            <textarea name="message"><%= g.welcome?.message || '' %></textarea>
-          </div>
-          <div class="form-group">
-            <label>
-              <input type="checkbox" name="enabled" <%= g.welcome?.enabled ? 'checked' : '' %>>
-              啟用歡迎功能
-            </label>
-          </div>
-          <button type="submit">儲存設定</button>
-        </form>
-      </div>
-    <% }); %>
+    <h1>伺服器設定</h1>
+    <div class="empty">歡迎/告別頻道請透過環境變數 `WELCOME_CHANNEL_ID` 和 `FAREWELL_CHANNEL_ID` 設定</div>
   </div>
 </body>
 </html>

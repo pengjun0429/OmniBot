@@ -14,14 +14,12 @@ module.exports = {
     token: process.env.DISCORD_TOKEN,
     clientId: process.env.DISCORD_CLIENT_ID,
   },
-  firebase: {
-    serviceAccountPath: process.env.FIREBASE_SERVICE_ACCOUNT_PATH,
-    databaseURL: process.env.FIREBASE_DATABASE_URL,
-  },
   admin: {
     port: parseInt(process.env.ADMIN_PORT, 10) || 3000,
     username: process.env.ADMIN_USERNAME || 'admin',
     password: process.env.ADMIN_PASSWORD || 'admin123',
   },
   weatherApiKey: process.env.WEATHER_API_KEY || '',
+  welcomeChannelId: process.env.WELCOME_CHANNEL_ID || '',
+  farewellChannelId: process.env.FAREWELL_CHANNEL_ID || '',
 };

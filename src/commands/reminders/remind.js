@@ -1,6 +1,4 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { getDb, isReady } = require('../../services/firebase');
-const logger = require('../../utils/logger');
 
 module.exports = {
   category: '提醒',
@@ -24,22 +22,6 @@ module.exports = {
 
     await interaction.reply({ embeds: [embed] });
 
-    const reminderData = {
-      userId: interaction.user.id,
-      channelId: interaction.channelId,
-      guildId: interaction.guildId,
-      content,
-      remindAt: Date.now() + minutes * 60 * 1000,
-    };
-
-    if (isReady()) {
-      try {
-        await getDb().collection('reminders').add(reminderData);
-      } catch (err) {
-        logger.error('儲存提醒失敗:', err.message);
-      }
-    }
-
     setTimeout(async () => {
       try {
         const reminderEmbed = new EmbedBuilder()
@@ -53,7 +35,7 @@ module.exports = {
           await channel.send({ content: `<@${interaction.user.id}>`, embeds: [reminderEmbed] });
         }
       } catch (err) {
-        logger.error('發送提醒失敗:', err.message);
+        console.error('發送提醒失敗:', err.message);
       }
     }, minutes * 60 * 1000);
   },

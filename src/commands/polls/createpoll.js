@@ -1,8 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { getDb, isReady } = require('../../services/firebase');
-const logger = require('../../utils/logger');
 
 const EMOJIS = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'];
+const activeTimers = new Map();
 
 module.exports = {
   category: '投票',
@@ -43,29 +42,8 @@ module.exports = {
       await message.react(EMOJIS[i]);
     }
 
-    if (isReady()) {
+    const timer = setTimeout(async () => {
       try {
-        await getDb().collection('polls').doc(message.id).set({
-        guildId: interaction.guildId,
-        channelId: interaction.channelId,
-        messageId: message.id,
-        question,
-        options,
-        authorId: interaction.user.id,
-        endsAt: Date.now() + duration * 60 * 1000,
-      });
-      } catch (err) {
-        logger.error('儲存投票資料失敗:', err.message);
-      }
-    }
-
-    setTimeout(async () => {
-      if (!isReady()) return;
-
-      try {
-        const pollDoc = await getDb().collection('polls').doc(message.id).get();
-        if (!pollDoc.exists) return;
-
         await message.reactions.removeAll();
 
         const fetched = await message.fetch();
@@ -86,10 +64,13 @@ module.exports = {
           .setTimestamp();
 
         await message.edit({ embeds: [resultEmbed] });
-        await getDb().collection('polls').doc(message.id).delete();
       } catch (err) {
-        logger.error('結束投票失敗:', err.message);
+        console.error('結束投票失敗:', err.message);
       }
+
+      activeTimers.delete(message.id);
     }, duration * 60 * 1000);
+
+    activeTimers.set(message.id, timer);
   },
 };
