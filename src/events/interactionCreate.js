@@ -2,6 +2,10 @@ const logger = require('../utils/logger');
 
 module.exports = {
   async execute(interaction) {
+    if (interaction.isButton() && interaction.customId.startsWith('role_toggle_')) {
+      return handleRoleToggle(interaction);
+    }
+
     if (!interaction.isChatInputCommand()) return;
 
     const command = interaction.client.commands.get(interaction.commandName);
@@ -50,3 +54,35 @@ module.exports = {
     }
   },
 };
+
+async function handleRoleToggle(interaction) {
+  const [, , guildId, roleId] = interaction.customId.split('_');
+
+  if (interaction.guild.id !== guildId) {
+    return interaction.reply({ content: '此按鈕不屬於此伺服器', ephemeral: true });
+  }
+
+  const role = interaction.guild.roles.cache.get(roleId);
+  if (!role) {
+    return interaction.reply({ content: '身分組已不存在', ephemeral: true });
+  }
+
+  if (role.position >= interaction.guild.members.me.roles.highest.position) {
+    return interaction.reply({ content: '機器人權限不足以管理該身分組', ephemeral: true });
+  }
+
+  const member = interaction.member;
+  const has = member.roles.cache.has(roleId);
+
+  try {
+    if (has) {
+      await member.roles.remove(role);
+      await interaction.reply({ content: `✅ 已移除 ${role.name}`, ephemeral: true });
+    } else {
+      await member.roles.add(role);
+      await interaction.reply({ content: `✅ 已為你加入 ${role.name}`, ephemeral: true });
+    }
+  } catch {
+    await interaction.reply({ content: '❌ 操作失敗，請確認機器人權限', ephemeral: true });
+  }
+}
