@@ -32,12 +32,14 @@ module.exports = {
     .addSubcommand(sub =>
       sub.setName('setup')
         .setDescription('設定自動包房創建頻道（管理員專用）')
-        .addChannelOption(opt => opt.setName('頻道').setDescription('語音頻道').setRequired(true))
-        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)),
+        .addChannelOption(opt => opt.setName('頻道').setDescription('語音頻道').setRequired(true))),
   async execute(interaction) {
     const sub = interaction.options.getSubcommand();
 
     if (sub === 'setup') {
+      if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+        return interaction.reply({ content: '❌ 只有管理員才能使用此指令', ephemeral: true });
+      }
       const channel = interaction.options.getChannel('頻道');
       if (channel.type !== 2) {
         return interaction.reply({ content: '請選擇一個語音頻道', ephemeral: true });
