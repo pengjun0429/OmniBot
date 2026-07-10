@@ -31,13 +31,19 @@ async function deploy() {
   const rest = new REST({ version: '10' }).setToken(config.discord.token);
 
   try {
-    logger.info(`正在註冊 ${commands.length} 個斜線指令...`);
+    const guildId = process.env.DISCORD_GUILD_ID;
 
-    await rest.put(Routes.applicationCommands(config.discord.clientId), {
-      body: commands,
-    });
-
-    logger.info('斜線指令註冊成功');
+    if (guildId) {
+      await rest.put(Routes.applicationGuildCommands(config.discord.clientId, guildId), {
+        body: commands,
+      });
+      logger.info(`已將 ${commands.length} 個指令註冊到伺服器 ${guildId}（即時生效）`);
+    } else {
+      await rest.put(Routes.applicationCommands(config.discord.clientId), {
+        body: commands,
+      });
+      logger.info(`已註冊 ${commands.length} 個全域指令（可能需要 1 小時同步）`);
+    }
   } catch (err) {
     logger.error('指令註冊失敗:', err);
   }
