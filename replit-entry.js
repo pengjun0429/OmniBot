@@ -4,6 +4,7 @@ const logger = require('./src/utils/logger');
 const { deploy } = require('./src/utils/deploy-commands');
 const { registerCommands, registerEvents } = require('./src/utils/command-handler');
 const logCapture = require('./src/utils/log-capture');
+const settings = require('./src/services/settings');
 const path = require('path');
 
 registerCommands(client);
@@ -41,7 +42,13 @@ function requireAuth(req, res, next) {
   res.redirect('/login');
 }
 
+app.get('/', (req, res) => {
+  if (req.session.authenticated) return res.redirect('/dashboard');
+  res.render('login', { error: null });
+});
+
 app.get('/login', (req, res) => {
+  if (req.session.authenticated) return res.redirect('/dashboard');
   res.render('login', { error: null });
 });
 
@@ -49,7 +56,7 @@ app.post('/login', (req, res) => {
   const { username, password } = req.body;
   if (username === config.admin.username && password === config.admin.password) {
     req.session.authenticated = true;
-    return res.redirect('/');
+    return res.redirect('/dashboard');
   }
   res.render('login', { error: '帳號或密碼錯誤' });
 });
@@ -63,77 +70,111 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', uptime: process.uptime() });
 });
 
-app.get('/', requireAuth, (req, res) => {
+app.get('/dashboard', requireAuth, (req, res) => {
   const guilds = client.guilds.cache.map(g => ({
-    id: g.id,
-    name: g.name,
-    memberCount: g.memberCount,
+    id: g.id, name: g.name, memberCount: g.memberCount,
     icon: g.icon ? `<img src="https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=32" style="width:36px;height:36px;border-radius:8px;">` : '🌐',
   }));
-
-  const totalUsers = guilds.reduce((sum, g) => sum + g.memberCount, 0);
-
+  const totalUsers = guilds.reduce((s, g) => s + g.memberCount, 0);
   const commands = [];
-  for (const [, cmd] of client.commands) {
-    commands.push({ name: cmd.data.name, desc: cmd.data.description });
-  }
-
+  for (const [, cmd] of client.commands) commands.push({ name: cmd.data.name, desc: cmd.data.description });
   const uptime = process.uptime();
   const hours = Math.floor(uptime / 3600);
   const minutes = Math.floor((uptime % 3600) / 60);
-  const uptimeFormatted = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
-
   res.render('dashboard', {
-    page: 'dashboard',
-    online: client.ws.status === 0,
-    guilds, totalUsers, commands,
-    ping: client.ws.ping,
-    uptimeFormatted, nodeVersion: process.version,
-    error: null,
+    online: client.ws.status === 0, guilds, totalUsers, commands,
+    ping: client.ws.ping, uptimeFormatted: hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`,
+    nodeVersion: process.version,
   });
 });
 
 app.get('/logs', requireAuth, (req, res) => {
-  const logs = logCapture.getLogs();
-  res.render('logs', { page: 'logs', logs });
+  res.render('logs', { logs: logCapture.getLogs() });
 });
 
 app.get('/api/logs/stream', requireAuth, (req, res) => {
-  res.writeHead(200, {
-    'Content-Type': 'text/event-stream',
-    'Cache-Control': 'no-cache',
-    Connection: 'keep-alive',
-  });
-
+  res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
   let index = parseInt(req.query.index, 10) || 0;
-
   const interval = setInterval(() => {
     const newLogs = logCapture.getLogsSince(index);
-    if (newLogs.length > 0) {
-      index += newLogs.length;
-      res.write(`data: ${JSON.stringify(newLogs)}\n\n`);
-    }
+    if (newLogs.length > 0) { index += newLogs.length; res.write(`data: ${JSON.stringify(newLogs)}\n\n`); }
   }, 1000);
-
   req.on('close', () => clearInterval(interval));
+});
+
+app.get('/cmd', requireAuth, (req, res) => {
+  const commands = [];
+  for (const [, cmd] of client.commands) commands.push({ name: cmd.data.name, desc: cmd.data.description });
+  res.render('cmd', { commands });
+});
+
+app.post('/api/cmd/info', requireAuth, (req, res) => {
+  const cmd = client.commands.get(req.body.command);
+  if (!cmd) return res.json({ error: '未知指令' });
+  res.json({ success: true, data: { name: cmd.data.name, description: cmd.data.description, options: cmd.data.options?.map(o => ({ name: o.name, description: o.description, required: o.required })) || [] } });
+});
+
+app.get('/settings', requireAuth, async (req, res) => {
+  const guilds = [];
+  for (const g of client.guilds.cache.values()) {
+    await g.channels.fetch();
+    const gs = settings.getGuildSettings(g.id);
+    guilds.push({
+      id: g.id, name: g.name,
+      channels: g.channels.cache.filter(c => c.type === 0).map(c => ({ id: c.id, name: c.name })),
+      welcomeChannel: gs?.welcome?.channelId || '',
+      welcomeMessage: gs?.welcome?.message || '',
+      welcomeEnabled: gs?.welcome?.enabled || false,
+      farewellChannel: gs?.farewell?.channelId || '',
+      farewellMessage: gs?.farewell?.message || '',
+      farewellEnabled: gs?.farewell?.enabled || false,
+    });
+  }
+  res.render('settings', { guilds });
+});
+
+app.post('/api/settings/:guildId', requireAuth, (req, res) => {
+  const { type, channelId, message, enabled } = req.body;
+  const gs = settings.getGuildSettings(req.params.guildId);
+  gs[type] = { channelId: channelId || '', message: message || '', enabled: enabled === '1' || enabled === true };
+  settings.updateGuildSettings(req.params.guildId, gs);
+  res.redirect('/settings');
+});
+
+app.get('/announce', requireAuth, async (req, res) => {
+  const guilds = [];
+  for (const g of client.guilds.cache.values()) {
+    await g.channels.fetch();
+    guilds.push({
+      id: g.id, name: g.name,
+      channels: g.channels.cache.filter(c => c.type === 0).map(c => ({ id: c.id, name: c.name })),
+    });
+  }
+  res.render('announce', { guilds });
+});
+
+app.post('/api/announce/send', requireAuth, async (req, res) => {
+  const { channelId, message } = req.body;
+  try {
+    const channel = client.channels.cache.get(channelId);
+    if (!channel) return res.json({ success: false, error: '找不到頻道' });
+    await channel.send(message);
+    res.json({ success: true });
+  } catch (err) {
+    res.json({ success: false, error: err.message });
+  }
 });
 
 app.get('/guild/:id', requireAuth, async (req, res) => {
   const guild = client.guilds.cache.get(req.params.id);
   if (!guild) return res.status(404).send('找不到伺服器');
-
   await guild.members.fetch();
-
-  const channels = guild.channels.cache
-    .filter(c => c.type === 0)
-    .map(c => ({ id: c.id, name: c.name }));
-
+  const channels = guild.channels.cache.filter(c => c.type === 0).map(c => ({ id: c.id, name: c.name }));
+  const owner = await guild.fetchOwner().catch(() => null);
   res.render('guild', {
-    page: 'guild',
     guild: {
-      id: guild.id, name: guild.name,
-      memberCount: guild.memberCount,
-      ownerTag: guild.fetchOwner().then(o => o.user.tag).catch(() => '未知'),
+      id: guild.id, name: guild.name, memberCount: guild.memberCount,
+      ownerTag: owner?.user?.tag || '未知',
       createdAt: `<t:${Math.floor(guild.createdTimestamp / 1000)}:R>`,
       channels,
     },
@@ -142,42 +183,14 @@ app.get('/guild/:id', requireAuth, async (req, res) => {
 
 app.post('/api/guild/:id/say', requireAuth, async (req, res) => {
   const { channelId, message } = req.body;
-  if (!channelId || !message) return res.status(400).json({ error: '缺少參數' });
-
   try {
     const channel = client.channels.cache.get(channelId);
-    if (!channel) return res.status(404).json({ error: '找不到頻道' });
-
+    if (!channel) return res.json({ success: false, error: '找不到頻道' });
     await channel.send(message);
     res.json({ success: true });
   } catch (err) {
     res.json({ success: false, error: err.message });
   }
-});
-
-app.get('/cmd', requireAuth, (req, res) => {
-  const commands = [];
-  for (const [, cmd] of client.commands) {
-    commands.push({ name: cmd.data.name, desc: cmd.data.description });
-  }
-  res.render('cmd', { page: 'cmd', commands, result: null });
-});
-
-app.post('/api/cmd/run', requireAuth, async (req, res) => {
-  const { command } = req.body;
-  if (!command) return res.json({ error: '請輸入指令' });
-
-  const cmd = client.commands.get(command);
-  if (!cmd) return res.json({ error: `未知指令: ${command}` });
-
-  res.json({
-    success: true,
-    data: {
-      name: cmd.data.name,
-      description: cmd.data.description,
-      options: cmd.data.options?.map(o => ({ name: o.name, description: o.description, required: o.required })) || [],
-    },
-  });
 });
 
 app.listen(PORT, () => {
