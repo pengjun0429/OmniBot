@@ -85,14 +85,16 @@
   <aside class="sidebar">
     <div class="logo">Omni<span>Bot</span></div>
     <nav>
-      <a href="/" class="active">
+      <a href="/dashboard" class="active">
         <span class="status-dot <%= online ? 'online' : 'offline' %>"></span>
         控制臺
       </a>
       <a href="/logs">📋 日誌</a>
       <a href="/cmd">⚡ 指令</a>
+      <a href="/settings">⚙️ 設定</a>
+      <a href="/announce">📢 公告</a>
       <% guilds.forEach(g => { %>
-        <a href="/guild/<%= g.id %>" style="font-size:12px;padding:6px 12px;">🖥️ <%= g.name.length > 12 ? g.name.slice(0,12)+'..' : g.name %></a>
+        <a href="/guild/<%= g.id %>" style="font-size:12px;padding:6px 12px;" title="<%= g.name %>">🖥️ <%= g.name.length > 12 ? g.name.slice(0,12)+'..' : g.name %></a>
       <% }); %>
     </nav>
     <a href="/logout" class="logout">登出</a>
@@ -159,6 +161,53 @@
         </div>
       <% } %>
     </div>
+
+    <div class="card">
+      <h2>📢 快速發送公告</h2>
+      <form onsubmit="quickAnnounce(event)" style="display:flex;gap:8px;align-items:flex-start;">
+        <select id="qChannel" style="flex-shrink:0;width:180px;padding:8px 12px;background:#1e1e3a;border:1px solid #333;border-radius:6px;color:#fff;font-size:13px;">
+          <option value="">選擇頻道...</option>
+        </select>
+        <input id="qMessage" type="text" placeholder="輸入訊息..." style="flex:1;padding:8px 12px;background:#1e1e3a;border:1px solid #333;border-radius:6px;color:#fff;font-size:13px;" required>
+        <button type="submit" style="padding:8px 20px;background:#7c6ff0;color:#fff;border:none;border-radius:6px;cursor:pointer;">發送</button>
+      </form>
+      <div id="qStatus" style="margin-top:8px;font-size:13px;"></div>
+    </div>
   </div>
+  <script>
+    async function loadChannels() {
+      const sel = document.getElementById('qChannel');
+      const res = await fetch('/api/channels');
+      const data = await res.json();
+      data.forEach(g => {
+        const group = document.createElement('optgroup');
+        group.label = g.name;
+        g.channels.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.id; opt.textContent = '#' + c.name;
+          group.appendChild(opt);
+        });
+        sel.appendChild(group);
+      });
+    }
+    loadChannels();
+    async function quickAnnounce(e) {
+      e.preventDefault();
+      const channelId = document.getElementById('qChannel').value;
+      const message = document.getElementById('qMessage').value.trim();
+      if (!channelId || !message) return;
+      const status = document.getElementById('qStatus');
+      status.textContent = '發送中...'; status.style.color = '#aaa';
+      const res = await fetch('/api/announce/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channelId, message }),
+      });
+      const data = await res.json();
+      status.textContent = data.success ? '✅ 已發送' : '❌ 失敗';
+      status.style.color = data.success ? '#4ade80' : '#ef4444';
+      if (data.success) document.getElementById('qMessage').value = '';
+    }
+  </script>
 </body>
 </html>

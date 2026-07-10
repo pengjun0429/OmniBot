@@ -155,6 +155,18 @@ app.post('/api/settings/:guildId/roles', requireAuth, (req, res) => {
   res.redirect('/settings');
 });
 
+app.get('/api/channels', requireAuth, async (req, res) => {
+  const result = [];
+  for (const g of client.guilds.cache.values()) {
+    await g.channels.fetch();
+    result.push({
+      id: g.id, name: g.name,
+      channels: g.channels.cache.filter(c => c.type === 0).map(c => ({ id: c.id, name: c.name })),
+    });
+  }
+  res.json(result);
+});
+
 app.get('/announce', requireAuth, async (req, res) => {
   const guilds = [];
   for (const g of client.guilds.cache.values()) {
