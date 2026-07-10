@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
 const settings = require('../../services/settings');
+const logger = require('../../utils/logger');
 
 module.exports = {
   category: '身分組',
@@ -85,9 +86,10 @@ module.exports = {
             embeds: [],
           });
         }
-      } catch {
+      } catch (err) {
+        logger.error(`身分組操作失敗 (${role.name}):`, err);
         btnInt.update({
-          content: '❌ 操作失敗，請確認機器人權限',
+          content: `❌ ${err.code === 50013 ? '機器人缺少權限（Missing Permissions），請檢查角色層級與管理身分組權限' : '操作失敗：' + err.message}`,
           components: [],
           embeds: [],
         });

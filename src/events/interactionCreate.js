@@ -67,8 +67,13 @@ async function handleRoleToggle(interaction) {
     return interaction.reply({ content: '身分組已不存在', ephemeral: true });
   }
 
-  if (role.position >= interaction.guild.members.me.roles.highest.position) {
-    return interaction.reply({ content: '機器人權限不足以管理該身分組', ephemeral: true });
+  const me = interaction.guild.members.me;
+  if (!me.permissions.has('ManageRoles')) {
+    return interaction.reply({ content: '❌ 機器人缺少「管理身分組」權限', ephemeral: true });
+  }
+
+  if (role.position >= me.roles.highest.position) {
+    return interaction.reply({ content: '❌ 機器人的角色層級不足以管理該身分組（請將機器人角色往上移）', ephemeral: true });
   }
 
   const member = interaction.member;
@@ -82,7 +87,8 @@ async function handleRoleToggle(interaction) {
       await member.roles.add(role);
       await interaction.reply({ content: `✅ 已為你加入 ${role.name}`, ephemeral: true });
     }
-  } catch {
-    await interaction.reply({ content: '❌ 操作失敗，請確認機器人權限', ephemeral: true });
+  } catch (err) {
+      logger.error(`身分組操作失敗 (${role.name}):`, err);
+    await interaction.reply({ content: `❌ ${err.code === 50013 ? '機器人缺少權限（Missing Permissions），請檢查角色層級與管理身分組權限' : '操作失敗：' + err.message}`, ephemeral: true });
   }
 }
