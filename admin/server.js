@@ -23,18 +23,22 @@ function requireAuth(req, res, next) {
   res.redirect('/login');
 }
 
+app.get('/', (req, res) => {
+  if (req.session.authenticated) return res.redirect('/dashboard');
+  res.render('login', { error: null });
+});
+
 app.get('/login', (req, res) => {
+  if (req.session.authenticated) return res.redirect('/dashboard');
   res.render('login', { error: null });
 });
 
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
-
   if (username === config.admin.username && password === config.admin.password) {
     req.session.authenticated = true;
-    return res.redirect('/');
+    return res.redirect('/dashboard');
   }
-
   res.render('login', { error: '帳號或密碼錯誤' });
 });
 
@@ -43,11 +47,10 @@ app.get('/logout', (req, res) => {
   res.redirect('/login');
 });
 
-app.get('/', requireAuth, (req, res) => {
+app.get('/dashboard', requireAuth, (req, res) => {
   res.render('dashboard', {
-    botName: 'OmniBot',
-    nodeVersion: process.version,
-    uptime: Math.floor(process.uptime()),
+    online: false, guilds: [], totalUsers: 0, commands: [],
+    ping: 0, uptimeFormatted: '0m', nodeVersion: process.version,
   });
 });
 
