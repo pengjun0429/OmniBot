@@ -221,6 +221,7 @@ app.get('/server/:id', requireAuth, async (req, res) => {
 
     const owner = guild.members.cache.get(guild.ownerId);
 
+    res.set('Cache-Control', 'no-store');
     res.render('server', {
       adminLevel: req.session.adminLevel || null,
       guild: {
