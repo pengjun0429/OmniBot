@@ -138,6 +138,7 @@
       <a href="#" onclick="switchTab('roles', event)">🎭 身分組</a>
       <a href="#" onclick="switchTab('voice', event)">🔊 語音包房</a>
       <a href="#" onclick="switchTab('ticket', event)">🎫 工單</a>
+      <a href="#" onclick="switchTab('automod', event)">🤖 自動審核</a>
       <a href="#" onclick="switchTab('rolegive', event)">🎁 公開派發</a>
     <% } %>
     <a href="#" onclick="switchTab('announce', event)">📢 公告</a>
@@ -338,6 +339,58 @@
           </form>
           <div id="ticketPanelStatus" class="status-msg" style="margin-top:8px;font-size:13px;"></div>
         </div>
+      </div>
+    </div>
+
+    <div class="tab-pane" id="tab-automod">
+      <div class="card">
+        <h2>🤖 自動審核</h2>
+        <form method="POST" action="/api/settings/<%= guild.id %>/automod">
+          <div class="form-group checkbox">
+            <input type="hidden" name="enabled" value="0">
+            <input type="checkbox" name="enabled" value="1" <%= guild.autoMod.enabled ? 'checked' : '' %>>
+            <label>啟用自動審核</label>
+          </div>
+          <div class="form-group">
+            <label>過濾詞（用逗號分隔）</label>
+            <textarea name="words" placeholder="例如：髒話1,髒話2,廣告詞"><%= (guild.autoMod.words || []).join(',') %></textarea>
+          </div>
+          <div class="form-group checkbox">
+            <input type="hidden" name="blockLinks" value="0">
+            <input type="checkbox" name="blockLinks" value="1" <%= guild.autoMod.blockLinks ? 'checked' : '' %>>
+            <label>封鎖連結</label>
+          </div>
+          <div class="form-group">
+            <label>違規懲罰</label>
+            <select name="punishment">
+              <option value="delete" <%= guild.autoMod.punishment === 'delete' ? 'selected' : '' %>>刪除訊息</option>
+              <option value="timeout" <%= guild.autoMod.punishment === 'timeout' ? 'selected' : '' %>>刪除+禁言</option>
+              <option value="kick" <%= guild.autoMod.punishment === 'kick' ? 'selected' : '' %>>刪除+踢出</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>禁言分鐘（僅禁言有效）</label>
+            <input type="number" name="timeoutMinutes" value="<%= guild.autoMod.timeoutMinutes || 10 %>" min="1" style="width:100px;">
+          </div>
+          <div class="form-group">
+            <label>公告級別</label>
+            <select name="logLevel">
+              <option value="all" <%= guild.autoMod.logLevel === 'all' ? 'selected' : '' %>>全部紀錄</option>
+              <option value="punish_only" <%= guild.autoMod.logLevel === 'punish_only' ? 'selected' : '' %>>僅懲罰紀錄</option>
+              <option value="off" <%= guild.autoMod.logLevel === 'off' ? 'selected' : '' %>>不紀錄</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>紀錄頻道</label>
+            <select name="logChannelId">
+              <option value="">不設定</option>
+              <% guild.channels.forEach(c => { %>
+                <option value="<%= c.id %>" <%= guild.autoMod.logChannelId === c.id ? 'selected' : '' %>>#<%= c.name %></option>
+              <% }); %>
+            </select>
+          </div>
+          <button type="submit" class="btn">儲存設定</button>
+        </form>
       </div>
     </div>
 

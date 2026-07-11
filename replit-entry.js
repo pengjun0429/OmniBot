@@ -224,6 +224,7 @@ app.get('/server/:id', requireAuth, async (req, res) => {
         selfRoles: gs.selfRoles || [],
         autoVoice: gs.autoVoice || { channelId: '' },
         ticket: gs.ticket || { categoryId: '', roleIds: [], channelId: '' },
+        autoMod: gs.autoMod || { enabled: false, words: [], blockLinks: false, logChannelId: '', punishment: 'delete', timeoutMinutes: 10, logLevel: 'all' },
         roleGive: gs.roleGive || { channelId: '' },
         welcome: gs.welcome || { enabled: false, channelId: '', message: '' },
         farewell: gs.farewell || { enabled: false, channelId: '', message: '' },
@@ -280,6 +281,22 @@ app.post('/api/settings/:guildId/roles', requireAuth, requireTopAdmin, (req, res
   gs.selfRoles = Array.isArray(selected) ? selected : (selected ? [selected] : []);
   settings.updateGuildSettings(req.params.guildId, gs);
   res.redirect(`/server/${req.params.guildId}#roles`);
+});
+
+app.post('/api/settings/:guildId/automod', requireAuth, requireTopAdmin, (req, res) => {
+  const gs = settings.getGuildSettings(req.params.guildId);
+  const words = req.body.words ? req.body.words.split(',').map(w => w.trim()).filter(Boolean) : [];
+  gs.autoMod = {
+    enabled: req.body.enabled === '1',
+    words,
+    blockLinks: req.body.blockLinks === '1',
+    logChannelId: req.body.logChannelId || '',
+    punishment: req.body.punishment || 'delete',
+    timeoutMinutes: parseInt(req.body.timeoutMinutes, 10) || 10,
+    logLevel: req.body.logLevel || 'all',
+  };
+  settings.updateGuildSettings(req.params.guildId, gs);
+  res.redirect(`/server/${req.params.guildId}#automod`);
 });
 
 app.post('/api/settings/:guildId/autovoice', requireAuth, requireTopAdmin, (req, res) => {
