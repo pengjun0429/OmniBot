@@ -117,6 +117,7 @@ app.get('/auth/discord/callback', async (req, res) => {
       const blockedUsers = Array.isArray(gs.blockedUsers) ? gs.blockedUsers : [];
 
       if (blockedUsers.includes(discordUser.id) && member.id !== guild.ownerId) {
+        logger.info(`[封鎖] ${discordUser.username} 被封鎖於 ${guild.name}，跳過`);
         continue;
       }
 
@@ -126,11 +127,13 @@ app.get('/auth/discord/callback', async (req, res) => {
       if (isTopAdmin(member) || memberRoleIds.some(r => topIds.includes(r))) {
         allowed = true;
         adminLevel = 'top';
+        logger.info(`[登入] ${discordUser.username} 以 ${guild.name} 的 TOP 權限登入`);
         break;
       }
       if (isModerator(member) || memberRoleIds.some(r => modIds.includes(r))) {
         allowed = true;
         adminLevel = 'mod';
+        logger.info(`[登入] ${discordUser.username} 以 ${guild.name} 的 MOD 權限登入`);
         break;
       }
     }
