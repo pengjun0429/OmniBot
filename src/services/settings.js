@@ -35,17 +35,23 @@ function getDefaults() {
 
 async function loadFromGoogle() {
   try {
+    logger.info('[GSheet] 正在從 Google Sheets 載入設定...');
     const all = await googleDb.getAll();
-    if (all && Object.keys(all).length > 0) {
+    const keys = all ? Object.keys(all) : [];
+    logger.info(`[GSheet] Google Sheets 回傳 ${keys.length} 個伺服器`);
+    if (keys.length > 0) {
       cache = {};
       for (const [gid, data] of Object.entries(all)) {
         cache[gid] = { ...getDefaults(), ...data };
       }
-      save(); // backup to JSON
-      logger.info(`從 Google Sheets 載入 ${Object.keys(cache).length} 個伺服器設定`);
+      save();
+      logger.info(`[GSheet] 從 Google Sheets 載入 ${keys.length} 個伺服器設定`);
       return true;
     }
-  } catch {}
+    logger.warn('[GSheet] Google Sheets 中無設定資料');
+  } catch (err) {
+    logger.error('[GSheet] loadFromGoogle 失敗:', err.message);
+  }
   return false;
 }
 

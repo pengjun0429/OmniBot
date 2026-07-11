@@ -22,11 +22,14 @@ const API = {
   },
 
   async getAll() {
-    if (!WEB_APP_URL) return {};
+    if (!WEB_APP_URL) { logger.info('[GSheet] WEB_APP_URL 未設定'); return {}; }
     try {
       const { data } = await axios.get(`${WEB_APP_URL}?action=getAll`, { timeout: 15000 });
       return data.allSettings || {};
-    } catch { return {}; }
+    } catch (err) {
+      logger.error('[GSheet] getAll 失敗:', err.message);
+      return {};
+    }
   },
 
   async health() {
