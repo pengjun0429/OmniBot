@@ -48,10 +48,10 @@ module.exports = {
       let punished = false;
 
       if (punishment === 'timeout' || punishment === 'warn') {
-        await message.member.timeout(timeoutMinutes * 60 * 1000, `自動審核：${reason}`).catch(() => {});
+        await message.member.timeout(timeoutMinutes * 60 * 1000, `自動審核：${reason}`).catch(err => logger.error(`自動審核 timeout 失敗:`, err.message));
         punished = true;
       } else if (punishment === 'kick') {
-        await message.member.kick(`自動審核：${reason}`).catch(() => {});
+        await message.member.kick(`自動審核：${reason}`).catch(err => logger.error(`自動審核 kick 失敗:`, err.message));
         punished = true;
       }
 
