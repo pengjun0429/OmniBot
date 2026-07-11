@@ -63,6 +63,7 @@ function getGuildSettings(guildId) {
     data[guildId] = getDefaults();
     save();
   }
+  data[guildId] = { ...getDefaults(), ...data[guildId] };
   return data[guildId];
 }
 
