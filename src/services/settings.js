@@ -48,6 +48,7 @@ function save() {
   ensureDir();
   try {
     fs.writeFileSync(SETTINGS_PATH, JSON.stringify(cache, null, 2), 'utf-8');
+    logger.info(`設定已儲存 (${Object.keys(cache).length} 個伺服器)`);
   } catch (err) {
     logger.error('儲存設定檔失敗:', err.message);
   }
