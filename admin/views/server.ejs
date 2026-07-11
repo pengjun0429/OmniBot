@@ -400,6 +400,7 @@
       <div class="card">
         <h2>🤖 自動審核</h2>
         <form method="POST" action="/api/settings/<%= guild.id %>/automod">
+          <input type="hidden" name="_tab" value="automod">
           <div class="form-group checkbox">
             <input type="hidden" name="enabled" value="0">
             <input type="checkbox" name="enabled" value="1" <%= guild.autoMod.enabled ? 'checked' : '' %>>
