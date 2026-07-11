@@ -147,7 +147,7 @@ app.get('/auth/discord/callback', async (req, res) => {
     req.session.authenticated = true;
     req.session.adminLevel = adminLevel;
     req.session.discordUser = { id: discordUser.id, username: discordUser.username, avatar: discordUser.avatar, global_name: discordUser.global_name };
-    res.redirect('/dashboard');
+    req.session.save(() => res.redirect('/dashboard'));
   } catch (err) {
     logger.error('Discord OAuth 失敗:', err.response?.data || err.message);
     res.render('login', { error: 'Discord 登入失敗，請稍後再試' });
