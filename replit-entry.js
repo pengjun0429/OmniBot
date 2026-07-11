@@ -24,6 +24,7 @@ startBot().catch(err => {
 
 const express = require('express');
 const session = require('express-session');
+const FileStore = require('session-file-store')(session);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -34,9 +35,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.use(session({
+  store: new FileStore({ path: path.join(__dirname, 'data', 'sessions'), ttl: 86400 }),
   secret: 'omnibot-replit-session',
   resave: false,
-  saveUninitialized: true,
+  saveUninitialized: false,
   cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 },
 }));
 
