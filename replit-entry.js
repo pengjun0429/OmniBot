@@ -426,7 +426,7 @@ app.post('/api/settings/:guildId/messagelog', requireAuth, requireTopAdmin, (req
     gs.messageLog = { channelId: req.body.channelId || '' };
   }
   if (req.body.messageLogAllEnabled !== undefined) {
-    gs.messageLogAll = { enabled: req.body.messageLogAllEnabled === '1' };
+    gs.messageLogAll = { enabled: String(req.body.messageLogAllEnabled).includes('1') };
   }
   if (!gs.blockedUsers) gs.blockedUsers = [];
   if (!gs.adminRoles) gs.adminRoles = { topIds: [], modIds: [] };

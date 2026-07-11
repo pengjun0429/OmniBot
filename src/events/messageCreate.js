@@ -33,7 +33,9 @@ module.exports = {
         content: message.content?.slice(0, 1000) || '',
         url: message.url,
       };
-      axios.post(GOOGLE_DB_URL(), { action: 'log', logEntry: entry }, { timeout: 5000 }).catch(() => {});
+      axios.post(GOOGLE_DB_URL(), { action: 'log', logEntry: entry }, { timeout: 5000 })
+        .then(() => logger.info(`[GSheet] ${message.author.tag} 的訊息已記錄`))
+        .catch(() => {});
     }
 
     if (!gs.autoMod || !gs.autoMod.enabled) return;
