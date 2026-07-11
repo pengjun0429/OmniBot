@@ -149,6 +149,7 @@
         <h2>👋 歡迎訊息</h2>
         <form method="POST" action="/api/settings/<%= guild.id %>">
           <input type="hidden" name="type" value="welcome">
+          <input type="hidden" name="_tab" value="welcome">
           <div class="form-group">
             <label>發送頻道</label>
             <select name="channelId">
@@ -177,6 +178,7 @@
         <h2>👋 告別訊息</h2>
         <form method="POST" action="/api/settings/<%= guild.id %>">
           <input type="hidden" name="type" value="farewell">
+          <input type="hidden" name="_tab" value="farewell">
           <div class="form-group">
             <label>發送頻道</label>
             <select name="channelId">
@@ -400,7 +402,13 @@
       document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
       document.querySelector(`.tabs a[onclick*="'${name}'"]`).classList.add('active');
       document.getElementById('tab-' + name).classList.add('active');
+      window.location.hash = name;
     }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const hash = window.location.hash.replace('#', '');
+      if (hash) switchTab(hash);
+    });
 
     async function sendAnnounce(e) {
       e.preventDefault();
