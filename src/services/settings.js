@@ -20,6 +20,9 @@ function getDefaults() {
     farewell: { enabled: false, channelId: '', message: '' },
     selfRoles: [],
     autoVoice: { channelId: '' },
+    ticket: { categoryId: '', roleIds: [], channelId: '' },
+    autoMod: { enabled: false, words: [], blockLinks: false, logChannelId: '' },
+    customCommands: {},
   };
 }
 

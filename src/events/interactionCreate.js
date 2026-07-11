@@ -1,9 +1,14 @@
 const logger = require('../utils/logger');
+const settings = require('../services/settings');
 
 module.exports = {
   async execute(interaction) {
     if (interaction.isButton() && interaction.customId.startsWith('role_toggle_')) {
       return handleRoleToggle(interaction);
+    }
+
+    if (interaction.isButton() && interaction.customId === 'ticket_open') {
+      return handleTicketCreate(interaction);
     }
 
     if (!interaction.isChatInputCommand()) return;
@@ -54,6 +59,42 @@ module.exports = {
     }
   },
 };
+
+async function handleTicketCreate(interaction) {
+  try {
+    const gs = settings.getGuildSettings(interaction.guild.id);
+    const ticketConfig = gs.ticket || {};
+    const categoryId = ticketConfig.categoryId;
+    const roleIds = ticketConfig.roleIds.length > 0 ? ticketConfig.roleIds : [interaction.guild.roles.everyone.id];
+
+    const ticketNumber = Date.now().toString(36).slice(-4);
+    const channelName = `ticket-${interaction.user.username.toLowerCase().replace(/[^a-z0-9]/g, '')}-${ticketNumber}`;
+
+    const channel = await interaction.guild.channels.create({
+      name: channelName,
+      type: 0,
+      parent: categoryId || null,
+      permissionOverwrites: [
+        { id: interaction.guild.roles.everyone.id, deny: ['ViewChannel'] },
+        { id: interaction.user.id, allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory'] },
+        ...roleIds.map(id => ({ id, allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory'] })),
+      ],
+    });
+
+    const { EmbedBuilder } = require('discord.js');
+    const embed = new EmbedBuilder()
+      .setColor(0x5865F2)
+      .setTitle(`🎫 ${interaction.user.username} 的工單`)
+      .setDescription('管理員即將為你處理，請描述你的問題。\n關閉請使用 `/ticket close`')
+      .setTimestamp();
+
+    await channel.send({ content: `<@${interaction.user.id}>`, embeds: [embed] });
+    await interaction.reply({ content: `✅ 已建立工單 ${channel}`, ephemeral: true });
+  } catch (err) {
+    logger.error('建立工單失敗:', err);
+    await interaction.reply({ content: '❌ 建立工單失敗', ephemeral: true });
+  }
+}
 
 async function handleRoleToggle(interaction) {
   const [, , guildId, roleId] = interaction.customId.split('_');
