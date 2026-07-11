@@ -102,10 +102,34 @@ async function init() {
       useGoogle = true;
       logger.info('Google Sheets 資料庫連線成功');
       await loadFromGoogle();
+      startSync();
     } else {
       logger.warn('Google Sheets 連線失敗，使用本地 JSON');
     }
   }
+}
+
+let syncTimer = null;
+
+function startSync() {
+  if (syncTimer) clearInterval(syncTimer);
+  syncTimer = setInterval(async () => {
+    try {
+      const fresh = await googleDb.getAll();
+      if (fresh && Object.keys(fresh).length > 0) {
+        const oldCache = cache || {};
+        cache = {};
+        for (const [gid, data] of Object.entries(fresh)) {
+          cache[gid] = { ...getDefaults(), ...data };
+        }
+        save();
+        const changed = Object.keys(cache).filter(k => JSON.stringify(cache[k]) !== JSON.stringify(oldCache[k]));
+        if (changed.length > 0) logger.info(`Google Sheets 同步完成，${changed.length} 個伺服器有更新`);
+      }
+    } catch (err) {
+      logger.error(`Google Sheets 同步失敗:`, err.message);
+    }
+  }, 5 * 60 * 1000);
 }
 
 module.exports = { load, getGuildSettings, updateGuildSettings, init };
