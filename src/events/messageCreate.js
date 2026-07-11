@@ -7,6 +7,18 @@ module.exports = {
     if (!message.guild) return;
 
     const gs = settings.getGuildSettings(message.guild.id);
+
+    const mention = `<@${message.client.user.id}>`;
+    const mentionNick = `<@!${message.client.user.id}>`;
+    if (message.content.startsWith(mention) || message.content.startsWith(mentionNick)) {
+      const prefix = message.content.startsWith(mention) ? mention : mentionNick;
+      const args = message.content.slice(prefix.length).trim().split(/\s+/);
+      const cmdName = args[0]?.toLowerCase();
+      if (cmdName && gs.customCommands?.[cmdName]) {
+        return message.channel.send(gs.customCommands[cmdName]);
+      }
+    }
+
     if (!gs.autoMod || !gs.autoMod.enabled) return;
 
     const { words, blockLinks, logChannelId, punishment, timeoutMinutes, logLevel } = gs.autoMod;
