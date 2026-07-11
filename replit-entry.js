@@ -36,7 +36,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.use(session({
-  store: new FileStore({ path: sessionDir, ttl: 86400 }),
+  store: new FileStore({ path: sessionDir, ttl: 86400 * 30, retries: 0, logFn: () => {} }),
   secret: 'omnibot-replit-session',
   resave: false,
   saveUninitialized: false,
