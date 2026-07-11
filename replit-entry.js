@@ -394,11 +394,17 @@ app.get('/announce', requireAuth, async (req, res) => {
 });
 
 app.post('/api/announce/send', requireAuth, async (req, res) => {
-  const { channelId, message } = req.body;
+  const { channelId, title, message, color } = req.body;
   try {
     const channel = client.channels.cache.get(channelId);
     if (!channel) return res.json({ success: false, error: '找不到頻道' });
-    await channel.send(message);
+    const { EmbedBuilder } = require('discord.js');
+    const embed = new EmbedBuilder()
+      .setColor(parseInt(color?.replace('#', ''), 16) || 0x7c6ff0)
+      .setTitle(title || '📢 公告')
+      .setDescription(message)
+      .setFooter({ text: `OmniBot · ${new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}` });
+    await channel.send({ embeds: [embed] });
     res.json({ success: true });
   } catch (err) {
     res.json({ success: false, error: err.message });

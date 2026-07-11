@@ -298,19 +298,80 @@
     <div class="tab-pane" id="tab-announce">
       <div class="card">
         <h2>📢 發送公告</h2>
-        <form class="say-form" onsubmit="sendAnnounce(event)">
-          <select id="announceChannel">
-            <option value="">選擇頻道...</option>
-            <% guild.channels.forEach(c => { %>
-              <option value="<%= c.id %>">#<%= c.name %></option>
-            <% }); %>
-          </select>
-          <input type="text" id="announceMsg" placeholder="輸入公告內容..." required>
-          <button type="submit" class="btn">發送</button>
-        </form>
-        <div id="announceStatus" class="status-msg"></div>
+        <p style="font-size:13px;color:#888;margin-bottom:16px;">
+          選擇頻道並輸入內容，Bot 會以 Embed 格式發送公告。
+        </p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div>
+            <div class="form-group">
+              <label>發送頻道</label>
+              <select id="announceChannel">
+                <option value="">選擇頻道...</option>
+                <% guild.channels.forEach(c => { %>
+                  <option value="<%= c.id %>">#<%= c.name %></option>
+                <% }); %>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>公告標題（選填）</label>
+              <input type="text" id="announceTitle" placeholder="例如：伺服器公告" style="width:100%;padding:10px 14px;background:rgba(12,12,24,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:#e0e0e0;font-size:13px;">
+            </div>
+            <div class="form-group">
+              <label>公告內容</label>
+              <textarea id="announceMsg" placeholder="輸入公告內容..." rows="5" style="width:100%;padding:10px 14px;background:rgba(12,12,24,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:#e0e0e0;font-size:13px;resize:vertical;"></textarea>
+            </div>
+            <div class="form-group">
+              <label>顏色（選填）</label>
+              <input type="color" id="announceColor" value="#7c6ff0" style="width:60px;height:36px;border:none;border-radius:6px;cursor:pointer;background:transparent;">
+            </div>
+            <button onclick="sendAnnounce(event)" class="btn" style="margin-top:4px;">📨 發送公告</button>
+            <div id="announceStatus" class="status-msg" style="margin-top:8px;"></div>
+          </div>
+          <div>
+            <div style="background:rgba(22,22,42,0.6);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px;">
+              <div style="font-size:11px;color:#666;margin-bottom:8px;">預覽</div>
+              <div id="previewBox" style="background:rgba(12,12,24,0.6);border-radius:8px;padding:16px;border-left:4px solid #7c6ff0;">
+                <div id="previewTitle" style="font-size:15px;font-weight:600;color:#fff;margin-bottom:6px;">公告標題</div>
+                <div id="previewContent" style="font-size:13px;color:#ccc;line-height:1.6;">公告內容將顯示在這裡</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
+    <script>
+      document.getElementById('announceTitle')?.addEventListener('input', updatePreview);
+      document.getElementById('announceMsg')?.addEventListener('input', updatePreview);
+      document.getElementById('announceColor')?.addEventListener('input', updatePreview);
+      function updatePreview() {
+        const title = document.getElementById('announceTitle').value || '公告標題';
+        const msg = document.getElementById('announceMsg').value || '公告內容將顯示在這裡';
+        const color = document.getElementById('announceColor').value;
+        document.getElementById('previewTitle').textContent = title;
+        document.getElementById('previewContent').textContent = msg;
+        document.getElementById('previewBox').style.borderLeftColor = color;
+      }
+      async function sendAnnounce(e) {
+        if (e) e.preventDefault();
+        const channelId = document.getElementById('announceChannel').value;
+        const title = document.getElementById('announceTitle').value.trim() || '📢 公告';
+        const msg = document.getElementById('announceMsg').value.trim();
+        const color = document.getElementById('announceColor').value || '#7c6ff0';
+        if (!channelId) { document.getElementById('announceStatus').textContent = '請選擇頻道'; document.getElementById('announceStatus').className = 'status-msg err'; return; }
+        if (!msg) { document.getElementById('announceStatus').textContent = '請輸入內容'; document.getElementById('announceStatus').className = 'status-msg err'; return; }
+        const status = document.getElementById('announceStatus');
+        status.textContent = '發送中...'; status.className = 'status-msg';
+        const res = await fetch('/api/announce/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ channelId, title, message: msg, color }),
+        });
+        const data = await res.json();
+        status.textContent = data.success ? '✅ 已發送' : '❌ ' + data.error;
+        status.className = 'status-msg ' + (data.success ? 'ok' : 'err');
+        if (data.success) { document.getElementById('announceMsg').value = ''; document.getElementById('announceTitle').value = ''; updatePreview(); }
+      }
+    </script>
 
     <div class="tab-pane" id="tab-channels">
       <div class="card">
@@ -578,24 +639,6 @@
       const hash = window.location.hash.replace('#', '');
       if (hash) switchTab(hash);
     });
-
-    async function sendAnnounce(e) {
-      e.preventDefault();
-      const channelId = document.getElementById('announceChannel').value;
-      const message = document.getElementById('announceMsg').value.trim();
-      if (!channelId || !message) return;
-      const status = document.getElementById('announceStatus');
-      status.textContent = '發送中...'; status.className = 'status-msg';
-      const res = await fetch('/api/announce/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ channelId, message }),
-      });
-      const data = await res.json();
-      status.textContent = data.success ? '✅ 已發送' : '❌ ' + data.error;
-      status.className = 'status-msg ' + (data.success ? 'ok' : 'err');
-      if (data.success) document.getElementById('announceMsg').value = '';
-    }
   </script>
 </body>
 </html>
