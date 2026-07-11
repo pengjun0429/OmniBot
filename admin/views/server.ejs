@@ -495,18 +495,38 @@
 
     <div class="tab-pane" id="tab-messagelog">
       <div class="card">
-        <h2>📝 記錄日誌</h2>
+        <h2>🗑️ 編輯/刪除紀錄</h2>
         <p style="font-size:13px;color:#888;margin-bottom:12px;">
           設定一個頻道，Bot 會自動記錄成員的訊息編輯和刪除。
         </p>
         <form method="POST" action="/api/settings/<%= guild.id %>/messagelog">
           <input type="hidden" name="_tab" value="messagelog">
           <div class="form-group">
-            <label>記錄頻道</label>
+            <label>紀錄頻道</label>
             <select name="channelId">
               <option value="">不啟用</option>
               <% guild.channels.forEach(c => { %>
                 <option value="<%= c.id %>" <%= guild.messageLog.channelId === c.id ? 'selected' : '' %>>#<%= c.name %></option>
+              <% }); %>
+            </select>
+          </div>
+          <button type="submit" class="btn">儲存設定</button>
+        </form>
+      </div>
+      <div class="card">
+        <h2>📝 全部訊息紀錄</h2>
+        <p style="font-size:13px;color:#888;margin-bottom:12px;">
+          設定一個頻道，Bot 會紀錄所有成員發送的每一則訊息（含跳轉連結）。
+        </p>
+        <form method="POST" action="/api/settings/<%= guild.id %>/messagelog">
+          <input type="hidden" name="_tab" value="messagelog">
+          <input type="hidden" name="channelId" value="">
+          <div class="form-group">
+            <label>紀錄頻道</label>
+            <select name="messageLogAllChannelId">
+              <option value="">不啟用</option>
+              <% guild.channels.forEach(c => { %>
+                <option value="<%= c.id %>" <%= guild.messageLogAll.channelId === c.id ? 'selected' : '' %>>#<%= c.name %></option>
               <% }); %>
             </select>
           </div>

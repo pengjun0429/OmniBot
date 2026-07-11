@@ -19,6 +19,23 @@ module.exports = {
       }
     }
 
+    const logAllChannelId = gs.messageLogAll?.channelId;
+    if (logAllChannelId) {
+      const logChannel = message.guild.channels.cache.get(logAllChannelId);
+      if (logChannel) {
+        const jump = `[跳轉](${message.url})`;
+        logChannel.send({
+          embeds: [{
+            color: 0x6366f1,
+            author: { name: message.author.tag, icon_url: message.author.displayAvatarURL() },
+            description: `${message.content.slice(0, 1000) || '（無文字內容）'}\n\n${jump}`,
+            footer: { text: `#${message.channel.name} · ${message.author.id}` },
+            timestamp: message.createdAt.toISOString(),
+          }],
+        }).catch(() => {});
+      }
+    }
+
     if (!gs.autoMod || !gs.autoMod.enabled) return;
 
     const { words, blockLinks, logChannelId, punishment, timeoutMinutes, logLevel, strikes, strikeResetHours } = gs.autoMod;

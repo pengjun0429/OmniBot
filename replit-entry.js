@@ -283,6 +283,7 @@ app.get('/server/:id', requireAuth, async (req, res) => {
         autoMod: gs.autoMod || { enabled: false, words: [], blockLinks: false, logChannelId: '', punishment: 'delete', timeoutMinutes: 10, logLevel: 'all' },
         roleGive: gs.roleGive || { channelId: '' },
         messageLog: gs.messageLog || { channelId: '' },
+        messageLogAll: gs.messageLogAll || { channelId: '' },
         welcome: gs.welcome || { enabled: false, channelId: '', message: '' },
         farewell: gs.farewell || { enabled: false, channelId: '', message: '' },
       },
@@ -422,6 +423,7 @@ app.post('/api/settings/:guildId/rolegive', requireAuth, requireTopAdmin, (req, 
 app.post('/api/settings/:guildId/messagelog', requireAuth, requireTopAdmin, (req, res) => {
   const gs = settings.getGuildSettings(req.params.guildId);
   gs.messageLog = { channelId: req.body.channelId || '' };
+  gs.messageLogAll = { channelId: req.body.messageLogAllChannelId || '' };
   if (!gs.blockedUsers) gs.blockedUsers = [];
   if (!gs.adminRoles) gs.adminRoles = { topIds: [], modIds: [] };
   settings.updateGuildSettings(req.params.guildId, gs);
