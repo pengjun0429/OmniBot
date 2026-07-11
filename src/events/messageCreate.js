@@ -41,6 +41,8 @@ module.exports = {
 
     if (!flagged) return;
 
+    const censored = words.reduce((c, w) => c.replace(new RegExp(w, 'gi'), '****'), message.content);
+
     try {
       await message.delete();
       logger.info(`自動審核：已刪除 ${message.author.tag} 的訊息（${reason}）`);
@@ -60,7 +62,7 @@ module.exports = {
         const logChannel = message.guild.channels.cache.get(logChannelId);
         if (logChannel) {
           const punishText = punished ? `\n懲罰：${punishment === 'timeout' ? `禁言 ${timeoutMinutes} 分鐘` : punishment}` : '';
-          logChannel.send(`🛡️ **${message.author.tag}** ${reason}${punishText}\n內容：\`${message.content.slice(0, 200)}\``);
+          logChannel.send(`🛡️ ${message.author} 使用了過濾詞：${reason.replace('使用了過濾詞：', '')}\n內容：${censored.slice(0, 200)}${punishText}`);
         }
       }
     } catch (err) {
