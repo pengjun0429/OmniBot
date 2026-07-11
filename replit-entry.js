@@ -113,7 +113,7 @@ app.get('/auth/discord/callback', async (req, res) => {
     for (const guildId of mutualGuilds) {
       const guild = client.guilds.cache.get(guildId);
       if (!guild) continue;
-      const member = guild.members.cache.get(discordUser.id);
+      const member = guild.members.cache.get(discordUser.id) || await guild.members.fetch(discordUser.id).catch(() => null);
       if (!member) continue;
 
       const memberRoleIds = member.roles.cache.map(r => r.id);
