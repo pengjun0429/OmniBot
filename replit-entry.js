@@ -111,13 +111,16 @@ app.get('/auth/discord/callback', async (req, res) => {
       if (!member) continue;
 
       const memberRoleIds = member.roles.cache.map(r => r.id);
+      const gs = settings.getGuildSettings(guildId);
+      const topIds = gs.adminRoles?.topIds?.length > 0 ? gs.adminRoles.topIds : config.admin.topRoleIds;
+      const modIds = gs.adminRoles?.modIds?.length > 0 ? gs.adminRoles.modIds : config.admin.modRoleIds;
 
-      if (isTopAdmin(member) || memberRoleIds.some(r => config.admin.topRoleIds.includes(r))) {
+      if (isTopAdmin(member) || memberRoleIds.some(r => topIds.includes(r))) {
         allowed = true;
         adminLevel = 'top';
         break;
       }
-      if (isModerator(member) || memberRoleIds.some(r => config.admin.modRoleIds.includes(r))) {
+      if (isModerator(member) || memberRoleIds.some(r => modIds.includes(r))) {
         allowed = true;
         adminLevel = 'mod';
         break;
