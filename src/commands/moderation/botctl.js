@@ -1,6 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const { isTopAdmin } = require('../../utils/permissions');
-const { setCustom } = require('../../utils/presence');
 
 module.exports = {
   category: '管理',
@@ -13,19 +12,6 @@ module.exports = {
     .addSubcommand(sub =>
       sub.setName('ping')
         .setDescription('查看機器人詳細狀態'))
-    .addSubcommand(sub =>
-      sub.setName('presence')
-        .setDescription('設定機器人狀態')
-        .addStringOption(opt => opt.setName('訊息').setDescription('狀態文字').setRequired(true))
-        .addStringOption(opt =>
-          opt.setName('類型').setDescription('狀態類型')
-            .addChoices(
-              { name: '🎮 Playing', value: '0' },
-              { name: '📺 Streaming', value: '1' },
-              { name: '🎧 Listening', value: '2' },
-              { name: '👀 Watching', value: '3' },
-              { name: '🏆 Competing', value: '5' },
-            ).setRequired(false)))
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
   async execute(interaction) {
     if (!isTopAdmin(interaction.member)) {
@@ -63,13 +49,6 @@ module.exports = {
       } catch (err) {
         await interaction.reply({ content: `❌ 重新載入失敗: ${err.message}`, ephemeral: true });
       }
-    }
-
-    if (sub === 'presence') {
-      const text = interaction.options.getString('訊息');
-      const typeNum = parseInt(interaction.options.getString('類型') || '0', 10);
-      setCustom(interaction.client, text, typeNum);
-      await interaction.reply({ content: `✅ 已設定狀態：${text}`, ephemeral: true });
     }
   },
 };
