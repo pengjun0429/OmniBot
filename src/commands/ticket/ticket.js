@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } = require('discord.js');
+const settings = require('../../services/settings');
 
 module.exports = {
   category: '工單',
@@ -39,6 +40,13 @@ module.exports = {
     if (sub === 'close') {
       if (!interaction.channel.name.startsWith('ticket-')) {
         return interaction.reply({ content: '❌ 這不是工單頻道', ephemeral: true });
+      }
+      const gs = settings.getGuildSettings(interaction.guild.id);
+      const ticketRoles = gs.ticket?.roleIds || [];
+      const isAdmin = interaction.member.permissions.has(PermissionFlagsBits.Administrator);
+      const hasRole = ticketRoles.length === 0 || interaction.member.roles.cache.some(r => ticketRoles.includes(r.id));
+      if (!isAdmin && !hasRole) {
+        return interaction.reply({ content: '❌ 只有管理員可以關閉工單', ephemeral: true });
       }
       await interaction.reply({ content: '🔒 此工單將在 5 秒後關閉...' });
       setTimeout(() => interaction.channel.delete().catch(() => {}), 5000);
