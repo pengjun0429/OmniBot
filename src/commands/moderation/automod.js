@@ -22,11 +22,30 @@ module.exports = {
     .addSubcommand(sub =>
       sub.setName('links')
         .setDescription('啟用/停用連結過濾'))
+    .addSubcommand(sub =>
+      sub.setName('punishment')
+        .setDescription('設定違規懲罰方式')
+        .addStringOption(opt => opt.setName('方式').setDescription('懲罰方式').setRequired(true)
+          .addChoices(
+            { name: '刪除訊息', value: 'delete' },
+            { name: '刪除+禁言', value: 'timeout' },
+            { name: '刪除+踢出', value: 'kick' },
+          ))
+        .addIntegerOption(opt => opt.setName('分鐘').setDescription('禁言分鐘數（僅 timeout 有效）').setRequired(false)))
+    .addSubcommand(sub =>
+      sub.setName('log')
+        .setDescription('設定公告級別')
+        .addStringOption(opt => opt.setName('級別').setDescription('公告級別').setRequired(true)
+          .addChoices(
+            { name: '全部紀錄', value: 'all' },
+            { name: '僅懲罰紀錄', value: 'punish_only' },
+            { name: '不紀錄', value: 'off' },
+          )))
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
   async execute(interaction) {
     const sub = interaction.options.getSubcommand();
     const gs = settings.getGuildSettings(interaction.guild.id);
-    if (!gs.autoMod) gs.autoMod = { enabled: false, words: [], blockLinks: false, logChannelId: '' };
+    if (!gs.autoMod) gs.autoMod = { enabled: false, words: [], blockLinks: false, logChannelId: '', punishment: 'delete', timeoutMinutes: 10, logLevel: 'all' };
 
     if (sub === 'toggle') {
       gs.autoMod.enabled = !gs.autoMod.enabled;
@@ -62,6 +81,21 @@ module.exports = {
       gs.autoMod.blockLinks = !gs.autoMod.blockLinks;
       settings.updateGuildSettings(interaction.guild.id, gs);
       return interaction.reply({ content: `✅ 連結過濾已${gs.autoMod.blockLinks ? '啟用' : '停用'}`, ephemeral: true });
+    }
+
+    if (sub === 'punishment') {
+      gs.autoMod.punishment = interaction.options.getString('方式');
+      const minutes = interaction.options.getInteger('分鐘');
+      if (minutes) gs.autoMod.timeoutMinutes = minutes;
+      settings.updateGuildSettings(interaction.guild.id, gs);
+      return interaction.reply({ content: `✅ 懲罰方式已設為：${gs.autoMod.punishment === 'delete' ? '刪除訊息' : gs.autoMod.punishment === 'timeout' ? `刪除+禁言 ${gs.autoMod.timeoutMinutes} 分鐘` : '刪除+踢出'}`, ephemeral: true });
+    }
+
+    if (sub === 'log') {
+      gs.autoMod.logLevel = interaction.options.getString('級別');
+      settings.updateGuildSettings(interaction.guild.id, gs);
+      const labels = { all: '全部紀錄', punish_only: '僅懲罰紀錄', off: '不紀錄' };
+      return interaction.reply({ content: `✅ 公告級別已設為：${labels[gs.autoMod.logLevel]}`, ephemeral: true });
     }
   },
 };
