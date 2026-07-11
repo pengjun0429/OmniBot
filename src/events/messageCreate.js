@@ -24,8 +24,10 @@ module.exports = {
 
     if (gs.messageLogAll?.enabled && GOOGLE_DB_URL()) {
       logger.info(`[GSheet] 準備記錄 ${message.author.tag} 的訊息到 ${GOOGLE_DB_URL()}`);
+      const now = new Date();
+      const twTime = now.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false });
       const entry = {
-        time: new Date().toISOString(),
+        time: twTime,
         guildId: message.guild.id,
         channelId: message.channel.id,
         channelName: message.channel.name,
