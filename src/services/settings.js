@@ -26,7 +26,7 @@ function getDefaults() {
     autoMod: { enabled: false, words: [], blockLinks: false, logChannelId: '', punishment: 'delete', timeoutMinutes: 10, logLevel: 'all', strikes: { 2: 'timeout', 3: 'kick' }, strikeResetHours: 24, userStrikes: {} },
     roleGive: { channelId: '' },
     messageLog: { channelId: '' },
-    messageLogAll: { channelId: '' },
+    messageLogAll: { enabled: false },
     adminRoles: { topIds: [], modIds: [] },
     blockedUsers: [],
     customCommands: {},

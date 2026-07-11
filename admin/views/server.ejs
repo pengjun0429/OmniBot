@@ -514,20 +514,17 @@
         </form>
       </div>
       <div class="card">
-        <h2>📝 全部訊息紀錄</h2>
+        <h2>📝 全部訊息紀錄 → Google Sheets</h2>
         <p style="font-size:13px;color:#888;margin-bottom:12px;">
-          設定一個頻道，Bot 會紀錄所有成員發送的每一則訊息（含跳轉連結）。
+          啟用後，所有成員的每則訊息會自動寫入 Google Sheets 的 MessageLog 工作表。<br>
+          （需要先設定 <code>GOOGLE_DB_URL</code> 環境變數）
         </p>
         <form method="POST" action="/api/settings/<%= guild.id %>/messagelog">
           <input type="hidden" name="_tab" value="messagelog">
-          <div class="form-group">
-            <label>紀錄頻道</label>
-            <select name="messageLogAllChannelId">
-              <option value="">不啟用</option>
-              <% guild.channels.forEach(c => { %>
-                <option value="<%= c.id %>" <%= guild.messageLogAll.channelId === c.id ? 'selected' : '' %>>#<%= c.name %></option>
-              <% }); %>
-            </select>
+          <div class="form-group checkbox">
+            <input type="hidden" name="messageLogAllEnabled" value="0">
+            <input type="checkbox" name="messageLogAllEnabled" value="1" <%= guild.messageLogAll.enabled ? 'checked' : '' %>>
+            <label>啟用 Google Sheets 訊息紀錄</label>
           </div>
           <button type="submit" class="btn">儲存設定</button>
         </form>

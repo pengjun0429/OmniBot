@@ -1,8 +1,8 @@
 // ===== OmniBot 資料庫 - Google Apps Script =====
 // 部署方式：工具 -> 指令碼編輯器 -> 貼上此程式碼 -> 部署 -> 新增部署 -> 網頁應用程式
-// 部署後取得網址，設為 GOOGLE_DB_URL
 
-const SHEET_NAME = 'OmniBotDB';
+const DB_SHEET = 'OmniBotDB';
+const LOG_SHEET = 'MessageLog';
 
 function doGet(e) {
   const action = e?.parameter?.action;
@@ -21,6 +21,11 @@ function doGet(e) {
       return json({ allSettings: all });
     }
 
+    if (action === 'getLog') {
+      const rows = getLogRows(e?.parameter?.guild, parseInt(e?.parameter?.limit) || 100);
+      return json({ rows });
+    }
+
     return json({ error: 'unknown action' });
   } catch (err) {
     return json({ error: err.message });
@@ -32,11 +37,21 @@ function doPost(e) {
     const body = typeof e?.postData?.contents === 'string'
       ? JSON.parse(e.postData.contents) : e?.parameter || {};
 
-    const { guildId, settings, action } = body;
+    const { guildId, settings, action, logEntry } = body;
 
     if (action === 'set' && guildId) {
       setProp(guildId, JSON.stringify(settings));
       return json({ success: true });
+    }
+
+    if (action === 'log' && logEntry) {
+      addLogRow(logEntry);
+      return json({ success: true });
+    }
+
+    if (action === 'logBatch' && Array.isArray(logEntry)) {
+      for (const entry of logEntry) addLogRow(entry);
+      return json({ success: true, count: logEntry.length });
     }
 
     return json({ error: 'unknown action' });
@@ -45,8 +60,9 @@ function doPost(e) {
   }
 }
 
+// ===== Settings (key-value) =====
 function getProp(key) {
-  const sheet = getSheet();
+  const sheet = getSheet(DB_SHEET);
   const data = sheet.getDataRange().getValues();
   for (let i = 0; i < data.length; i++) {
     if (String(data[i][0]) === String(key)) return data[i][1] || null;
@@ -55,7 +71,7 @@ function getProp(key) {
 }
 
 function setProp(key, val) {
-  const sheet = getSheet();
+  const sheet = getSheet(DB_SHEET);
   const data = sheet.getDataRange().getValues();
   for (let i = 0; i < data.length; i++) {
     if (String(data[i][0]) === String(key)) {
@@ -67,7 +83,7 @@ function setProp(key, val) {
 }
 
 function getAllProps() {
-  const sheet = getSheet();
+  const sheet = getSheet(DB_SHEET);
   const data = sheet.getDataRange().getValues();
   const result = {};
   for (let i = 0; i < data.length; i++) {
@@ -76,12 +92,47 @@ function getAllProps() {
   return result;
 }
 
-function getSheet() {
+// ===== Message Log =====
+function addLogRow(entry) {
+  const sheet = getSheet(LOG_SHEET);
+  sheet.appendRow([
+    entry.time || new Date().toISOString(),
+    entry.guildId || '',
+    entry.channelId || '',
+    entry.channelName || '',
+    entry.authorId || '',
+    entry.authorTag || '',
+    entry.content || '',
+    entry.url || '',
+  ]);
+}
+
+function getLogRows(guildId, limit) {
+  const sheet = getSheet(LOG_SHEET);
+  const data = sheet.getDataRange().getValues();
+  const rows = [];
+  const start = Math.max(1, data.length - limit);
+  for (let i = start; i < data.length; i++) {
+    const r = data[i];
+    if (!guildId || String(r[1]) === String(guildId)) {
+      rows.push({
+        time: r[0], guildId: r[1], channelId: r[2],
+        channelName: r[3], authorId: r[4], authorTag: r[5],
+        content: r[6], url: r[7],
+      });
+    }
+  }
+  return rows;
+}
+
+// ===== Helpers =====
+function getSheet(name) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet = ss.getSheetByName(SHEET_NAME);
+  let sheet = ss.getSheetByName(name);
   if (!sheet) {
-    sheet = ss.insertSheet(SHEET_NAME);
-    sheet.appendRow(['guild_id', 'settings_json']);
+    sheet = ss.insertSheet(name);
+    if (name === DB_SHEET) sheet.appendRow(['guild_id', 'settings_json']);
+    if (name === LOG_SHEET) sheet.appendRow(['time', 'guildId', 'channelId', 'channelName', 'authorId', 'authorTag', 'content', 'url']);
   }
   return sheet;
 }
