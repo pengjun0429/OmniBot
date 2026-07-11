@@ -11,6 +11,7 @@ registerCommands(client);
 registerEvents(client);
 
 async function startBot() {
+  await settings.init();
   await deploy();
   await client.login(config.discord.token);
   logger.info('Bot 已上線');

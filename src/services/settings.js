@@ -1,11 +1,13 @@
 const fs = require('fs');
 const path = require('path');
 const logger = require('../utils/logger');
+const googleDb = require('./google-db');
 
 const SETTINGS_DIR = path.join(__dirname, '..', '..', 'data');
 const SETTINGS_PATH = path.join(SETTINGS_DIR, 'settings.json');
 
 let cache = null;
+let useGoogle = false;
 
 function ensureDir() {
   if (!fs.existsSync(SETTINGS_DIR)) {
@@ -30,6 +32,22 @@ function getDefaults() {
   };
 }
 
+async function loadFromGoogle() {
+  try {
+    const all = await googleDb.getAll();
+    if (all && Object.keys(all).length > 0) {
+      cache = {};
+      for (const [gid, data] of Object.entries(all)) {
+        cache[gid] = { ...getDefaults(), ...data };
+      }
+      save(); // backup to JSON
+      logger.info(`從 Google Sheets 載入 ${Object.keys(cache).length} 個伺服器設定`);
+      return true;
+    }
+  } catch {}
+  return false;
+}
+
 function load() {
   if (cache) return cache;
   ensureDir();
@@ -51,7 +69,6 @@ function save() {
   ensureDir();
   try {
     fs.writeFileSync(SETTINGS_PATH, JSON.stringify(cache, null, 2), 'utf-8');
-    logger.info(`設定已儲存 (${Object.keys(cache).length} 個伺服器)`);
   } catch (err) {
     logger.error('儲存設定檔失敗:', err.message);
   }
@@ -60,10 +77,9 @@ function save() {
 function getGuildSettings(guildId) {
   const data = load();
   if (!data[guildId]) {
-    data[guildId] = getDefaults();
+    data[guildId] = { ...getDefaults() };
     save();
   }
-  data[guildId] = { ...getDefaults(), ...data[guildId] };
   return data[guildId];
 }
 
@@ -71,7 +87,24 @@ function updateGuildSettings(guildId, settings) {
   const data = load();
   data[guildId] = { ...data[guildId], ...settings };
   save();
+  if (useGoogle) {
+    googleDb.set(guildId, data[guildId]).catch(() => {});
+  }
   return data[guildId];
 }
 
-module.exports = { load, getGuildSettings, updateGuildSettings };
+async function init() {
+  if (process.env.GOOGLE_DB_URL) {
+    googleDb.setUrl(process.env.GOOGLE_DB_URL);
+    const ok = await googleDb.health();
+    if (ok) {
+      useGoogle = true;
+      logger.info('Google Sheets 資料庫連線成功');
+      await loadFromGoogle();
+    } else {
+      logger.warn('Google Sheets 連線失敗，使用本地 JSON');
+    }
+  }
+}
+
+module.exports = { load, getGuildSettings, updateGuildSettings, init };
