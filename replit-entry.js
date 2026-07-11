@@ -296,9 +296,9 @@ app.post('/api/settings/:guildId/automod', requireAuth, requireTopAdmin, (req, r
   const gs = settings.getGuildSettings(req.params.guildId);
   const words = req.body.words ? req.body.words.split(',').map(w => w.trim()).filter(Boolean) : [];
   gs.autoMod = {
-    enabled: req.body.enabled === '1',
+    enabled: String(req.body.enabled).includes('1'),
     words,
-    blockLinks: req.body.blockLinks === '1',
+    blockLinks: String(req.body.blockLinks).includes('1'),
     logChannelId: req.body.logChannelId || '',
     punishment: req.body.punishment || 'delete',
     timeoutMinutes: parseInt(req.body.timeoutMinutes, 10) || 10,
