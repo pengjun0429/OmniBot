@@ -162,6 +162,49 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', uptime: process.uptime(), bot: client.ws.status === 0 ? 'online' : 'offline' });
 });
 
+app.get('/export', requireAuth, async (req, res) => {
+  try {
+    const XLSX = require('xlsx');
+    const wb = XLSX.utils.book_new();
+
+    const guildRows = [];
+    for (const g of client.guilds.cache.values()) {
+      const gs = settings.getGuildSettings(g.id);
+      guildRows.push({
+        '伺服器名稱': g.name,
+        '伺服器 ID': g.id,
+        '成員數': g.memberCount,
+        '擁有者': g.members.cache.get(g.ownerId)?.user?.tag || '?',
+        '歡迎頻道': gs.welcome?.channelId || '未設定',
+        '告別頻道': gs.farewell?.channelId || '未設定',
+        '可領取身分組數': gs.selfRoles?.length || 0,
+        '自動審核': gs.autoMod?.enabled ? '啟用' : '停用',
+        '過濾詞數': gs.autoMod?.words?.length || 0,
+        '語音包房': gs.autoVoice?.channelId || '未設定',
+        '工單分類': gs.ticket?.categoryId || '未設定',
+      });
+    }
+    const ws1 = XLSX.utils.json_to_sheet(guildRows);
+    XLSX.utils.book_append_sheet(wb, ws1, '伺服器');
+
+    const allGuildSettings = settings.load();
+    const settingRows = [];
+    for (const [gid, data] of Object.entries(allGuildSettings)) {
+      settingRows.push({ '伺服器 ID': gid, '設定內容': JSON.stringify(data, null, 2) });
+    }
+    const ws2 = XLSX.utils.json_to_sheet(settingRows);
+    XLSX.utils.book_append_sheet(wb, ws2, '原始設定');
+
+    const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    res.set('Content-Disposition', `attachment; filename="OmniBot_${new Date().toISOString().slice(0, 10)}.xlsx"`);
+    res.set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.send(buf);
+  } catch (err) {
+    logger.error('匯出失敗:', err);
+    res.status(500).send('匯出失敗');
+  }
+});
+
 app.get('/privacy', (req, res) => {
   res.render('privacy');
 });
