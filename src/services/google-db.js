@@ -1,5 +1,4 @@
 const axios = require('axios');
-const logger = require('../utils/logger');
 
 let WEB_APP_URL = process.env.GOOGLE_DB_URL || '';
 
