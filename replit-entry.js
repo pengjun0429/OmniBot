@@ -307,7 +307,12 @@ app.post('/api/settings/:guildId/automod', requireAuth, requireTopAdmin, (req, r
     punishment: req.body.punishment || 'delete',
     timeoutMinutes: parseInt(req.body.timeoutMinutes, 10) || 10,
     logLevel: req.body.logLevel || 'all',
+    strikes: {},
+    strikeResetHours: parseInt(req.body.strikeResetHours, 10) || 24,
+    userStrikes: gs.autoMod?.userStrikes || {},
   };
+  if (req.body.strike_2) gs.autoMod.strikes['2'] = req.body.strike_2;
+  if (req.body.strike_3) gs.autoMod.strikes['3'] = req.body.strike_3;
   settings.updateGuildSettings(req.params.guildId, gs);
   res.redirect(`/server/${req.params.guildId}#automod`);
 });

@@ -444,7 +444,30 @@
               <% }); %>
             </select>
           </div>
-          <button type="submit" class="btn">儲存設定</button>
+          <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.06);">
+            <h2 style="font-size:14px;color:#fff;margin-bottom:12px;">📊 累犯門檻</h2>
+            <div class="form-group">
+              <label>第2次違規懲罰</label>
+              <select name="strike_2">
+                <option value="">不特別處理（跟第1次一樣）</option>
+                <option value="timeout" <%= guild.autoMod.strikes?.['2'] === 'timeout' ? 'selected' : '' %>>禁言</option>
+                <option value="kick" <%= guild.autoMod.strikes?.['2'] === 'kick' ? 'selected' : '' %>>踢出</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>第3次違規懲罰</label>
+              <select name="strike_3">
+                <option value="">不特別處理（跟第2次一樣）</option>
+                <option value="timeout" <%= guild.autoMod.strikes?.['3'] === 'timeout' ? 'selected' : '' %>>禁言</option>
+                <option value="kick" <%= guild.autoMod.strikes?.['3'] === 'kick' ? 'selected' : '' %>>踢出</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>重置時間（小時）</label>
+              <input type="number" name="strikeResetHours" value="<%= guild.autoMod.strikeResetHours || 24 %>" min="1" style="width:100px;">
+            </div>
+          </div>
+          <button type="submit" class="btn" style="margin-top:16px;">儲存設定</button>
         </form>
       </div>
     </div>
