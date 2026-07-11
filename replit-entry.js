@@ -41,7 +41,7 @@ app.use(session({
   secret: 'omnibot-replit-session',
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 },
+  cookie: { maxAge: 30 * 24 * 60 * 60 * 1000, sameSite: 'lax', secure: false },
 }));
 
 function requireAuth(req, res, next) {
