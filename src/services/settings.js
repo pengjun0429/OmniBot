@@ -23,6 +23,7 @@ function getDefaults() {
     ticket: { categoryId: '', roleIds: [], channelId: '' },
     autoMod: { enabled: false, words: [], blockLinks: false, logChannelId: '', punishment: 'delete', timeoutMinutes: 10, logLevel: 'all' },
     roleGive: { channelId: '' },
+    messageLog: { channelId: '' },
     adminRoles: { topIds: [], modIds: [] },
     blockedUsers: [],
     customCommands: {},

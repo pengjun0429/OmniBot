@@ -193,6 +193,7 @@
       <a href="#" onclick="switchTab('ticket', event)">🎫 工單</a>
       <a href="#" onclick="switchTab('automod', event)">🤖 自動審核</a>
       <a href="#" onclick="switchTab('rolegive', event)">🎁 公開派發</a>
+      <a href="#" onclick="switchTab('messagelog', event)">📝 記錄日誌</a>
     <% } %>
     <a href="#" onclick="switchTab('announce', event)">📢 公告</a>
   </div>
@@ -460,6 +461,27 @@
               <option value="">不公告</option>
               <% guild.channels.forEach(c => { %>
                 <option value="<%= c.id %>" <%= guild.roleGive.channelId === c.id ? 'selected' : '' %>>#<%= c.name %></option>
+              <% }); %>
+            </select>
+          </div>
+          <button type="submit" class="btn">儲存設定</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="tab-pane" id="tab-messagelog">
+      <div class="card">
+        <h2>📝 記錄日誌</h2>
+        <p style="font-size:13px;color:#888;margin-bottom:12px;">
+          設定一個頻道，Bot 會自動記錄成員的訊息編輯和刪除。
+        </p>
+        <form method="POST" action="/api/settings/<%= guild.id %>/messagelog">
+          <div class="form-group">
+            <label>記錄頻道</label>
+            <select name="channelId">
+              <option value="">不啟用</option>
+              <% guild.channels.forEach(c => { %>
+                <option value="<%= c.id %>" <%= guild.messageLog.channelId === c.id ? 'selected' : '' %>>#<%= c.name %></option>
               <% }); %>
             </select>
           </div>

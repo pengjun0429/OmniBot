@@ -234,6 +234,7 @@ app.get('/server/:id', requireAuth, async (req, res) => {
         ticket: gs.ticket || { categoryId: '', roleIds: [], channelId: '' },
         autoMod: gs.autoMod || { enabled: false, words: [], blockLinks: false, logChannelId: '', punishment: 'delete', timeoutMinutes: 10, logLevel: 'all' },
         roleGive: gs.roleGive || { channelId: '' },
+        messageLog: gs.messageLog || { channelId: '' },
         welcome: gs.welcome || { enabled: false, channelId: '', message: '' },
         farewell: gs.farewell || { enabled: false, channelId: '', message: '' },
       },
@@ -363,6 +364,13 @@ app.post('/api/settings/:guildId/rolegive', requireAuth, requireTopAdmin, (req, 
   gs.roleGive = { channelId: req.body.channelId || '' };
   settings.updateGuildSettings(req.params.guildId, gs);
   res.redirect(`/server/${req.params.guildId}#rolegive`);
+});
+
+app.post('/api/settings/:guildId/messagelog', requireAuth, requireTopAdmin, (req, res) => {
+  const gs = settings.getGuildSettings(req.params.guildId);
+  gs.messageLog = { channelId: req.body.channelId || '' };
+  settings.updateGuildSettings(req.params.guildId, gs);
+  res.redirect(`/server/${req.params.guildId}#messagelog`);
 });
 
 app.post('/api/server/:id/send-ticket-panel', requireAuth, requireTopAdmin, async (req, res) => {

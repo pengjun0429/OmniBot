@@ -8,7 +8,7 @@ const client = new Client({
     GatewayIntentBits.GuildVoiceStates,
     GatewayIntentBits.GuildMembers,
   ],
-  partials: [Partials.Channel],
+  partials: [Partials.Channel, Partials.Message],
 });
 
 client.commands = new Collection();
