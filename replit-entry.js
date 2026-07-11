@@ -210,6 +210,7 @@ app.get('/server/:id', requireAuth, async (req, res) => {
         roles,
         selfRoles: gs.selfRoles || [],
         autoVoice: gs.autoVoice || { channelId: '' },
+        ticket: gs.ticket || { categoryId: '', roleIds: [], channelId: '' },
         welcome: gs.welcome || { enabled: false, channelId: '', message: '' },
         farewell: gs.farewell || { enabled: false, channelId: '', message: '' },
       },
@@ -304,6 +305,33 @@ app.post('/api/announce/send', requireAuth, async (req, res) => {
     const channel = client.channels.cache.get(channelId);
     if (!channel) return res.json({ success: false, error: '找不到頻道' });
     await channel.send(message);
+    res.json({ success: true });
+  } catch (err) {
+    res.json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/settings/:guildId/ticket', requireAuth, requireTopAdmin, (req, res) => {
+  const gs = settings.getGuildSettings(req.params.guildId);
+  const roleIds = Array.isArray(req.body.roleIds) ? req.body.roleIds : (req.body.roleIds ? [req.body.roleIds] : []);
+  gs.ticket = { categoryId: req.body.categoryId || '', roleIds, channelId: '' };
+  settings.updateGuildSettings(req.params.guildId, gs);
+  res.redirect(`/server/${req.params.guildId}`);
+});
+
+app.post('/api/server/:id/send-ticket-panel', requireAuth, requireTopAdmin, async (req, res) => {
+  try {
+    const guild = client.guilds.cache.get(req.params.id);
+    if (!guild) return res.json({ success: false, error: '找不到伺服器' });
+    const channel = guild.channels.cache.get(req.body.channelId);
+    if (!channel) return res.json({ success: false, error: '找不到頻道' });
+
+    const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+    const embed = new EmbedBuilder().setColor(0x5865F2).setTitle('🎫 建立工單').setDescription('點擊下方按鈕建立工單，管理員將為你協助');
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId('ticket_open').setLabel('📩 建立工單').setStyle(ButtonStyle.Primary)
+    );
+    await channel.send({ embeds: [embed], components: [row] });
     res.json({ success: true });
   } catch (err) {
     res.json({ success: false, error: err.message });

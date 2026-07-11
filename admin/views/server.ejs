@@ -137,6 +137,7 @@
       <a href="#" onclick="switchTab('farewell', event)">👋 告別</a>
       <a href="#" onclick="switchTab('roles', event)">🎭 身分組</a>
       <a href="#" onclick="switchTab('voice', event)">🔊 語音包房</a>
+      <a href="#" onclick="switchTab('ticket', event)">🎫 工單</a>
     <% } %>
     <a href="#" onclick="switchTab('announce', event)">📢 公告</a>
   </div>
@@ -294,9 +295,67 @@
         </form>
       </div>
     </div>
+
+    <div class="tab-pane" id="tab-ticket">
+      <div class="card">
+        <h2>🎫 工單系統</h2>
+        <p style="font-size:13px;color:#888;margin-bottom:12px;">
+          成員點擊「建立工單」按鈕後，Bot 會自動創建私人頻道，只有管理員和該成員看得到。
+        </p>
+        <form method="POST" action="/api/settings/<%= guild.id %>/ticket">
+          <div class="form-group">
+            <label>工單分類（選填）</label>
+            <select name="categoryId">
+              <option value="">不指定</option>
+              <% guild.categories.forEach(c => { %>
+                <option value="<%= c.id %>" <%= guild.ticket.categoryId === c.id ? 'selected' : '' %>>📁 <%= c.name %></option>
+              <% }); %>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>可查看工單的身分組（按住 Ctrl 選多個）</label>
+            <select name="roleIds" multiple style="height:120px;">
+              <% guild.roles.forEach(r => { %>
+                <option value="<%= r.id %>" <%= guild.ticket.roleIds.includes(r.id) ? 'selected' : '' %>><%= r.name %></option>
+              <% }); %>
+            </select>
+          </div>
+          <button type="submit" class="btn">儲存設定</button>
+        </form>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid #232340;">
+          <p style="font-size:13px;color:#888;margin-bottom:8px;">發送開單面板到指定頻道：</p>
+          <form onsubmit="sendTicketPanel(event)" style="display:flex;gap:8px;">
+            <select id="ticketPanelChannel" style="width:220px;padding:8px 12px;background:#1e1e3a;border:1px solid #333;border-radius:6px;color:#fff;font-size:13px;">
+              <option value="">選擇頻道...</option>
+              <% guild.channels.forEach(c => { %>
+                <option value="<%= c.id %>">#<%= c.name %></option>
+              <% }); %>
+            </select>
+            <button type="submit" class="btn">發送面板</button>
+          </form>
+          <div id="ticketPanelStatus" class="status-msg" style="margin-top:8px;font-size:13px;"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
+    async function sendTicketPanel(e) {
+      e.preventDefault();
+      const channelId = document.getElementById('ticketPanelChannel').value;
+      if (!channelId) return;
+      const status = document.getElementById('ticketPanelStatus');
+      status.textContent = '發送中...'; status.className = 'status-msg';
+      const res = await fetch('/api/server/<%= guild.id %>/send-ticket-panel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channelId }),
+      });
+      const data = await res.json();
+      status.textContent = data.success ? '✅ 面板已發送' : '❌ ' + data.error;
+      status.className = 'status-msg ' + (data.success ? 'ok' : 'err');
+    }
+
     async function sendPanel(e) {
       e.preventDefault();
       const channelId = document.getElementById('panelChannel').value;
