@@ -59,6 +59,9 @@ module.exports = {
 
     if (sub === 'block') {
       const target = interaction.options.getUser('使用者');
+      if (target.id === interaction.guild.ownerId) {
+        return interaction.reply({ content: '❌ 無法封鎖伺服器擁有者', ephemeral: true });
+      }
       if (gs.blockedUsers.includes(target.id)) {
         return interaction.reply({ content: `❌ ${target} 已被封鎖`, ephemeral: true });
       }
