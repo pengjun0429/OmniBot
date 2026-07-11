@@ -21,7 +21,7 @@ module.exports = {
 
     if (!gs.autoMod || !gs.autoMod.enabled) return;
 
-    const { words, blockLinks, logChannelId, punishment, timeoutMinutes, logLevel } = gs.autoMod;
+    const { words, blockLinks, logChannelId, punishment, timeoutMinutes, logLevel, strikes, strikeResetHours } = gs.autoMod;
     const content = message.content.toLowerCase();
     let flagged = false;
     let reason = '';
@@ -47,13 +47,40 @@ module.exports = {
       await message.delete();
       logger.info(`自動審核：已刪除 ${message.author.tag} 的訊息（${reason}）`);
 
+      if (!gs.autoMod.userStrikes) gs.autoMod.userStrikes = {};
+      const uid = message.author.id;
+      const now = Date.now();
+      const userStrike = gs.autoMod.userStrikes[uid];
+
+      if (!userStrike || (now - userStrike.time) > (strikeResetHours || 24) * 3600000) {
+        gs.autoMod.userStrikes[uid] = { count: 1, time: now };
+      } else {
+        gs.autoMod.userStrikes[uid].count++;
+        gs.autoMod.userStrikes[uid].time = now;
+      }
+
+      settings.updateGuildSettings(message.guild.id, gs);
+
+      const strikeCount = gs.autoMod.userStrikes[uid].count;
+      let effectivePunishment = punishment;
+
+      if (strikes) {
+        const sorted = Object.entries(strikes).sort((a, b) => Number(b[0]) - Number(a[0]));
+        for (const [threshold, action] of sorted) {
+          if (strikeCount >= Number(threshold)) {
+            effectivePunishment = action;
+            break;
+          }
+        }
+      }
+
       let punished = false;
 
-      if (punishment === 'timeout' || punishment === 'warn') {
-        await message.member.timeout(timeoutMinutes * 60 * 1000, `自動審核：${reason}`).catch(err => logger.error(`自動審核 timeout 失敗:`, err.message));
+      if (effectivePunishment === 'timeout' || effectivePunishment === 'warn') {
+        await message.member.timeout((timeoutMinutes || 10) * 60 * 1000, `自動審核(${strikeCount}次)：${reason}`).catch(err => logger.error(`自動審核 timeout 失敗:`, err.message));
         punished = true;
-      } else if (punishment === 'kick') {
-        await message.member.kick(`自動審核：${reason}`).catch(err => logger.error(`自動審核 kick 失敗:`, err.message));
+      } else if (effectivePunishment === 'kick') {
+        await message.member.kick(`自動審核(${strikeCount}次)：${reason}`).catch(err => logger.error(`自動審核 kick 失敗:`, err.message));
         punished = true;
       }
 
@@ -61,8 +88,8 @@ module.exports = {
       if (logChannelId && shouldLog) {
         const logChannel = message.guild.channels.cache.get(logChannelId);
         if (logChannel) {
-          const punishText = punished ? `\n懲罰：${punishment === 'timeout' ? `禁言 ${timeoutMinutes} 分鐘` : punishment}` : '';
-          logChannel.send(`🛡️ ${message.author} 使用了過濾詞：${reason.replace('使用了過濾詞：', '')}\n內容：${censored.slice(0, 200)}${punishText}`);
+          const punishText = punished ? `\n懲罰(${strikeCount}犯)：${effectivePunishment === 'timeout' ? `禁言 ${timeoutMinutes} 分鐘` : effectivePunishment}` : '';
+          logChannel.send(`🛡️ ${message.author} ${reason}\n內容：${censored.slice(0, 200)}${punishText}`);
         }
       }
     } catch (err) {

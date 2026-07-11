@@ -33,6 +33,23 @@ module.exports = {
           ))
         .addIntegerOption(opt => opt.setName('分鐘').setDescription('禁言分鐘數（僅 timeout 有效）').setRequired(false)))
     .addSubcommand(sub =>
+      sub.setName('strike')
+        .setDescription('設定累犯門檻（第幾次用什麼罰）')
+        .addIntegerOption(opt => opt.setName('次數').setDescription('第幾次違規').setRequired(true).setMinValue(2).setMaxValue(10))
+        .addStringOption(opt => opt.setName('懲罰').setDescription('對應懲罰').setRequired(true)
+          .addChoices(
+            { name: '禁言', value: 'timeout' },
+            { name: '踢出', value: 'kick' },
+          )))
+    .addSubcommand(sub =>
+      sub.setName('strikereset')
+        .setDescription('設定累犯重置時間（小時）')
+        .addIntegerOption(opt => opt.setName('小時').setDescription('幾小時後重新計算 (預設24)').setRequired(true).setMinValue(1)))
+    .addSubcommand(sub =>
+      sub.setName('resetuser')
+        .setDescription('重設某使用者的累犯次數')
+        .addUserOption(opt => opt.setName('使用者').setDescription('要重設的使用者').setRequired(true)))
+    .addSubcommand(sub =>
       sub.setName('log')
         .setDescription('設定公告級別')
         .addStringOption(opt => opt.setName('級別').setDescription('公告級別').setRequired(true)
@@ -45,7 +62,7 @@ module.exports = {
   async execute(interaction) {
     const sub = interaction.options.getSubcommand();
     const gs = settings.getGuildSettings(interaction.guild.id);
-    if (!gs.autoMod) gs.autoMod = { enabled: false, words: [], blockLinks: false, logChannelId: '', punishment: 'delete', timeoutMinutes: 10, logLevel: 'all' };
+    if (!gs.autoMod) gs.autoMod = { enabled: false, words: [], blockLinks: false, logChannelId: '', punishment: 'delete', timeoutMinutes: 10, logLevel: 'all', strikes: { 2: 'timeout', 3: 'kick' }, strikeResetHours: 24, userStrikes: {} };
 
     if (sub === 'toggle') {
       gs.autoMod.enabled = !gs.autoMod.enabled;
@@ -56,20 +73,16 @@ module.exports = {
     if (sub === 'word') {
       const action = interaction.options.getString('動作');
       const word = interaction.options.getString('詞');
-
       if (action === 'list') {
         const list = gs.autoMod.words.join(', ') || '（無）';
         return interaction.reply({ content: `📋 過濾詞列表：${list}`, ephemeral: true });
       }
-
       if (!word) return interaction.reply({ content: '請輸入詞彙', ephemeral: true });
-
       if (action === 'add') {
         gs.autoMod.words.push(word);
         settings.updateGuildSettings(interaction.guild.id, gs);
         return interaction.reply({ content: `✅ 已新增過濾詞：${word}`, ephemeral: true });
       }
-
       if (action === 'remove') {
         gs.autoMod.words = gs.autoMod.words.filter(w => w !== word);
         settings.updateGuildSettings(interaction.guild.id, gs);
@@ -89,6 +102,31 @@ module.exports = {
       if (minutes) gs.autoMod.timeoutMinutes = minutes;
       settings.updateGuildSettings(interaction.guild.id, gs);
       return interaction.reply({ content: `✅ 懲罰方式已設為：${gs.autoMod.punishment === 'delete' ? '刪除訊息' : gs.autoMod.punishment === 'timeout' ? `刪除+禁言 ${gs.autoMod.timeoutMinutes} 分鐘` : '刪除+踢出'}`, ephemeral: true });
+    }
+
+    if (sub === 'strike') {
+      const count = interaction.options.getInteger('次數');
+      const action = interaction.options.getString('懲罰');
+      if (!gs.autoMod.strikes) gs.autoMod.strikes = {};
+      gs.autoMod.strikes[String(count)] = action;
+      settings.updateGuildSettings(interaction.guild.id, gs);
+      return interaction.reply({ content: `✅ 已設定第 ${count} 次違規 → ${action === 'timeout' ? '禁言' : '踢出'}`, ephemeral: true });
+    }
+
+    if (sub === 'strikereset') {
+      gs.autoMod.strikeResetHours = interaction.options.getInteger('小時');
+      settings.updateGuildSettings(interaction.guild.id, gs);
+      return interaction.reply({ content: `✅ 累犯重置時間已設為 ${gs.autoMod.strikeResetHours} 小時`, ephemeral: true });
+    }
+
+    if (sub === 'resetuser') {
+      const target = interaction.options.getUser('使用者');
+      if (gs.autoMod.userStrikes?.[target.id]) {
+        delete gs.autoMod.userStrikes[target.id];
+        settings.updateGuildSettings(interaction.guild.id, gs);
+        return interaction.reply({ content: `✅ 已重設 ${target.username} 的累犯次數`, ephemeral: true });
+      }
+      return interaction.reply({ content: `❌ ${target.username} 沒有累犯紀錄`, ephemeral: true });
     }
 
     if (sub === 'log') {

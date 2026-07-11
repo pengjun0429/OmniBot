@@ -21,7 +21,7 @@ function getDefaults() {
     selfRoles: [],
     autoVoice: { channelId: '' },
     ticket: { categoryId: '', roleIds: [], channelId: '' },
-    autoMod: { enabled: false, words: [], blockLinks: false, logChannelId: '', punishment: 'delete', timeoutMinutes: 10, logLevel: 'all' },
+    autoMod: { enabled: false, words: [], blockLinks: false, logChannelId: '', punishment: 'delete', timeoutMinutes: 10, logLevel: 'all', strikes: { 2: 'timeout', 3: 'kick' }, strikeResetHours: 24, userStrikes: {} },
     roleGive: { channelId: '' },
     messageLog: { channelId: '' },
     adminRoles: { topIds: [], modIds: [] },
