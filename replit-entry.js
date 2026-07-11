@@ -5,6 +5,7 @@ const { deploy } = require('./src/utils/deploy-commands');
 const { registerCommands, registerEvents } = require('./src/utils/command-handler');
 const logCapture = require('./src/utils/log-capture');
 const settings = require('./src/services/settings');
+const presence = require('./src/utils/presence');
 const path = require('path');
 
 registerCommands(client);
@@ -13,6 +14,7 @@ registerEvents(client);
 async function startBot() {
   await deploy();
   await client.login(config.discord.token);
+  presence.start(client);
   logger.info('Bot 已上線');
 }
 
