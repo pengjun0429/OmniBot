@@ -112,6 +112,11 @@ app.get('/auth/discord/callback', async (req, res) => {
 
       const memberRoleIds = member.roles.cache.map(r => r.id);
       const gs = settings.getGuildSettings(guildId);
+
+      if (gs.blockedUsers?.includes(discordUser.id)) {
+        continue;
+      }
+
       const topIds = gs.adminRoles?.topIds?.length > 0 ? gs.adminRoles.topIds : config.admin.topRoleIds;
       const modIds = gs.adminRoles?.modIds?.length > 0 ? gs.adminRoles.modIds : config.admin.modRoleIds;
 

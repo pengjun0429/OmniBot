@@ -24,6 +24,7 @@ function getDefaults() {
     autoMod: { enabled: false, words: [], blockLinks: false, logChannelId: '' },
     roleGive: { channelId: '' },
     adminRoles: { topIds: [], modIds: [] },
+    blockedUsers: [],
     customCommands: {},
   };
 }

@@ -21,6 +21,14 @@ module.exports = {
             { name: '移除', value: 'remove' },
           )))
     .addSubcommand(sub =>
+      sub.setName('block')
+        .setDescription('封鎖特定使用者禁止登入後臺')
+        .addUserOption(opt => opt.setName('使用者').setDescription('要封鎖的使用者').setRequired(true)))
+    .addSubcommand(sub =>
+      sub.setName('unblock')
+        .setDescription('解除封鎖使用者')
+        .addUserOption(opt => opt.setName('使用者').setDescription('要解封的使用者').setRequired(true)))
+    .addSubcommand(sub =>
       sub.setName('list')
         .setDescription('查看目前管理員身分組設定'))
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
@@ -28,6 +36,7 @@ module.exports = {
     const sub = interaction.options.getSubcommand();
     const gs = settings.getGuildSettings(interaction.guild.id);
     if (!gs.adminRoles) gs.adminRoles = { topIds: [], modIds: [] };
+    if (!gs.blockedUsers) gs.blockedUsers = [];
 
     if (sub === 'role') {
       const level = interaction.options.getString('層級');
@@ -48,15 +57,39 @@ module.exports = {
       return interaction.reply({ content: `✅ 已${action === 'add' ? '新增' : '移除'} ${role} 至 ${level === 'top' ? '👑可愛' : '🔨可惡'} 管理員列表`, ephemeral: true });
     }
 
+    if (sub === 'block') {
+      const target = interaction.options.getUser('使用者');
+      if (gs.blockedUsers.includes(target.id)) {
+        return interaction.reply({ content: `❌ ${target} 已被封鎖`, ephemeral: true });
+      }
+      gs.blockedUsers.push(target.id);
+      settings.updateGuildSettings(interaction.guild.id, gs);
+      const member = interaction.guild.members.cache.get(target.id);
+      const tag = member?.displayName || target.username;
+      return interaction.reply({ content: `✅ 已封鎖 ${tag}，該使用者無法再登入後臺`, ephemeral: true });
+    }
+
+    if (sub === 'unblock') {
+      const target = interaction.options.getUser('使用者');
+      if (!gs.blockedUsers.includes(target.id)) {
+        return interaction.reply({ content: `❌ ${target} 未被封鎖`, ephemeral: true });
+      }
+      gs.blockedUsers = gs.blockedUsers.filter(id => id !== target.id);
+      settings.updateGuildSettings(interaction.guild.id, gs);
+      return interaction.reply({ content: `✅ 已解除封鎖 ${target}`, ephemeral: true });
+    }
+
     if (sub === 'list') {
       const topRoles = gs.adminRoles.topIds.map(id => interaction.guild.roles.cache.get(id)).filter(Boolean);
       const modRoles = gs.adminRoles.modIds.map(id => interaction.guild.roles.cache.get(id)).filter(Boolean);
+      const blocked = gs.blockedUsers.map(id => interaction.client.users.cache.get(id)).filter(Boolean);
       const embed = new EmbedBuilder()
         .setColor(0x0099ff)
         .setTitle('🔐 管理員身分組設定')
         .addFields(
           { name: '👑 可愛的管管們', value: topRoles.map(r => r.toString()).join('\n') || '（無）', inline: true },
           { name: '🔨 可惡的管管們', value: modRoles.map(r => r.toString()).join('\n') || '（無）', inline: true },
+          { name: '🚫 被封鎖的使用者', value: blocked.map(u => u.tag).join('\n') || '（無）', inline: true },
         );
       return interaction.reply({ embeds: [embed], ephemeral: true });
     }
