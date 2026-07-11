@@ -57,15 +57,6 @@ app.get('/login', (req, res) => {
   res.render('login', { error: null });
 });
 
-app.post('/login', (req, res) => {
-  const { username, password } = req.body;
-  if (username === config.admin.username && password === config.admin.password) {
-    req.session.authenticated = true;
-    return res.redirect('/dashboard');
-  }
-  res.render('login', { error: '帳號或密碼錯誤' });
-});
-
 const axios = require('axios');
 
 app.get('/auth/discord', (req, res) => {
