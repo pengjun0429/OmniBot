@@ -23,6 +23,7 @@ module.exports = {
     }
 
     if (gs.messageLogAll?.enabled && GOOGLE_DB_URL()) {
+      logger.info(`[GSheet] 準備記錄 ${message.author.tag} 的訊息到 ${GOOGLE_DB_URL()}`);
       const entry = {
         time: new Date().toISOString(),
         guildId: message.guild.id,
@@ -35,7 +36,10 @@ module.exports = {
       };
       axios.post(GOOGLE_DB_URL(), { action: 'log', logEntry: entry }, { timeout: 5000 })
         .then(() => logger.info(`[GSheet] ${message.author.tag} 的訊息已記錄`))
-        .catch(() => {});
+        .catch(err => logger.error(`[GSheet] 記錄失敗:`, err.message));
+    } else {
+      if (!gs.messageLogAll?.enabled) logger.info('[GSheet] 未啟用');
+      if (!GOOGLE_DB_URL()) logger.info('[GSheet] 未設定 GOOGLE_DB_URL');
     }
 
     if (!gs.autoMod || !gs.autoMod.enabled) return;
