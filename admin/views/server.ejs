@@ -7,95 +7,147 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #0f0f1a; color: #e0e0e0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0a0a14;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: radial-gradient(ellipse at 30% 20%, rgba(124, 111, 240, 0.06) 0%, transparent 50%),
+                  radial-gradient(ellipse at 70% 80%, rgba(233, 69, 96, 0.04) 0%, transparent 50%);
+      pointer-events: none; z-index: 0;
     }
 
     .top-bar {
+      position: relative; z-index: 1;
       display: flex; justify-content: space-between; align-items: center;
-      padding: 20px 36px; border-bottom: 1px solid #232340;
+      padding: 16px 40px;
+      background: rgba(12, 12, 24, 0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
     }
-    .top-bar .logo { font-size: 22px; font-weight: 800; color: #fff; text-decoration: none; }
+    .top-bar .logo { font-size: 20px; font-weight: 800; color: #fff; text-decoration: none; letter-spacing: -0.5px; }
     .top-bar .logo span { color: #7c6ff0; }
-    .top-bar .right { display: flex; align-items: center; gap: 16px; }
-    .top-bar .right a { color: #8888aa; text-decoration: none; font-size: 13px; }
+    .top-bar .right { display: flex; align-items: center; gap: 20px; }
+    .top-bar .right a { color: #8888cc; text-decoration: none; font-size: 13px; font-weight: 500; transition: color 0.15s; }
     .top-bar .right a:hover { color: #fff; }
+    .top-bar .right .user-badge {
+      display: flex; align-items: center; gap: 8px;
+      padding: 4px 10px 4px 4px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 20px;
+      font-size: 13px; color: #ccc;
+    }
+    .top-bar .right .user-badge img { width: 22px; height: 22px; border-radius: 50%; }
+    .top-bar .right .role-badge {
+      font-size: 11px; padding: 2px 8px; border-radius: 20px;
+      font-weight: 600;
+    }
+    .top-bar .right .role-badge.top { background: rgba(124, 111, 240, 0.2); color: #7c6ff0; }
+    .top-bar .right .role-badge.mod { background: rgba(255, 255, 255, 0.08); color: #888; }
 
     .guild-header {
-      display: flex; align-items: center; gap: 16px;
-      padding: 24px 36px; background: #16162a; border-bottom: 1px solid #232340;
+      position: relative; z-index: 1;
+      display: flex; align-items: center; gap: 20px;
+      padding: 24px 40px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
     }
     .guild-header .icon {
-      width: 48px; height: 48px; border-radius: 10px; overflow: hidden; flex-shrink: 0;
+      width: 52px; height: 52px; border-radius: 14px; overflow: hidden; flex-shrink: 0;
+      background: rgba(42, 42, 74, 0.6);
     }
-    .guild-header .icon img { width: 48px; height: 48px; border-radius: 10px; }
+    .guild-header .icon img { width: 52px; height: 52px; border-radius: 14px; }
     .guild-header .info { flex: 1; }
-    .guild-header .info h1 { font-size: 20px; color: #fff; }
-    .guild-header .info .meta { font-size: 12px; color: #6666aa; margin-top: 2px; }
-    .guild-header .stats { display: flex; gap: 20px; }
-    .guild-header .stats .stat { text-align: center; }
-    .guild-header .stats .stat .num { font-size: 18px; font-weight: 600; color: #fff; }
-    .guild-header .stats .stat .label { font-size: 11px; color: #6666aa; }
+    .guild-header .info h1 { font-size: 20px; font-weight: 700; color: #fff; letter-spacing: -0.3px; }
+    .guild-header .info .meta { font-size: 12px; color: #5555aa; margin-top: 2px; }
+    .guild-header .stats { display: flex; gap: 16px; }
+    .guild-header .stats .stat { text-align: center; padding: 8px 16px; background: rgba(255,255,255,0.03); border-radius: 10px; }
+    .guild-header .stats .stat .num { font-size: 18px; font-weight: 700; color: #fff; }
+    .guild-header .stats .stat .label { font-size: 11px; color: #5555aa; margin-top: 1px; }
 
     .tabs {
-      display: flex; gap: 0; padding: 0 36px; background: #12121e;
-      border-bottom: 1px solid #232340;
+      position: relative; z-index: 1;
+      display: flex; gap: 0; padding: 0 40px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      overflow-x: auto;
     }
     .tabs a {
-      padding: 12px 20px; color: #8888aa; text-decoration: none;
-      font-size: 13px; border-bottom: 2px solid transparent; transition: all 0.15s;
+      padding: 12px 18px; color: #6666aa; text-decoration: none;
+      font-size: 13px; font-weight: 500; border-bottom: 2px solid transparent;
+      transition: all 0.15s; white-space: nowrap;
     }
-    .tabs a:hover { color: #fff; }
+    .tabs a:hover { color: #ccc; }
     .tabs a.active { color: #7c6ff0; border-bottom-color: #7c6ff0; }
 
-    .tab-content { padding: 24px 36px; }
+    .tab-content { position: relative; z-index: 1; padding: 24px 40px; max-width: 960px; }
     .tab-pane { display: none; }
     .tab-pane.active { display: block; }
 
     .card {
-      background: #16162a; border-radius: 12px; border: 1px solid #232340;
-      padding: 20px; margin-bottom: 16px;
+      background: rgba(22, 22, 42, 0.6);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px; padding: 24px; margin-bottom: 16px;
+      backdrop-filter: blur(10px);
     }
-    .card h2 { font-size: 16px; color: #fff; margin-bottom: 16px; }
+    .card h2 { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 16px; letter-spacing: -0.2px; }
 
     .form-group { margin-bottom: 14px; }
-    .form-group label { display: block; font-size: 12px; color: #8888aa; margin-bottom: 4px; }
-    .form-group select, .form-group textarea, .form-group input {
-      width: 100%; padding: 8px 12px; background: #1e1e3a; border: 1px solid #333;
-      border-radius: 6px; color: #fff; font-size: 13px;
+    .form-group label { display: block; font-size: 12px; font-weight: 500; color: #8888cc; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.3px; }
+    .form-group select, .form-group textarea, .form-group input[type="number"], .form-group input[type="text"] {
+      width: 100%; padding: 10px 14px;
+      background: rgba(12, 12, 24, 0.6);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px; color: #e0e0e0; font-size: 13px;
+      transition: border-color 0.15s;
     }
+    .form-group select:focus, .form-group textarea:focus, .form-group input:focus { outline: none; border-color: rgba(124, 111, 240, 0.5); }
     .form-group textarea { min-height: 60px; resize: vertical; }
-    .form-group .hint { font-size: 11px; color: #555; margin-top: 2px; }
-    .form-group.checkbox { display: flex; align-items: center; gap: 8px; }
-    .form-group.checkbox label { margin: 0; cursor: pointer; }
-    .form-group.checkbox input { width: auto; }
+    .form-group .hint { font-size: 11px; color: #5555aa; margin-top: 3px; }
+    .form-group.checkbox {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px;
+      background: rgba(12, 12, 24, 0.4);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 8px;
+    }
+    .form-group.checkbox label { margin: 0; cursor: pointer; text-transform: none; letter-spacing: 0; font-size: 13px; color: #ccc; }
+    .form-group.checkbox input[type="checkbox"] { width: auto; accent-color: #7c6ff0; }
 
-    .btn { background: #7c6ff0; color: #fff; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; font-size: 13px; }
-    .btn:hover { background: #6a5de0; }
-    .btn-sm { padding: 6px 14px; font-size: 12px; }
+    .btn {
+      background: linear-gradient(135deg, #7c6ff0, #6a5de0);
+      color: #fff; border: none; padding: 10px 24px; border-radius: 8px;
+      cursor: pointer; font-size: 13px; font-weight: 600;
+      transition: all 0.15s; letter-spacing: 0.2px;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(124, 111, 240, 0.3); }
+    .btn-sm { padding: 7px 16px; font-size: 12px; }
 
     .role-grid {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 6px; max-height: 300px; overflow-y: auto;
-      background: #1e1e3a; padding: 10px; border-radius: 8px; margin-bottom: 12px;
+      background: rgba(12, 12, 24, 0.4); padding: 12px; border-radius: 10px; margin-bottom: 12px;
     }
     .role-item {
       display: flex; align-items: center; gap: 8px;
-      padding: 4px 6px; border-radius: 4px; cursor: pointer; font-size: 13px;
+      padding: 6px 8px; border-radius: 6px; cursor: pointer; font-size: 13px;
+      transition: background 0.1s;
     }
-    .role-item:hover { background: #2a2a4a; }
-    .role-item input { width: auto; }
+    .role-item:hover { background: rgba(255,255,255,0.04); }
+    .role-item input { width: auto; accent-color: #7c6ff0; }
 
     .channel-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 6px;
     }
-    .channel-item { background: #1e1e3a; padding: 6px 10px; border-radius: 6px; font-size: 12px; color: #aaa; }
+    .channel-item {
+      background: rgba(12, 12, 24, 0.4); padding: 8px 12px; border-radius: 8px;
+      font-size: 12px; color: #8888aa; border: 1px solid rgba(255,255,255,0.04);
+    }
 
-    .say-form { display: flex; gap: 8px; align-items: flex-start; }
-    .say-form select { flex-shrink: 0; width: 200px; padding: 8px 12px; background: #1e1e3a; border: 1px solid #333; border-radius: 6px; color: #fff; font-size: 13px; }
-    .say-form input { flex: 1; padding: 8px 12px; background: #1e1e3a; border: 1px solid #333; border-radius: 6px; color: #fff; font-size: 13px; }
-
-    .status-msg { font-size: 12px; margin-top: 6px; }
+    .status-msg { font-size: 12px; margin-top: 6px; font-weight: 500; }
     .status-msg.ok { color: #4ade80; }
     .status-msg.err { color: #ef4444; }
   </style>
@@ -105,15 +157,16 @@
     <a href="/dashboard" class="logo">Omni<span>Bot</span></a>
     <div class="right">
       <% if (locals.user) { %>
-        <span style="display:flex;align-items:center;gap:6px;font-size:13px;color:#aaa;">
-          <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png?size=32" style="width:20px;height:20px;border-radius:50%;">
+        <span class="user-badge">
+          <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png?size=32">
           <%= user.global_name || user.username %>
-          <span style="font-size:11px;padding:1px 6px;border-radius:4px;<%= adminLevel === 'top' ? 'background:#7c6ff0;color:#fff' : 'background:#555;color:#ddd' %>"><%= adminLevel === 'top' ? '👑可愛' : '🔨可惡' %></span>
+          <span class="role-badge <%= adminLevel %>"><%= adminLevel === 'top' ? '管理員' : '管理員' %></span>
         </span>
       <% } %>
-      <a href="/logs">📋 日誌</a>
-      <a href="/cmd">⚡ 指令</a>
-      <a href="/logout">登出</a>
+      <a href="/logs">日誌</a>
+      <a href="/cmd">指令</a>
+      <a href="/privacy">隱私</a>
+      <a href="/logout" style="color:#e94560;">登出</a>
     </div>
   </div>
 

@@ -157,6 +157,10 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', uptime: process.uptime(), bot: client.ws.status === 0 ? 'online' : 'offline' });
 });
 
+app.get('/privacy', (req, res) => {
+  res.render('privacy');
+});
+
 app.get('/up', (req, res) => {
   res.send('ok');
 });
