@@ -4,54 +4,123 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>OmniBot 控制臺</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #0f0f1a; color: #e0e0e0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0a0a14;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(ellipse at 30% 20%, rgba(124, 111, 240, 0.06) 0%, transparent 50%),
+                  radial-gradient(ellipse at 70% 80%, rgba(233, 69, 96, 0.04) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
     }
 
     .top-bar {
+      position: relative;
+      z-index: 1;
       display: flex; justify-content: space-between; align-items: center;
-      padding: 20px 36px; border-bottom: 1px solid #232340;
+      padding: 16px 40px;
+      background: rgba(12, 12, 24, 0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
     }
-    .top-bar .logo { font-size: 22px; font-weight: 800; color: #fff; }
+    .top-bar .logo { font-size: 20px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
     .top-bar .logo span { color: #7c6ff0; }
-    .top-bar .right { display: flex; align-items: center; gap: 16px; }
-    .top-bar .right .status { font-size: 12px; color: #666; }
-    .top-bar .right .status .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4px; }
-    .top-bar .right .status .dot.on { background: #4ade80; }
-    .top-bar .right .status .dot.off { background: #ef4444; }
-    .top-bar .right a { color: #7c6ff0; text-decoration: none; font-size: 13px; }
-    .top-bar .right a:hover { text-decoration: underline; }
+    .top-bar .right { display: flex; align-items: center; gap: 20px; }
+    .top-bar .right .status { font-size: 12px; color: #666; display: flex; align-items: center; gap: 4px; }
+    .top-bar .right .status .dot { width: 6px; height: 6px; border-radius: 50%; }
+    .top-bar .right .status .dot.on { background: #4ade80; box-shadow: 0 0 8px rgba(74, 222, 128, 0.4); }
+    .top-bar .right .status .dot.off { background: #ef4444; box-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }
+    .top-bar .right a {
+      color: #8888cc; text-decoration: none; font-size: 13px; font-weight: 500;
+      transition: color 0.15s;
+    }
+    .top-bar .right a:hover { color: #fff; }
+    .top-bar .right .user-badge {
+      display: flex; align-items: center; gap: 8px;
+      padding: 4px 10px 4px 4px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 20px;
+      font-size: 13px; color: #ccc;
+    }
+    .top-bar .right .user-badge img { width: 22px; height: 22px; border-radius: 50%; }
 
     .hero {
-      text-align: center; padding: 60px 20px 40px;
+      position: relative; z-index: 1;
+      text-align: center; padding: 64px 20px 32px;
     }
-    .hero h1 { font-size: 28px; color: #fff; margin-bottom: 8px; }
-    .hero p { color: #8888aa; font-size: 15px; }
+    .hero .icon-bg {
+      width: 72px; height: 72px; margin: 0 auto 16px;
+      background: linear-gradient(135deg, rgba(124, 111, 240, 0.2), rgba(233, 69, 96, 0.1));
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 36px;
+    }
+    .hero h1 { font-size: 26px; font-weight: 700; color: #fff; margin-bottom: 6px; letter-spacing: -0.3px; }
+    .hero p { color: #6666aa; font-size: 14px; font-weight: 400; }
+    .hero p strong { color: #7c6ff0; font-weight: 600; }
+
+    .stats-row {
+      position: relative; z-index: 1;
+      display: flex; gap: 12px; justify-content: center;
+      padding: 0 40px 32px; max-width: 900px; margin: 0 auto;
+    }
+    .stat-card {
+      flex: 1; max-width: 200px;
+      background: rgba(22, 22, 42, 0.6);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 12px; padding: 16px 20px;
+      text-align: center;
+      backdrop-filter: blur(10px);
+    }
+    .stat-card .num { font-size: 24px; font-weight: 700; color: #fff; }
+    .stat-card .label { font-size: 12px; color: #6666aa; margin-top: 2px; }
 
     .server-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 12px; padding: 0 36px 40px; max-width: 1200px; margin: 0 auto;
+      position: relative; z-index: 1;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 10px; padding: 0 40px 40px; max-width: 1200px; margin: 0 auto;
     }
     .server-card {
-      background: #16162a; border-radius: 12px; border: 1px solid #232340;
-      padding: 16px; display: flex; align-items: center; gap: 14px;
-      cursor: pointer; transition: all 0.15s; text-decoration: none;
+      background: rgba(22, 22, 42, 0.6);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 12px; padding: 14px;
+      display: flex; align-items: center; gap: 14px;
+      cursor: pointer; transition: all 0.2s; text-decoration: none;
+      backdrop-filter: blur(10px);
     }
-    .server-card:hover { border-color: #7c6ff0; background: #1a1a34; transform: translateY(-1px); }
+    .server-card:hover {
+      border-color: rgba(124, 111, 240, 0.4);
+      background: rgba(26, 26, 52, 0.8);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
     .server-card .icon {
-      width: 48px; height: 48px; border-radius: 10px; background: #2a2a4a;
-      display: flex; align-items: center; justify-content: center; font-size: 24px;
+      width: 44px; height: 44px; border-radius: 10px; background: rgba(42, 42, 74, 0.6);
+      display: flex; align-items: center; justify-content: center; font-size: 22px;
       flex-shrink: 0; overflow: hidden;
     }
-    .server-card .icon img { width: 48px; height: 48px; border-radius: 10px; }
+    .server-card .icon img { width: 44px; height: 44px; border-radius: 10px; }
     .server-card .info { min-width: 0; flex: 1; }
-    .server-card .info .name { font-size: 15px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .server-card .info .detail { font-size: 12px; color: #6666aa; margin-top: 2px; }
-    .server-card .members { font-size: 12px; color: #555; }
-    .empty-state { text-align: center; padding: 60px 20px; color: #555; }
+    .server-card .info .name { font-size: 14px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .server-card .info .detail { font-size: 11px; color: #5555aa; margin-top: 1px; }
+    .server-card .members {
+      font-size: 12px; color: #5555aa; font-weight: 500;
+      padding: 4px 10px; background: rgba(255,255,255,0.03); border-radius: 8px;
+    }
+    .empty-state { position: relative; z-index: 1; text-align: center; padding: 60px 20px; color: #555; }
   </style>
 </head>
 <body>
@@ -59,30 +128,38 @@
     <div class="logo">Omni<span>Bot</span></div>
     <div class="right">
       <% if (locals.user) { %>
-        <span style="display:flex;align-items:center;gap:6px;font-size:13px;color:#aaa;">
-          <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png?size=32" style="width:20px;height:20px;border-radius:50%;">
+        <span class="user-badge">
+          <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png?size=32">
           <%= user.global_name || user.username %>
         </span>
       <% } %>
       <span class="status">
         <span class="dot <%= online ? 'on' : 'off' %>"></span>
-        <%= online ? '連線中' : '離線' %> · <%= ping %>ms
+        <%= online ? '連線中' : '離線' %>
       </span>
-      <a href="/logs">📋 日誌</a>
-      <a href="/cmd">⚡ 指令</a>
-      <a href="/logout">登出</a>
+      <a href="/logs">日誌</a>
+      <a href="/cmd">指令</a>
+      <a href="/logout" style="color:#e94560;">登出</a>
     </div>
   </div>
 
   <div class="hero">
-    <h1>選擇一個伺服器開始</h1>
-    <p>OmniBot 正在 <%= guilds.length %> 個伺服器中服務 <%= totalUsers %> 位成員</p>
+    <div class="icon-bg">🤖</div>
+    <h1>選擇一個伺服器</h1>
+    <p>OmniBot 正在 <strong><%= guilds.length %></strong> 個伺服器中服務 <strong><%= totalUsers.toLocaleString() %></strong> 位成員</p>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="num"><%= guilds.length %></div><div class="label">伺服器</div></div>
+    <div class="stat-card"><div class="num"><%= totalUsers.toLocaleString() %></div><div class="label">成員</div></div>
+    <div class="stat-card"><div class="num"><%= ping %>ms</div><div class="label">延遲</div></div>
   </div>
 
   <% if (guilds.length === 0) { %>
     <div class="empty-state">
+      <p style="font-size:20px;margin-bottom:8px;">📡</p>
       <p>尚未加入任何伺服器</p>
-      <p style="font-size:13px;margin-top:8px;">請先將 Bot 邀請到你的伺服器</p>
+      <p style="font-size:13px;margin-top:8px;color:#5555aa;">請先將 Bot 邀請到你的伺服器</p>
     </div>
   <% } else { %>
     <div class="server-grid">
@@ -91,7 +168,7 @@
           <div class="icon"><%- g.icon %></div>
           <div class="info">
             <div class="name"><%= g.name %></div>
-            <div class="detail">ID: <%= g.id %></div>
+            <div class="detail"><%= g.id %></div>
           </div>
           <div class="members"><%= g.memberCount %></div>
         </a>
