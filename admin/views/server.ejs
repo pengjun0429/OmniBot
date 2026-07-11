@@ -281,6 +281,15 @@
               <% }); %>
             </select>
           </div>
+          <div class="form-group">
+            <label>包房分類（選填，不選則跟創建頻道同一類別）</label>
+            <select name="categoryId">
+              <option value="">不指定</option>
+              <% guild.categories.forEach(c => { %>
+                <option value="<%= c.id %>" <%= guild.autoVoice.categoryId === c.id ? 'selected' : '' %>>📁 <%= c.name %></option>
+              <% }); %>
+            </select>
+          </div>
           <button type="submit" class="btn">儲存設定</button>
         </form>
       </div>

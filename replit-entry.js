@@ -196,6 +196,7 @@ app.get('/server/:id', requireAuth, async (req, res) => {
     await guild.channels.fetch().catch(() => {});
     const channels = guild.channels.cache.filter(c => c.type === 0).map(c => ({ id: c.id, name: c.name }));
     const voiceChannels = guild.channels.cache.filter(c => c.type === 2).map(c => ({ id: c.id, name: c.name }));
+    const categories = guild.channels.cache.filter(c => c.type === 4).map(c => ({ id: c.id, name: c.name }));
     const roles = guild.roles.cache
       .filter(r => r.id !== guild.id && r.name !== '@everyone' && r.position < guild.members.me.roles.highest.position)
       .map(r => ({ id: r.id, name: r.name, color: r.hexColor }))
@@ -212,6 +213,7 @@ app.get('/server/:id', requireAuth, async (req, res) => {
         ownerTag: owner?.user?.tag || '未知',
         channels,
         voiceChannels,
+        categories,
         roles,
         selfRoles: gs.selfRoles || [],
         autoVoice: gs.autoVoice || { channelId: '' },
@@ -274,7 +276,7 @@ app.post('/api/settings/:guildId/roles', requireAuth, requireTopAdmin, (req, res
 
 app.post('/api/settings/:guildId/autovoice', requireAuth, requireTopAdmin, (req, res) => {
   const gs = settings.getGuildSettings(req.params.guildId);
-  gs.autoVoice = { channelId: req.body.channelId || '' };
+  gs.autoVoice = { channelId: req.body.channelId || '', categoryId: req.body.categoryId || '' };
   settings.updateGuildSettings(req.params.guildId, gs);
   res.redirect(`/server/${req.params.guildId}`);
 });

@@ -22,7 +22,7 @@ module.exports = {
     if (newState.channelId === creationId) {
       try {
         const creationChannel = newState.channel;
-        const parentId = creationChannel.parentId;
+        const parentId = gs.autoVoice.categoryId || creationChannel.parentId;
         const everyoneRole = guild.roles.everyone;
 
         const tempChannel = await guild.channels.create({
