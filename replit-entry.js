@@ -114,8 +114,9 @@ app.get('/auth/discord/callback', async (req, res) => {
 
       const memberRoleIds = member.roles.cache.map(r => r.id);
       const gs = settings.getGuildSettings(guildId);
+      const blockedUsers = Array.isArray(gs.blockedUsers) ? gs.blockedUsers : [];
 
-      if (gs.blockedUsers?.includes(discordUser.id) && member.id !== guild.ownerId) {
+      if (blockedUsers.includes(discordUser.id) && member.id !== guild.ownerId) {
         continue;
       }
 
