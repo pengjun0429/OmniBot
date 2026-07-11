@@ -211,6 +211,7 @@ app.get('/server/:id', requireAuth, async (req, res) => {
         selfRoles: gs.selfRoles || [],
         autoVoice: gs.autoVoice || { channelId: '' },
         ticket: gs.ticket || { categoryId: '', roleIds: [], channelId: '' },
+        roleGive: gs.roleGive || { channelId: '' },
         welcome: gs.welcome || { enabled: false, channelId: '', message: '' },
         farewell: gs.farewell || { enabled: false, channelId: '', message: '' },
       },
@@ -315,6 +316,13 @@ app.post('/api/settings/:guildId/ticket', requireAuth, requireTopAdmin, (req, re
   const gs = settings.getGuildSettings(req.params.guildId);
   const roleIds = Array.isArray(req.body.roleIds) ? req.body.roleIds : (req.body.roleIds ? [req.body.roleIds] : []);
   gs.ticket = { categoryId: req.body.categoryId || '', roleIds, channelId: '' };
+  settings.updateGuildSettings(req.params.guildId, gs);
+  res.redirect(`/server/${req.params.guildId}`);
+});
+
+app.post('/api/settings/:guildId/rolegive', requireAuth, requireTopAdmin, (req, res) => {
+  const gs = settings.getGuildSettings(req.params.guildId);
+  gs.roleGive = { channelId: req.body.channelId || '' };
   settings.updateGuildSettings(req.params.guildId, gs);
   res.redirect(`/server/${req.params.guildId}`);
 });

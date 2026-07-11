@@ -22,6 +22,7 @@ function getDefaults() {
     autoVoice: { channelId: '' },
     ticket: { categoryId: '', roleIds: [], channelId: '' },
     autoMod: { enabled: false, words: [], blockLinks: false, logChannelId: '' },
+    roleGive: { channelId: '' },
     customCommands: {},
   };
 }

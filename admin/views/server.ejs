@@ -138,6 +138,7 @@
       <a href="#" onclick="switchTab('roles', event)">🎭 身分組</a>
       <a href="#" onclick="switchTab('voice', event)">🔊 語音包房</a>
       <a href="#" onclick="switchTab('ticket', event)">🎫 工單</a>
+      <a href="#" onclick="switchTab('rolegive', event)">🎁 公開派發</a>
     <% } %>
     <a href="#" onclick="switchTab('announce', event)">📢 公告</a>
   </div>
@@ -335,6 +336,27 @@
           </form>
           <div id="ticketPanelStatus" class="status-msg" style="margin-top:8px;font-size:13px;"></div>
         </div>
+      </div>
+    </div>
+
+    <div class="tab-pane" id="tab-rolegive">
+      <div class="card">
+        <h2>🎁 公開派發公告</h2>
+        <p style="font-size:13px;color:#888;margin-bottom:12px;">
+          使用 <code>/give @成員 @身分組</code> 派發身分組時，選擇一個頻道自動公告。
+        </p>
+        <form method="POST" action="/api/settings/<%= guild.id %>/rolegive">
+          <div class="form-group">
+            <label>公告頻道（不選則只私訊不公告）</label>
+            <select name="channelId">
+              <option value="">不公告</option>
+              <% guild.channels.forEach(c => { %>
+                <option value="<%= c.id %>" <%= guild.roleGive.channelId === c.id ? 'selected' : '' %>>#<%= c.name %></option>
+              <% }); %>
+            </select>
+          </div>
+          <button type="submit" class="btn">儲存設定</button>
+        </form>
       </div>
     </div>
   </div>
