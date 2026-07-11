@@ -369,8 +369,10 @@ app.post('/api/settings/:guildId/rolegive', requireAuth, requireTopAdmin, (req, 
 app.post('/api/settings/:guildId/messagelog', requireAuth, requireTopAdmin, (req, res) => {
   const gs = settings.getGuildSettings(req.params.guildId);
   gs.messageLog = { channelId: req.body.channelId || '' };
+  if (!gs.blockedUsers) gs.blockedUsers = [];
+  if (!gs.adminRoles) gs.adminRoles = { topIds: [], modIds: [] };
   settings.updateGuildSettings(req.params.guildId, gs);
-  res.redirect(`/server/${req.params.guildId}#messagelog`);
+  res.redirect(`/server/${req.params.guildId}#${req.body._tab || 'messagelog'}`);
 });
 
 app.post('/api/server/:id/send-ticket-panel', requireAuth, requireTopAdmin, async (req, res) => {

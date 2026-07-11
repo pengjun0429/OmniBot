@@ -476,6 +476,7 @@
           設定一個頻道，Bot 會自動記錄成員的訊息編輯和刪除。
         </p>
         <form method="POST" action="/api/settings/<%= guild.id %>/messagelog">
+          <input type="hidden" name="_tab" value="messagelog">
           <div class="form-group">
             <label>記錄頻道</label>
             <select name="channelId">
