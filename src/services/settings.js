@@ -95,13 +95,18 @@ function updateGuildSettings(guildId, settings) {
 }
 
 async function init() {
-  if (process.env.GOOGLE_DB_URL) {
-    googleDb.setUrl(process.env.GOOGLE_DB_URL);
+  const url = process.env.GOOGLE_DB_URL;
+  logger.info(`[GSheet] GOOGLE_DB_URL = ${url ? '已設定' : '未設定'}`);
+  if (url) {
+    googleDb.setUrl(url);
+    logger.info('[GSheet] 正在連線 Google Sheets...');
     const ok = await googleDb.health();
+    logger.info(`[GSheet] 連線結果: ${ok ? '成功' : '失敗'}`);
     if (ok) {
       useGoogle = true;
-      logger.info('Google Sheets 資料庫連線成功');
-      await loadFromGoogle();
+      logger.info('[GSheet] 正在從 Google Sheets 載入設定...');
+      const loaded = await loadFromGoogle();
+      logger.info(`[GSheet] 載入結果: ${loaded ? '成功' : '無資料，使用本地 JSON'}`);
       startSync();
     } else {
       logger.warn('Google Sheets 連線失敗，使用本地 JSON');
