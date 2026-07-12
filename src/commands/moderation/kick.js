@@ -22,6 +22,10 @@ module.exports = {
       return interaction.reply({ content: '無法踢出該成員（權限不足）', ephemeral: true });
     }
 
+    try {
+      await target.send(`你已被伺服器 **${interaction.guild.name}** 踢出\n原因: ${reason}\n\n📋 申訴：https://omnibot-yzti.onrender.com/appeal`);
+    } catch {}
+
     await target.kick(reason);
 
     const embed = new EmbedBuilder()

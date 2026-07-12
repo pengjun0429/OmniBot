@@ -23,7 +23,7 @@ module.exports = {
     }
 
     try {
-      await target.send(`你已在伺服器 **${interaction.guild.name}** 被封鎖\n原因: ${reason}`);
+      await target.send(`你已在伺服器 **${interaction.guild.name}** 被封鎖\n原因: ${reason}\n\n📋 申訴：https://omnibot-yzti.onrender.com/appeal`);
     } catch {
       // 私訊失敗不影響封鎖
     }
