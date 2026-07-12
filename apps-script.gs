@@ -26,9 +26,13 @@ function doGet(e) {
       const data = sheet.getDataRange().getValues();
       const rows = [];
       for (let i = 0; i < data.length; i++) {
-        rows.push({ row: i, col0: data[i][0]?.slice(0,20), col1: data[i][1]?.slice(0,50), col1Len: data[i][1]?.length });
+        rows.push({ row: i, col0: data[i][0]?.slice(0,20), col1: data[i][1]?.slice(0,80), col1Len: data[i][1]?.length });
       }
-      return json({ sheetName: DB_SHEET, totalRows: data.length, rows });
+      let parseOk = false, parseErr = '';
+      if (data.length > 1 && data[1][1]) {
+        try { JSON.parse(data[1][1]); parseOk = true; } catch (e) { parseErr = e.message; }
+      }
+      return json({ sheetName: DB_SHEET, totalRows: data.length, rows, parseOk, parseErr });
     }
 
     if (action === 'getLog') {
@@ -98,7 +102,11 @@ function getAllProps() {
   const result = {};
   for (let i = 1; i < data.length; i++) {
     if (data[i][0]) {
-      try { result[String(data[i][0])] = JSON.parse(data[i][1] || '{}'); } catch {}
+      try {
+        result[String(data[i][0])] = JSON.parse(data[i][1] || '{}');
+      } catch (e) {
+        console.error(`Row ${i} JSON parse error: ${e.message}, len=${(data[i][1]||'').length}`);
+      }
     }
   }
   return result;
