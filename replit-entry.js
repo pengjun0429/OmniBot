@@ -356,8 +356,18 @@ app.post('/api/settings/:guildId/automod', requireAuth, requireTopAdmin, (req, r
     strikeResetHours: parseInt(req.body.strikeResetHours, 10) || 24,
     userStrikes: gs.autoMod?.userStrikes || {},
   };
-  if (req.body.strike_2) gs.autoMod.strikes['2'] = req.body.strike_2;
-  if (req.body.strike_3) gs.autoMod.strikes['3'] = req.body.strike_3;
+  if (req.body.strikeResetHours) {
+    gs.autoMod.strikeResetHours = parseInt(req.body.strikeResetHours, 10) || 24;
+  }
+  for (let i = 2; i <= 5; i++) {
+    const action = req.body[`strike_action_${i}`];
+    const dur = parseInt(req.body[`strike_duration_${i}`], 10) || 10;
+    if (action) {
+      gs.autoMod.strikes[i] = { action, duration: dur };
+    } else {
+      delete gs.autoMod.strikes[i];
+    }
+  }
   settings.updateGuildSettings(req.params.guildId, gs);
   res.redirect(`/server/${req.params.guildId}#automod`);
 });

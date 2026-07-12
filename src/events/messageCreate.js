@@ -88,12 +88,18 @@ module.exports = {
 
       const strikeCount = gs.autoMod.userStrikes[uid].count;
       let effectivePunishment = punishment;
+      let effectiveDuration = timeoutMinutes || 10;
 
       if (strikes) {
         const sorted = Object.entries(strikes).sort((a, b) => Number(b[0]) - Number(a[0]));
-        for (const [threshold, action] of sorted) {
+        for (const [threshold, config] of sorted) {
           if (strikeCount >= Number(threshold)) {
-            effectivePunishment = action;
+            if (typeof config === 'object') {
+              effectivePunishment = config.action || 'timeout';
+              effectiveDuration = config.duration || timeoutMinutes || 10;
+            } else {
+              effectivePunishment = config;
+            }
             break;
           }
         }
@@ -102,7 +108,7 @@ module.exports = {
       let punished = false;
 
       if (effectivePunishment === 'timeout' || effectivePunishment === 'warn') {
-        await message.member.timeout((timeoutMinutes || 10) * 60 * 1000, `自動審核(${strikeCount}次)：${reason}`).catch(err => logger.error(`自動審核 timeout 失敗:`, err.message));
+        await message.member.timeout(effectiveDuration * 60 * 1000, `自動審核(${strikeCount}次)：${reason}`).catch(err => logger.error(`自動審核 timeout 失敗:`, err.message));
         punished = true;
       } else if (effectivePunishment === 'kick') {
         await message.member.kick(`自動審核(${strikeCount}次)：${reason}`).catch(err => logger.error(`自動審核 kick 失敗:`, err.message));
@@ -113,7 +119,7 @@ module.exports = {
       if (logChannelId && shouldLog) {
         const logChannel = message.guild.channels.cache.get(logChannelId);
         if (logChannel) {
-          const punishText = punished ? `\n懲罰(${strikeCount}犯)：${effectivePunishment === 'timeout' ? `禁言 ${timeoutMinutes} 分鐘` : effectivePunishment}` : '';
+          const punishText = punished ? `\n懲罰(${strikeCount}犯)：${effectivePunishment === 'timeout' ? `禁言 ${effectiveDuration} 分鐘` : effectivePunishment}` : '';
           logChannel.send(`🛡️ ${message.author} ${reason}\n內容：${censored.slice(0, 200)}${punishText}`);
         }
       }

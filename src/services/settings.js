@@ -23,7 +23,7 @@ function getDefaults() {
     selfRoles: [],
     autoVoice: { channelId: '' },
     ticket: { categoryId: '', roleIds: [], channelId: '' },
-    autoMod: { enabled: false, words: [], blockLinks: false, logChannelId: '', punishment: 'delete', timeoutMinutes: 10, logLevel: 'all', strikes: { 2: 'timeout', 3: 'kick' }, strikeResetHours: 24, userStrikes: {} },
+    autoMod: { enabled: false, words: [], blockLinks: false, logChannelId: '', punishment: 'delete', timeoutMinutes: 10, logLevel: 'all', strikes: {}, strikeResetHours: 24, userStrikes: {} },
     roleGive: { channelId: '' },
     messageLog: { channelId: '' },
     messageLogAll: { enabled: false },
@@ -49,10 +49,26 @@ async function loadFromGoogle() {
       return true;
     }
     logger.warn('[GSheet] Google Sheets 中無設定資料');
+    await syncToGoogle();
   } catch (err) {
     logger.error('[GSheet] loadFromGoogle 失敗:', err.message);
   }
   return false;
+}
+
+async function syncToGoogle() {
+  try {
+    load();
+    if (!cache || Object.keys(cache).length === 0) return;
+    let count = 0;
+    for (const [gid, data] of Object.entries(cache)) {
+      await googleDb.set(gid, data);
+      count++;
+    }
+    logger.info(`[GSheet] 已將 ${count} 個伺服器設定上傳到 Google Sheets`);
+  } catch (err) {
+    logger.error('[GSheet] syncToGoogle 失敗:', err.message);
+  }
 }
 
 function load() {
