@@ -66,7 +66,7 @@ module.exports = {
 
     if (gs.antiRaid?.enabled) {
       const raidTracker = require('../services/raid-tracker');
-      const count = raidTracker.trackMessage(message.guild.id, message.author.id);
+      raidTracker.trackMessage(message.guild.id, message.author.id);
       const window = (gs.antiRaid.spamWindow || 5) * 1000;
       const threshold = gs.antiRaid.spamThreshold || 5;
       const recent = raidTracker.getSpamCount(message.guild.id, message.author.id, window);

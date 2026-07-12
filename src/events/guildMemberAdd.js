@@ -1,4 +1,4 @@
-const { EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 const settings = require('../services/settings');
 const config = require('../config');
 const logger = require('../utils/logger');
@@ -9,7 +9,7 @@ module.exports = {
     const gs = settings.getGuildSettings(member.guild.id);
 
     if (gs.antiRaid?.enabled) {
-      const count = raidTracker.trackJoin(member.guild.id);
+      raidTracker.trackJoin(member.guild.id);
       const window = (gs.antiRaid.joinWindow || 10) * 1000;
       const threshold = gs.antiRaid.joinThreshold || 5;
       const recent = raidTracker.getJoinCount(member.guild.id, window);
