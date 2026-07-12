@@ -284,7 +284,6 @@ app.get('/server/:id', requireAuth, async (req, res) => {
         roleGive: gs.roleGive || { channelId: '' },
         messageLog: gs.messageLog || { channelId: '' },
         messageLogAll: gs.messageLogAll || { enabled: false },
-        verify: gs.verify || { roleId: '', channelId: '' },
         inviteGuard: gs.inviteGuard || { enabled: false, whitelist: [], logChannelId: '' },
         welcome: gs.welcome || { enabled: false, channelId: '', message: '' },
         farewell: gs.farewell || { enabled: false, channelId: '', message: '' },
@@ -450,13 +449,6 @@ app.post('/api/settings/:guildId/messagelog', requireAuth, requireTopAdmin, (req
   if (!gs.adminRoles) gs.adminRoles = { topIds: [], modIds: [] };
   settings.updateGuildSettings(req.params.guildId, gs);
   res.redirect(`/server/${req.params.guildId}#${req.body._tab || 'messagelog'}`);
-});
-
-app.post('/api/settings/:guildId/verify', requireAuth, requireTopAdmin, (req, res) => {
-  const gs = settings.getGuildSettings(req.params.guildId);
-  gs.verify = { roleId: req.body.roleId || '', channelId: req.body.channelId || '' };
-  settings.updateGuildSettings(req.params.guildId, gs);
-  res.redirect(`/server/${req.params.guildId}#verify`);
 });
 
 app.post('/api/settings/:guildId/inviteguard', requireAuth, requireTopAdmin, (req, res) => {

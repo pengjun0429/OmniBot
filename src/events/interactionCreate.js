@@ -11,10 +11,6 @@ module.exports = {
       return handleTicketCreate(interaction);
     }
 
-    if (interaction.isButton() && interaction.customId === 'verify_click') {
-      return handleVerify(interaction);
-    }
-
     if (!interaction.isChatInputCommand()) return;
 
     const command = interaction.client.commands.get(interaction.commandName);
@@ -63,24 +59,6 @@ module.exports = {
     }
   },
 };
-
-async function handleVerify(interaction) {
-  try {
-    const gs = settings.getGuildSettings(interaction.guild.id);
-    const roleId = gs.verify?.roleId;
-    if (!roleId) return interaction.reply({ content: '❌ 驗證身分組未設定', ephemeral: true });
-    const role = interaction.guild.roles.cache.get(roleId);
-    if (!role) return interaction.reply({ content: '❌ 驗證身分組已不存在', ephemeral: true });
-    if (interaction.member.roles.cache.has(roleId)) {
-      return interaction.reply({ content: '✅ 你已經驗證過了！', ephemeral: true });
-    }
-    await interaction.member.roles.add(role);
-    await interaction.reply({ content: `✅ 驗證成功！已獲得 ${role.name}`, ephemeral: true });
-  } catch (err) {
-    logger.error('驗證失敗:', err);
-    await interaction.reply({ content: '❌ 驗證失敗，請通知管理員', ephemeral: true });
-  }
-}
 
 async function handleTicketCreate(interaction) {
   try {
