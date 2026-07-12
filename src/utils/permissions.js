@@ -6,7 +6,8 @@ function isTopAdmin(member) {
 }
 
 function isModerator(member) {
-  return member.permissions.has(PermissionFlagsBits.ModerateMembers) ||
+  return member.permissions.has(PermissionFlagsBits.Administrator) ||
+         member.permissions.has(PermissionFlagsBits.ModerateMembers) ||
          member.permissions.has(PermissionFlagsBits.KickMembers);
 }
 
