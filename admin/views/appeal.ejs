@@ -12,31 +12,49 @@
     p { font-size:13px;color:#8888aa;margin-bottom:20px; }
     .form-group { margin-bottom:14px; }
     label { display:block;font-size:12px;font-weight:500;color:#8888cc;margin-bottom:5px; }
-    input,textarea,select { width:100%;padding:10px 14px;background:rgba(12,12,24,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:#e0e0e0;font-size:13px; }
-    textarea { min-height:80px;resize:vertical; }
+    input,textarea { width:100%;padding:10px 14px;background:rgba(12,12,24,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:#e0e0e0;font-size:13px; }
+    textarea { min-height:100px;resize:vertical; }
     .btn { background:linear-gradient(135deg,#7c6ff0,#6a5de0);color:#fff;border:none;padding:10px 24px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;width:100%; }
     .btn:hover { transform:translateY(-1px);box-shadow:0 4px 16px rgba(124,111,240,0.3); }
+    .btn-discord { background:#5865F2; margin-bottom:16px; text-align:center; text-decoration:none; display:block; }
+    .btn-discord:hover { background:#4752C4; }
     .status { font-size:13px;margin-top:12px;text-align:center; }
     .status.ok { color:#4ade80; }
     .status.err { color:#ef4444; }
     .back { display:block;text-align:center;margin-top:16px;font-size:12px;color:#5555aa;text-decoration:none; }
     .back:hover { color:#8888cc; }
+    .user-info { display:flex;align-items:center;gap:10px;padding:12px;background:rgba(12,12,24,0.4);border-radius:8px;margin-bottom:16px; }
+    .user-info img { width:36px;height:36px;border-radius:50%; }
+    .user-info span { font-size:14px;color:#fff;font-weight:600; }
+    .user-info small { font-size:12px;color:#8888aa; }
   </style>
 </head>
 <body>
   <div class="card">
     <h1>📋 封禁申訴</h1>
-    <p>如果你被伺服器封鎖，請填寫此表單，管理員會審核你的申訴。</p>
-    <form id="appealForm">
-      <div class="form-group"><label>你的 Discord 使用者名稱</label><input type="text" id="username" placeholder="例如：使用者#1234" required></div>
-      <div class="form-group"><label>你的 Discord ID（選填）</label><input type="text" id="userId" placeholder="可右鍵你的頭像複製"></div>
-      <div class="form-group"><label>被封鎖的伺服器</label><input type="text" id="serverName" placeholder="伺服器名稱" required></div>
-      <div class="form-group"><label>申訴原因</label><textarea id="reason" placeholder="請說明為什麼要解除封鎖..." required></textarea></div>
-      <button type="submit" class="btn">📨 送出申訴</button>
-    </form>
+    <% if (locals.error) { %>
+      <p style="color:#ef4444;"><%= error %></p>
+    <% } else if (!user) { %>
+      <p>請先透過 Discord 登入以驗證身份，才能提交申訴。</p>
+      <a href="/appeal/login" class="btn btn-discord"> Discord 登入</a>
+    <% } else { %>
+      <div class="user-info">
+        <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png?size=64" alt="">
+        <div>
+          <span><%= user.global_name || user.username %></span>
+          <small><%= user.username %> · ID: <%= user.id %></small>
+        </div>
+      </div>
+      <p>身份已驗證，請填寫申訴表單，管理員會審核你的申訴。</p>
+      <form id="appealForm">
+        <div class="form-group"><label>申訴原因</label><textarea id="reason" placeholder="請說明為什麼要解除封鎖..." required></textarea></div>
+        <button type="submit" class="btn">📨 送出申訴</button>
+      </form>
+    <% } %>
     <div id="status" class="status"></div>
     <a href="/" class="back">← 回到首頁</a>
   </div>
+  <% if (locals.user) { %>
   <script>
     document.getElementById('appealForm').addEventListener('submit', async e => {
       e.preventDefault();
@@ -46,12 +64,7 @@
         const res = await fetch('/api/appeal/submit', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            username: document.getElementById('username').value,
-            userId: document.getElementById('userId').value,
-            serverName: document.getElementById('serverName').value,
-            reason: document.getElementById('reason').value,
-          }),
+          body: JSON.stringify({ reason: document.getElementById('reason').value }),
         });
         const data = await res.json();
         if (data.success) {
@@ -68,5 +81,6 @@
       }
     });
   </script>
+  <% } %>
 </body>
 </html>

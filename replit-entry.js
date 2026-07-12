@@ -215,13 +215,57 @@ app.get('/up', (req, res) => {
 });
 
 app.get('/appeal', (req, res) => {
-  res.render('appeal');
+  if (!req.session.appealUser) return res.render('appeal', { user: null });
+  res.render('appeal', { user: req.session.appealUser });
+});
+
+app.get('/appeal/login', (req, res) => {
+  const url = `https://discord.com/api/oauth2/authorize?client_id=${config.discord.clientId}&redirect_uri=${encodeURIComponent(config.discord.redirectUri)}&response_type=code&scope=identify`;
+  res.redirect(url);
+});
+
+app.get('/appeal/callback', async (req, res) => {
+  try {
+    const { code } = req.query;
+    if (!code) return res.redirect('/appeal?error=missing_code');
+
+    const tokenRes = await axios.post('https://discord.com/api/oauth2/token',
+      new URLSearchParams({
+        client_id: config.discord.clientId,
+        client_secret: config.discord.clientSecret,
+        code,
+        grant_type: 'authorization_code',
+        redirect_uri: config.discord.redirectUri,
+        scope: 'identify',
+      }),
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+    );
+
+    const userRes = await axios.get('https://discord.com/api/users/@me', {
+      headers: { Authorization: `Bearer ${tokenRes.data.access_token}` },
+    });
+
+    req.session.appealUser = {
+      id: userRes.data.id,
+      username: userRes.data.username,
+      global_name: userRes.data.global_name,
+      avatar: userRes.data.avatar,
+    };
+
+    res.redirect('/appeal');
+  } catch (err) {
+    logger.error('申訴登入失敗:', err.message);
+    res.redirect('/appeal?error=login_failed');
+  }
 });
 
 app.post('/api/appeal/submit', async (req, res) => {
   try {
-    const { username, userId, serverName, reason } = req.body;
-    if (!username || !serverName || !reason) return res.json({ success: false, error: '請填寫必填欄位' });
+    const { reason } = req.body;
+    const appealUser = req.session.appealUser;
+
+    if (!appealUser) return res.json({ success: false, error: '請先 Discord 登入' });
+    if (!reason) return res.json({ success: false, error: '請填寫申訴原因' });
 
     let sent = false;
     for (const guild of client.guilds.cache.values()) {
@@ -234,10 +278,10 @@ app.post('/api/appeal/submit', async (req, res) => {
       const embed = new EmbedBuilder()
         .setColor(0xf59e0b)
         .setTitle('📋 新的封禁申訴')
+        .setThumbnail(`https://cdn.discordapp.com/avatars/${appealUser.id}/${appealUser.avatar}.png?size=128`)
         .addFields(
-          { name: '使用者', value: username, inline: true },
-          { name: 'ID', value: userId || '未提供', inline: true },
-          { name: '伺服器', value: serverName, inline: true },
+          { name: '使用者', value: `${appealUser.global_name || appealUser.username} (${appealUser.username})`, inline: true },
+          { name: 'ID', value: appealUser.id, inline: true },
           { name: '申訴原因', value: reason },
         )
         .setTimestamp();
