@@ -38,7 +38,6 @@ module.exports = {
       const channel = member.guild.channels.cache.get(channelId);
       if (!channel) return;
 
-      const { EmbedBuilder } = require('discord.js');
       const welcomeChannel = member.guild.channels.cache.find(c => c.name.includes('歡迎') || c.name.includes('welcome'));
       const identityRole = member.guild.roles.cache.find(r => r.name.includes('identity') || r.name.includes('身分'));
       const memberCount = member.guild.memberCount;
