@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const { isTopAdmin } = require('../../utils/permissions');
+const settings = require('../../services/settings');
 
 module.exports = {
   category: '管理',
@@ -7,8 +8,7 @@ module.exports = {
     .setName('forceunmute')
     .setDescription('強制解除禁言（可愛的管管們專用）')
     .addUserOption(option =>
-      option.setName('成員').setDescription('要解除禁言的成員').setRequired(true))
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+      option.setName('成員').setDescription('要解除禁言的成員').setRequired(true)),
   async execute(interaction) {
     const target = interaction.options.getMember('成員');
 
@@ -16,7 +16,8 @@ module.exports = {
       return interaction.reply({ content: '找不到該成員', ephemeral: true });
     }
 
-    if (!isTopAdmin(interaction.member)) {
+    const gs = settings.getGuildSettings(interaction.guild.id);
+    if (!isTopAdmin(interaction.member, gs.adminRoles?.topIds || [])) {
       return interaction.reply({ content: '只有可愛的管管們才能使用此指令', ephemeral: true });
     }
 

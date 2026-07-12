@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const { isModerator, canTarget } = require('../../utils/permissions');
+const settings = require('../../services/settings');
 
 module.exports = {
   category: '管理',
@@ -9,8 +10,7 @@ module.exports = {
     .addUserOption(option =>
       option.setName('成員').setDescription('要警告的成員').setRequired(true))
     .addStringOption(option =>
-      option.setName('原因').setDescription('警告原因').setRequired(false))
-    .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
+      option.setName('原因').setDescription('警告原因').setRequired(false)),
   async execute(interaction) {
     const target = interaction.options.getMember('成員');
     const reason = interaction.options.getString('原因') || '未提供原因';
@@ -19,7 +19,8 @@ module.exports = {
       return interaction.reply({ content: '找不到該成員', ephemeral: true });
     }
 
-    if (!isModerator(interaction.member)) {
+    const gs = settings.getGuildSettings(interaction.guild.id);
+    if (!isModerator(interaction.member, gs.adminRoles?.modIds || [])) {
       return interaction.reply({ content: '你沒有權限執行此操作', ephemeral: true });
     }
 

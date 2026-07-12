@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const { isTopAdmin } = require('../../utils/permissions');
+const settings = require('../../services/settings');
 
 module.exports = {
   category: '管理',
@@ -11,10 +12,10 @@ module.exports = {
         .setDescription('重新載入所有指令'))
     .addSubcommand(sub =>
       sub.setName('ping')
-        .setDescription('查看機器人詳細狀態'))
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+        .setDescription('查看機器人詳細狀態')),
   async execute(interaction) {
-    if (!isTopAdmin(interaction.member)) {
+    const gs = settings.getGuildSettings(interaction.guild.id);
+    if (!isTopAdmin(interaction.member, gs.adminRoles?.topIds || [])) {
       return interaction.reply({ content: '只有可愛的管管們才能使用此指令', ephemeral: true });
     }
 
