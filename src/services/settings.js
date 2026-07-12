@@ -29,6 +29,7 @@ function getDefaults() {
     messageLogAll: { enabled: false },
     inviteGuard: { enabled: false, whitelist: [], logChannelId: '' },
     appeal: { channelId: '' },
+    antiRaid: { enabled: false, joinThreshold: 5, joinWindow: 10, spamThreshold: 5, spamWindow: 5, action: 'kick', logChannelId: '' },
     adminRoles: { topIds: [], modIds: [] },
     blockedUsers: [],
     customCommands: {},

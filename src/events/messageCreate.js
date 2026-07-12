@@ -64,6 +64,22 @@ module.exports = {
       }
     }
 
+    if (gs.antiRaid?.enabled) {
+      const raidTracker = require('../services/raid-tracker');
+      const count = raidTracker.trackMessage(message.guild.id, message.author.id);
+      const window = (gs.antiRaid.spamWindow || 5) * 1000;
+      const threshold = gs.antiRaid.spamThreshold || 5;
+      const recent = raidTracker.getSpamCount(message.guild.id, message.author.id, window);
+      if (recent >= threshold) {
+        try {
+          await message.delete();
+          await message.member.timeout(60000, '防轟炸：短時間大量訊息').catch(() => {});
+          const logCh = gs.antiRaid.logChannelId ? message.guild.channels.cache.get(gs.antiRaid.logChannelId) : null;
+          if (logCh) logCh.send(`🚨 **防轟炸** ${message.author} 短時間發送大量訊息，已禁言 1 分鐘`);
+        } catch {}
+      }
+    }
+
     if (!gs.autoMod || !gs.autoMod.enabled) return;
 
     const { words, blockLinks, logChannelId, punishment, timeoutMinutes, logLevel, strikes, strikeResetHours } = gs.autoMod;

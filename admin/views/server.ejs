@@ -196,6 +196,7 @@
       <a href="#" onclick="switchTab('rolegive', event)">🎁 公開派發</a>
       <a href="#" onclick="switchTab('inviteguard', event)">🔗 連結管理</a>
       <a href="#" onclick="switchTab('appeal', event)">📋 申訴</a>
+      <a href="#" onclick="switchTab('antiraid', event)">🚨 防轟炸</a>
       <a href="#" onclick="switchTab('messagelog', event)">📝 記錄日誌</a>
     <% } %>
     <a href="#" onclick="switchTab('announce', event)">📢 公告</a>
@@ -603,6 +604,59 @@
               <option value="">不啟用</option>
               <% guild.channels.forEach(c => { %>
                 <option value="<%= c.id %>" <%= guild.appeal.channelId === c.id ? 'selected' : '' %>>#<%= c.name %></option>
+              <% }); %>
+            </select>
+          </div>
+          <button type="submit" class="btn">儲存設定</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="tab-pane" id="tab-antiraid">
+      <div class="card">
+        <h2>🚨 防轟炸</h2>
+        <p style="font-size:13px;color:#888;margin-bottom:12px;">
+          偵測短時間大量加入或大量訊息，自動處理可疑活動。
+        </p>
+        <form method="POST" action="/api/settings/<%= guild.id %>/antiraid">
+          <div class="form-group checkbox">
+            <input type="hidden" name="enabled" value="0">
+            <input type="checkbox" name="enabled" value="1" <%= guild.antiRaid.enabled ? 'checked' : '' %>>
+            <label>啟用防轟炸</label>
+          </div>
+          <div style="display:flex;gap:12px;">
+            <div class="form-group" style="flex:1;">
+              <label>大量加入門檻（次數）</label>
+              <input type="number" name="joinThreshold" value="<%= guild.antiRaid.joinThreshold || 5 %>" min="2">
+            </div>
+            <div class="form-group" style="flex:1;">
+              <label>時間範圍（秒）</label>
+              <input type="number" name="joinWindow" value="<%= guild.antiRaid.joinWindow || 10 %>" min="3">
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;">
+            <div class="form-group" style="flex:1;">
+              <label>大量訊息門檻（則數）</label>
+              <input type="number" name="spamThreshold" value="<%= guild.antiRaid.spamThreshold || 5 %>" min="3">
+            </div>
+            <div class="form-group" style="flex:1;">
+              <label>時間範圍（秒）</label>
+              <input type="number" name="spamWindow" value="<%= guild.antiRaid.spamWindow || 5 %>" min="3">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>觸發動作</label>
+            <select name="action">
+              <option value="kick" <%= guild.antiRaid.action === 'kick' ? 'selected' : '' %>>踢出</option>
+              <option value="log" <%= guild.antiRaid.action === 'log' ? 'selected' : '' %>>僅記錄</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>日誌頻道</label>
+            <select name="logChannelId">
+              <option value="">不設定</option>
+              <% guild.channels.forEach(c => { %>
+                <option value="<%= c.id %>" <%= guild.antiRaid.logChannelId === c.id ? 'selected' : '' %>>#<%= c.name %></option>
               <% }); %>
             </select>
           </div>

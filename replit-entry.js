@@ -324,6 +324,7 @@ app.get('/server/:id', requireAuth, async (req, res) => {
         messageLogAll: gs.messageLogAll || { enabled: false },
         inviteGuard: gs.inviteGuard || { enabled: false, whitelist: [], logChannelId: '' },
         appeal: gs.appeal || { channelId: '' },
+        antiRaid: gs.antiRaid || { enabled: false, joinThreshold: 5, joinWindow: 10, spamThreshold: 5, spamWindow: 5, action: 'kick', logChannelId: '' },
         welcome: gs.welcome || { enabled: false, channelId: '', message: '' },
         farewell: gs.farewell || { enabled: false, channelId: '', message: '' },
       },
@@ -503,6 +504,22 @@ app.post('/api/settings/:guildId/appeal', requireAuth, requireTopAdmin, (req, re
   gs.appeal = { channelId: req.body.channelId || '' };
   settings.updateGuildSettings(req.params.guildId, gs);
   res.redirect(`/server/${req.params.guildId}#appeal`);
+});
+
+app.post('/api/settings/:guildId/antiraid', requireAuth, requireTopAdmin, (req, res) => {
+  const gs = settings.getGuildSettings(req.params.guildId);
+  const enabled = req.body.enabled !== undefined ? String(req.body.enabled).includes('1') : gs.antiRaid?.enabled;
+  gs.antiRaid = {
+    enabled,
+    joinThreshold: parseInt(req.body.joinThreshold, 10) || 5,
+    joinWindow: parseInt(req.body.joinWindow, 10) || 10,
+    spamThreshold: parseInt(req.body.spamThreshold, 10) || 5,
+    spamWindow: parseInt(req.body.spamWindow, 10) || 5,
+    action: req.body.action || 'kick',
+    logChannelId: req.body.logChannelId || '',
+  };
+  settings.updateGuildSettings(req.params.guildId, gs);
+  res.redirect(`/server/${req.params.guildId}#antiraid`);
 });
 
 app.post('/api/server/:id/send-ticket-panel', requireAuth, requireTopAdmin, async (req, res) => {
