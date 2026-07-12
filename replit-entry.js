@@ -220,7 +220,8 @@ app.get('/appeal', (req, res) => {
 });
 
 app.get('/appeal/login', (req, res) => {
-  const url = `https://discord.com/api/oauth2/authorize?client_id=${config.discord.clientId}&redirect_uri=${encodeURIComponent(config.discord.redirectUri)}&response_type=code&scope=identify`;
+  const appealRedirectUri = `${req.protocol}://${req.get('host')}/appeal/callback`;
+  const url = `https://discord.com/api/oauth2/authorize?client_id=${config.discord.clientId}&redirect_uri=${encodeURIComponent(appealRedirectUri)}&response_type=code&scope=identify`;
   res.redirect(url);
 });
 
@@ -229,13 +230,15 @@ app.get('/appeal/callback', async (req, res) => {
     const { code } = req.query;
     if (!code) return res.redirect('/appeal?error=missing_code');
 
+    const appealRedirectUri = `${req.protocol}://${req.get('host')}/appeal/callback`;
+
     const tokenRes = await axios.post('https://discord.com/api/oauth2/token',
       new URLSearchParams({
         client_id: config.discord.clientId,
         client_secret: config.discord.clientSecret,
         code,
         grant_type: 'authorization_code',
-        redirect_uri: config.discord.redirectUri,
+        redirect_uri: appealRedirectUri,
         scope: 'identify',
       }),
       { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
