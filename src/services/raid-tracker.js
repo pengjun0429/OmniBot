@@ -2,6 +2,7 @@ const RAID_WINDOW = 60000;
 
 const joins = {};
 const messages = {};
+const lastContents = {};
 
 function clean() {
   const now = Date.now();
@@ -32,6 +33,17 @@ module.exports = {
     if (!messages[guildId][userId]) messages[guildId][userId] = [];
     messages[guildId][userId].push(Date.now());
     return messages[guildId][userId].length;
+  },
+
+  checkDuplicate(guildId, userId, content) {
+    if (!lastContents[guildId]) lastContents[guildId] = {};
+    if (!lastContents[guildId][userId]) lastContents[guildId][userId] = [];
+    const history = lastContents[guildId][userId];
+    history.push({ content, time: Date.now() });
+    if (history.length > 20) history.shift();
+    const recent = history.filter(h => Date.now() - h.time < 10000);
+    const count = recent.filter(h => h.content === content).length;
+    return count;
   },
 
   getJoinCount(guildId, windowMs) {

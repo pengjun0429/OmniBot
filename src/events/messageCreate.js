@@ -66,11 +66,8 @@ module.exports = {
 
     if (gs.antiRaid?.enabled) {
       const raidTracker = require('../services/raid-tracker');
-      raidTracker.trackMessage(message.guild.id, message.author.id);
-      const window = (gs.antiRaid.spamWindow || 5) * 1000;
-      const threshold = gs.antiRaid.spamThreshold || 5;
-      const recent = raidTracker.getSpamCount(message.guild.id, message.author.id, window);
-      if (recent >= threshold) {
+      const dupCount = raidTracker.checkDuplicate(message.guild.id, message.author.id, message.content);
+      if (dupCount >= (gs.antiRaid.spamThreshold || 5)) {
         try {
           const channel = message.channel;
           const fetched = await channel.messages.fetch({ limit: 50 }).catch(() => null);
