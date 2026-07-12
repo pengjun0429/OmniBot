@@ -33,6 +33,7 @@ const PORT = process.env.PORT || 3000;
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'admin/views'));
+app.set('trust proxy', 1);
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
@@ -220,7 +221,7 @@ app.get('/appeal', (req, res) => {
 });
 
 app.get('/appeal/login', (req, res) => {
-  const appealRedirectUri = `${req.protocol}://${req.get('host')}/appeal/callback`;
+  const appealRedirectUri = 'https://omnibot-yzti.onrender.com/appeal/callback';
   const url = `https://discord.com/api/oauth2/authorize?client_id=${config.discord.clientId}&redirect_uri=${encodeURIComponent(appealRedirectUri)}&response_type=code&scope=identify`;
   res.redirect(url);
 });
@@ -230,7 +231,7 @@ app.get('/appeal/callback', async (req, res) => {
     const { code } = req.query;
     if (!code) return res.redirect('/appeal?error=missing_code');
 
-    const appealRedirectUri = `${req.protocol}://${req.get('host')}/appeal/callback`;
+    const appealRedirectUri = 'https://omnibot-yzti.onrender.com/appeal/callback';
 
     const tokenRes = await axios.post('https://discord.com/api/oauth2/token',
       new URLSearchParams({
