@@ -73,9 +73,9 @@ module.exports = {
       if (recent >= threshold) {
         try {
           await message.delete();
-          await message.member.timeout(60000, '防轟炸：短時間大量訊息').catch(() => {});
+          await message.member.timeout((gs.antiRaid.spamTimeout || 1) * 60 * 1000, '防轟炸：短時間大量訊息').catch(() => {});
           const logCh = gs.antiRaid.logChannelId ? message.guild.channels.cache.get(gs.antiRaid.logChannelId) : null;
-          if (logCh) logCh.send(`🚨 **防轟炸** ${message.author} 短時間發送大量訊息，已禁言 1 分鐘`);
+          if (logCh) logCh.send(`🚨 **防轟炸** ${message.author} 短時間發送大量訊息，已禁言 ${gs.antiRaid.spamTimeout || 1} 分鐘`);
         } catch {}
       }
     }

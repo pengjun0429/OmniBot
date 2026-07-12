@@ -18,7 +18,8 @@ module.exports = {
       sub.setName('spam')
         .setDescription('設定大量訊息偵測')
         .addIntegerOption(opt => opt.setName('次數').setDescription('幾則訊息觸發').setRequired(true).setMinValue(3))
-        .addIntegerOption(opt => opt.setName('秒數').setDescription('在幾秒內').setRequired(true).setMinValue(3)))
+        .addIntegerOption(opt => opt.setName('秒數').setDescription('在幾秒內').setRequired(true).setMinValue(3))
+        .addIntegerOption(opt => opt.setName('禁言').setDescription('禁言幾分鐘 (預設1)').setRequired(false).setMinValue(1)))
     .addSubcommand(sub =>
       sub.setName('action')
         .setDescription('設定觸發後的動作')
@@ -52,8 +53,10 @@ module.exports = {
     if (sub === 'spam') {
       gs.antiRaid.spamThreshold = interaction.options.getInteger('次數');
       gs.antiRaid.spamWindow = interaction.options.getInteger('秒數');
+      const timeout = interaction.options.getInteger('禁言');
+      if (timeout) gs.antiRaid.spamTimeout = timeout;
       settings.updateGuildSettings(interaction.guild.id, gs);
-      return interaction.reply({ content: `✅ 大量訊息已設為 ${gs.antiRaid.spamThreshold} 則 / ${gs.antiRaid.spamWindow} 秒`, ephemeral: true });
+      return interaction.reply({ content: `✅ 大量訊息已設為 ${gs.antiRaid.spamThreshold} 則 / ${gs.antiRaid.spamWindow} 秒，禁言 ${gs.antiRaid.spamTimeout} 分鐘`, ephemeral: true });
     }
 
     if (sub === 'action') {
