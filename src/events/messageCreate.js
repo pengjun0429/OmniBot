@@ -72,7 +72,12 @@ module.exports = {
       const recent = raidTracker.getSpamCount(message.guild.id, message.author.id, window);
       if (recent >= threshold) {
         try {
-          await message.delete();
+          const channel = message.channel;
+          const fetched = await channel.messages.fetch({ limit: 50 }).catch(() => null);
+          if (fetched) {
+            const userMsgs = fetched.filter(m => m.author.id === message.author.id && m.deletable);
+            await channel.bulkDelete(userMsgs).catch(() => {});
+          }
           await message.member.timeout((gs.antiRaid.spamTimeout || 1) * 60 * 1000, '防轟炸：短時間大量訊息').catch(() => {});
           const logCh = gs.antiRaid.logChannelId ? message.guild.channels.cache.get(gs.antiRaid.logChannelId) : null;
           if (logCh) logCh.send(`🚨 **防轟炸** ${message.author} 短時間發送大量訊息，已禁言 ${gs.antiRaid.spamTimeout || 1} 分鐘`);
