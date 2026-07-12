@@ -369,7 +369,7 @@ app.get('/settings', requireAuth, async (req, res) => {
 app.post('/api/settings/:guildId', requireAuth, requireTopAdmin, (req, res) => {
   const { type, channelId, message, enabled, _tab } = req.body;
   const gs = settings.getGuildSettings(req.params.guildId);
-  gs[type] = { channelId: channelId || '', message: message || '', enabled: enabled === '1' || enabled === true };
+  gs[type] = { channelId: channelId || '', message: message || '', enabled: enabled === '1' || enabled === true, image: req.body.image || '' };
   settings.updateGuildSettings(req.params.guildId, gs);
   res.redirect(`/server/${req.params.guildId}#${_tab || ''}`);
 });

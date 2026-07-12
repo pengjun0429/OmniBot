@@ -18,7 +18,7 @@ function ensureDir() {
 
 function getDefaults() {
   return {
-    welcome: { enabled: false, channelId: '', message: '' },
+    welcome: { enabled: false, channelId: '', message: '', image: '' },
     farewell: { enabled: false, channelId: '', message: '' },
     selfRoles: [],
     autoVoice: { channelId: '' },

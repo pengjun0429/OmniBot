@@ -38,17 +38,29 @@ module.exports = {
       const channel = member.guild.channels.cache.get(channelId);
       if (!channel) return;
 
-      const msg = (gs?.welcome?.message || `歡迎加入 {server}！`)
+      const { EmbedBuilder } = require('discord.js');
+      const welcomeChannel = member.guild.channels.cache.find(c => c.name.includes('歡迎') || c.name.includes('welcome'));
+      const identityRole = member.guild.roles.cache.find(r => r.name.includes('identity') || r.name.includes('身分'));
+      const memberCount = member.guild.memberCount;
+
+      const msg = (gs?.welcome?.message || `哈囉 {mention}，歡迎來到 {server}！\n👋 目前伺服器總人數：{count}人\n請先去 {channel} | 領取身分組 {role}\n祝你聊天愉快！`)
         .replace(/{mention}/g, `<@${member.id}>`)
         .replace(/{user}/g, member.user.tag)
-        .replace(/{server}/g, member.guild.name);
+        .replace(/{server}/g, member.guild.name)
+        .replace(/{count}/g, memberCount)
+        .replace(/{channel}/g, welcomeChannel ? `<#${welcomeChannel.id}>` : '#歡迎')
+        .replace(/{role}/g, identityRole ? `<@&${identityRole.id}>` : '@身分組');
 
       const embed = new EmbedBuilder()
-        .setColor(0x00ff00)
-        .setTitle(`歡迎 ${member.user.tag}！`)
+        .setColor(0x5865F2)
+        .setTitle('🎉 歡迎加入伺服器')
         .setDescription(msg)
-        .setThumbnail(member.user.displayAvatarURL())
+        .setThumbnail(member.user.displayAvatarURL({ dynamic: true, size: 128 }))
+        .setFooter({ text: member.guild.name, icon_url: member.guild.iconURL() })
         .setTimestamp();
+
+      const imageUrl = gs?.welcome?.image;
+      if (imageUrl) embed.setImage(imageUrl);
 
       await channel.send({ embeds: [embed] });
     } catch (err) {

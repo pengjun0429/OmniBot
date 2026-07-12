@@ -220,12 +220,17 @@
           </div>
           <div class="form-group">
             <label>訊息內容</label>
-            <textarea name="message" placeholder='例如：{mention} 歡迎來到 {server}！'><%= guild.welcome.message %></textarea>
-            <div class="hint"><code>{mention}</code> = @提及 · <code>{user}</code> = 成員名稱 · <code>{server}</code> = 伺服器名稱</div>
+            <textarea name="message" placeholder='哈囉 {mention}，歡迎來到 {server}！\n👋 目前伺服器總人數：{count}人\n請先去 {channel} | 領取身分組 {role}\n祝你聊天愉快！'><%= guild.welcome.message %></textarea>
+            <div class="hint"><code>{mention}</code> = @提及 · <code>{user}</code> = 成員名稱 · <code>{server}</code> = 伺服器名稱 · <code>{count}</code> = 成員數 · <code>{channel}</code> = 頻道連結 · <code>{role}</code> = 身分組連結</div>
           </div>
           <div class="form-group checkbox">
             <input type="checkbox" name="enabled" value="1" <%= guild.welcome.enabled ? 'checked' : '' %>>
             <label>啟用歡迎訊息</label>
+          </div>
+          <div class="form-group">
+            <label>歡迎圖片 URL（選填）</label>
+            <input type="text" name="image" value="<%= guild.welcome.image || '' %>" placeholder="貼上圖片網址" style="width:100%;padding:10px 14px;background:rgba(12,12,24,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:#e0e0e0;font-size:13px;">
+            <div class="hint">貼上圖片網址，歡迎訊息底部會顯示大圖</div>
           </div>
           <button type="submit" class="btn">儲存</button>
         </form>
