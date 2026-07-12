@@ -214,6 +214,44 @@ app.get('/up', (req, res) => {
   res.send('ok');
 });
 
+app.get('/appeal', (req, res) => {
+  res.render('appeal');
+});
+
+app.post('/api/appeal/submit', async (req, res) => {
+  try {
+    const { username, userId, serverName, reason } = req.body;
+    if (!username || !serverName || !reason) return res.json({ success: false, error: '請填寫必填欄位' });
+
+    let sent = false;
+    for (const guild of client.guilds.cache.values()) {
+      const gs = settings.getGuildSettings(guild.id);
+      const chId = gs.appeal?.channelId;
+      if (!chId) continue;
+      const ch = guild.channels.cache.get(chId);
+      if (!ch) continue;
+      const { EmbedBuilder } = require('discord.js');
+      const embed = new EmbedBuilder()
+        .setColor(0xf59e0b)
+        .setTitle('📋 新的封禁申訴')
+        .addFields(
+          { name: '使用者', value: username, inline: true },
+          { name: 'ID', value: userId || '未提供', inline: true },
+          { name: '伺服器', value: serverName, inline: true },
+          { name: '申訴原因', value: reason },
+        )
+        .setTimestamp();
+      await ch.send({ embeds: [embed] });
+      sent = true;
+    }
+    if (!sent) return res.json({ success: false, error: '目前沒有伺服器開啟申訴功能' });
+    res.json({ success: true });
+  } catch (err) {
+    logger.error('申訴送出失敗:', err.message);
+    res.json({ success: false, error: '系統錯誤' });
+  }
+});
+
 app.get('/dashboard', requireAuth, (req, res) => {
   const guilds = client.guilds.cache.map(g => ({
     id: g.id, name: g.name, memberCount: g.memberCount,
@@ -285,6 +323,7 @@ app.get('/server/:id', requireAuth, async (req, res) => {
         messageLog: gs.messageLog || { channelId: '' },
         messageLogAll: gs.messageLogAll || { enabled: false },
         inviteGuard: gs.inviteGuard || { enabled: false, whitelist: [], logChannelId: '' },
+        appeal: gs.appeal || { channelId: '' },
         welcome: gs.welcome || { enabled: false, channelId: '', message: '' },
         farewell: gs.farewell || { enabled: false, channelId: '', message: '' },
       },
@@ -457,6 +496,13 @@ app.post('/api/settings/:guildId/inviteguard', requireAuth, requireTopAdmin, (re
   gs.inviteGuard = { enabled: req.body.enabled === '1', whitelist: words, logChannelId: req.body.logChannelId || '' };
   settings.updateGuildSettings(req.params.guildId, gs);
   res.redirect(`/server/${req.params.guildId}#inviteguard`);
+});
+
+app.post('/api/settings/:guildId/appeal', requireAuth, requireTopAdmin, (req, res) => {
+  const gs = settings.getGuildSettings(req.params.guildId);
+  gs.appeal = { channelId: req.body.channelId || '' };
+  settings.updateGuildSettings(req.params.guildId, gs);
+  res.redirect(`/server/${req.params.guildId}#appeal`);
 });
 
 app.post('/api/server/:id/send-ticket-panel', requireAuth, requireTopAdmin, async (req, res) => {

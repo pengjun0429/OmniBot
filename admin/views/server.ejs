@@ -194,6 +194,7 @@
       <a href="#" onclick="switchTab('automod', event)">🤖 自動審核</a>
       <a href="#" onclick="switchTab('rolegive', event)">🎁 公開派發</a>
       <a href="#" onclick="switchTab('inviteguard', event)">🔗 連結管理</a>
+      <a href="#" onclick="switchTab('appeal', event)">📋 申訴</a>
       <a href="#" onclick="switchTab('messagelog', event)">📝 記錄日誌</a>
     <% } %>
     <a href="#" onclick="switchTab('announce', event)">📢 公告</a>
@@ -579,6 +580,28 @@
               <option value="">不設定</option>
               <% guild.channels.forEach(c => { %>
                 <option value="<%= c.id %>" <%= guild.inviteGuard.logChannelId === c.id ? 'selected' : '' %>>#<%= c.name %></option>
+              <% }); %>
+            </select>
+          </div>
+          <button type="submit" class="btn">儲存設定</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="tab-pane" id="tab-appeal">
+      <div class="card">
+        <h2>📋 封禁申訴</h2>
+        <p style="font-size:13px;color:#888;margin-bottom:12px;">
+          使用者可到 <code>/appeal</code> 填寫申訴表單。<br>
+          選擇一個頻道接收申訴通知。
+        </p>
+        <form method="POST" action="/api/settings/<%= guild.id %>/appeal">
+          <div class="form-group">
+            <label>申訴通知頻道</label>
+            <select name="channelId">
+              <option value="">不啟用</option>
+              <% guild.channels.forEach(c => { %>
+                <option value="<%= c.id %>" <%= guild.appeal.channelId === c.id ? 'selected' : '' %>>#<%= c.name %></option>
               <% }); %>
             </select>
           </div>

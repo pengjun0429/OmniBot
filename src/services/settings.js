@@ -28,6 +28,7 @@ function getDefaults() {
     messageLog: { channelId: '' },
     messageLogAll: { enabled: false },
     inviteGuard: { enabled: false, whitelist: [], logChannelId: '' },
+    appeal: { channelId: '' },
     adminRoles: { topIds: [], modIds: [] },
     blockedUsers: [],
     customCommands: {},
