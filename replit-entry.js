@@ -216,8 +216,8 @@ app.get('/up', (req, res) => {
 });
 
 app.get('/appeal', (req, res) => {
-  if (!req.session.appealUser) return res.render('appeal', { user: null });
-  res.render('appeal', { user: req.session.appealUser });
+  if (!req.session.appealUser) return res.render('appeal', { user: null, error: null, query: req.query });
+  res.render('appeal', { user: req.session.appealUser, error: null, query: {} });
 });
 
 app.get('/appeal/login', (req, res) => {
@@ -229,20 +229,27 @@ app.get('/appeal/login', (req, res) => {
 app.get('/appeal/callback', async (req, res) => {
   try {
     const { code } = req.query;
-    if (!code) return res.redirect('/appeal?error=missing_code');
+    if (!code) return res.redirect('/appeal?error=缺少授權碼');
 
     const appealRedirectUri = 'https://omnibot-yzti.onrender.com/appeal/callback';
 
+    const params = new URLSearchParams({
+      client_id: config.discord.clientId,
+      client_secret: config.discord.clientSecret,
+      code,
+      grant_type: 'authorization_code',
+      redirect_uri: appealRedirectUri,
+      scope: 'identify',
+    });
+
+    logger.info(`[申訴] 交換 token: client_id=${config.discord.clientId}, secret=${config.discord.clientSecret ? '已設定' : '未設定'}`);
+
     const tokenRes = await axios.post('https://discord.com/api/oauth2/token',
-      new URLSearchParams({
-        client_id: config.discord.clientId,
-        client_secret: config.discord.clientSecret,
-        code,
-        grant_type: 'authorization_code',
-        redirect_uri: appealRedirectUri,
-        scope: 'identify',
-      }),
-      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+      params,
+      {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        timeout: 10000,
+      }
     );
 
     const userRes = await axios.get('https://discord.com/api/users/@me', {
@@ -258,7 +265,7 @@ app.get('/appeal/callback', async (req, res) => {
 
     res.redirect('/appeal');
   } catch (err) {
-    logger.error('申訴登入失敗:', err.message);
+    logger.error(`[申訴] 登入失敗: ${err.response?.status} ${JSON.stringify(err.response?.data || err.message)}`);
     res.redirect('/appeal?error=login_failed');
   }
 });
