@@ -1,4 +1,4 @@
-const { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioPlayerStatus, VoiceConnectionStatus } = require('@discordjs/voice');
+const { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioPlayerStatus } = require('@discordjs/voice');
 const play = require('play-dl');
 const { EmbedBuilder } = require('discord.js');
 
@@ -54,7 +54,7 @@ const music = {
     guildQueue.songs.push(song);
 
     if (!guildQueue.playing) {
-      playSong(guildQueue, interaction);
+      playSong(guildQueue);
     }
 
     const embed = new EmbedBuilder()
@@ -140,7 +140,7 @@ const music = {
   },
 };
 
-async function playSong(queue, interaction) {
+async function playSong(queue) {
   queue.playing = true;
 
   if (!queue.connection) {
@@ -176,7 +176,7 @@ async function playSong(queue, interaction) {
   } catch (err) {
     console.error('播放失敗:', err.message);
     queue.songs.shift();
-    if (queue.songs.length > 0) playSong(queue, interaction);
+    if (queue.songs.length > 0) playSong(queue);
     else { queue.playing = false; queue.connection?.destroy(); queues.delete(queue.guildId); }
     return;
   }
@@ -187,7 +187,7 @@ async function playSong(queue, interaction) {
     } else {
       queue.songs.shift();
     }
-    if (queue.songs.length > 0) playSong(queue, interaction);
+    if (queue.songs.length > 0) playSong(queue);
     else {
       queue.playing = false;
       queue.connection?.destroy();

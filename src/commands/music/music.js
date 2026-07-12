@@ -1,8 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js');
 const music = require('../../services/music');
 
-const SUBS = ['skip', 'stop', 'np', 'queue', 'pause', 'resume', 'loop', 'volume'];
-
 module.exports = {
   category: '音樂',
   data: new SlashCommandBuilder()
