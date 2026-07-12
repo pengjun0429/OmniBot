@@ -44,6 +44,26 @@ module.exports = {
       if (!GOOGLE_DB_URL()) logger.info('[GSheet] 未設定 GOOGLE_DB_URL');
     }
 
+    if (gs.inviteGuard?.enabled) {
+      const inviteRegex = /(?:discord\.(?:gg|io|me|plus|com\/invite)\/)([a-zA-Z0-9_-]+)/gi;
+      let match;
+      while ((match = inviteRegex.exec(message.content)) !== null) {
+        const code = match[1];
+        if (!gs.inviteGuard.whitelist?.includes(code)) {
+          try {
+            await message.delete();
+            const warn = await message.channel.send(`${message.author} 不允許張貼邀請連結`).catch(() => {});
+            setTimeout(() => warn?.delete().catch(() => {}), 3000);
+            if (gs.inviteGuard.logChannelId) {
+              const logCh = message.guild.channels.cache.get(gs.inviteGuard.logChannelId);
+              if (logCh) logCh.send(`🚫 ${message.author} 張貼了非白名單邀請：\`${code}\``);
+            }
+          } catch {}
+          break;
+        }
+      }
+    }
+
     if (!gs.autoMod || !gs.autoMod.enabled) return;
 
     const { words, blockLinks, logChannelId, punishment, timeoutMinutes, logLevel, strikes, strikeResetHours } = gs.autoMod;

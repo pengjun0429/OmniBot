@@ -27,6 +27,8 @@ function getDefaults() {
     roleGive: { channelId: '' },
     messageLog: { channelId: '' },
     messageLogAll: { enabled: false },
+    verify: { roleId: '', channelId: '' },
+    inviteGuard: { enabled: false, whitelist: [], logChannelId: '' },
     adminRoles: { topIds: [], modIds: [] },
     blockedUsers: [],
     customCommands: {},

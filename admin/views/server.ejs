@@ -193,6 +193,8 @@
       <a href="#" onclick="switchTab('ticket', event)">🎫 工單</a>
       <a href="#" onclick="switchTab('automod', event)">🤖 自動審核</a>
       <a href="#" onclick="switchTab('rolegive', event)">🎁 公開派發</a>
+      <a href="#" onclick="switchTab('verify', event)">🚪 驗證</a>
+      <a href="#" onclick="switchTab('inviteguard', event)">🔗 連結管理</a>
       <a href="#" onclick="switchTab('messagelog', event)">📝 記錄日誌</a>
     <% } %>
     <a href="#" onclick="switchTab('announce', event)">📢 公告</a>
@@ -548,6 +550,58 @@
               <option value="">不公告</option>
               <% guild.channels.forEach(c => { %>
                 <option value="<%= c.id %>" <%= guild.roleGive.channelId === c.id ? 'selected' : '' %>>#<%= c.name %></option>
+              <% }); %>
+            </select>
+          </div>
+          <button type="submit" class="btn">儲存設定</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="tab-pane" id="tab-verify">
+      <div class="card">
+        <h2>🚪 成員驗證</h2>
+        <p style="font-size:13px;color:#888;margin-bottom:12px;">
+          設定一個身分組，新成員點擊按鈕驗證後自動獲得。<br>
+          使用 <code>/verify setup</code> 在頻道發送驗證面板。
+        </p>
+        <form method="POST" action="/api/settings/<%= guild.id %>/verify">
+          <div class="form-group">
+            <label>驗證身分組</label>
+            <select name="roleId">
+              <option value="">不啟用</option>
+              <% guild.roles.forEach(r => { %>
+                <option value="<%= r.id %>" <%= guild.verify.roleId === r.id ? 'selected' : '' %>><%= r.name %></option>
+              <% }); %>
+            </select>
+          </div>
+          <button type="submit" class="btn">儲存設定</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="tab-pane" id="tab-inviteguard">
+      <div class="card">
+        <h2>🔗 邀請連結管理</h2>
+        <p style="font-size:13px;color:#888;margin-bottom:12px;">
+          啟用後非白名單的 Discord 邀請連結會自動刪除。
+        </p>
+        <form method="POST" action="/api/settings/<%= guild.id %>/inviteguard">
+          <div class="form-group checkbox">
+            <input type="hidden" name="enabled" value="0">
+            <input type="checkbox" name="enabled" value="1" <%= guild.inviteGuard.enabled ? 'checked' : '' %>>
+            <label>啟用邀請過濾</label>
+          </div>
+          <div class="form-group">
+            <label>白名單邀請碼（逗號分隔）</label>
+            <textarea name="whitelist" placeholder="例如：abc123,def456"><%= (guild.inviteGuard.whitelist || []).join(',') %></textarea>
+          </div>
+          <div class="form-group">
+            <label>日誌頻道</label>
+            <select name="logChannelId">
+              <option value="">不設定</option>
+              <% guild.channels.forEach(c => { %>
+                <option value="<%= c.id %>" <%= guild.inviteGuard.logChannelId === c.id ? 'selected' : '' %>>#<%= c.name %></option>
               <% }); %>
             </select>
           </div>
