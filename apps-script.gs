@@ -64,7 +64,7 @@ function doPost(e) {
 function getProp(key) {
   const sheet = getSheet(DB_SHEET);
   const data = sheet.getDataRange().getValues();
-  for (let i = 0; i < data.length; i++) {
+  for (let i = 1; i < data.length; i++) {
     if (String(data[i][0]) === String(key)) return data[i][1] || null;
   }
   return null;
@@ -73,7 +73,7 @@ function getProp(key) {
 function setProp(key, val) {
   const sheet = getSheet(DB_SHEET);
   const data = sheet.getDataRange().getValues();
-  for (let i = 0; i < data.length; i++) {
+  for (let i = 1; i < data.length; i++) {
     if (String(data[i][0]) === String(key)) {
       sheet.getRange(i + 1, 2).setValue(val);
       return;
@@ -86,8 +86,10 @@ function getAllProps() {
   const sheet = getSheet(DB_SHEET);
   const data = sheet.getDataRange().getValues();
   const result = {};
-  for (let i = 0; i < data.length; i++) {
-    if (data[i][0]) result[String(data[i][0])] = JSON.parse(data[i][1] || '{}');
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0]) {
+      try { result[String(data[i][0])] = JSON.parse(data[i][1] || '{}'); } catch {}
+    }
   }
   return result;
 }
