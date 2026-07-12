@@ -15,11 +15,14 @@ const API = {
   },
 
   async set(guildId, settings) {
-    if (!WEB_APP_URL) return false;
+    if (!WEB_APP_URL) { logger.info('[GSheet] set: WEB_APP_URL 未設定'); return false; }
     try {
       await axios.post(WEB_APP_URL, { guildId, settings, action: 'set' }, { timeout: 10000 });
       return true;
-    } catch { return false; }
+    } catch (err) {
+      logger.error(`[GSheet] set(${guildId}) 失敗:`, err.message);
+      return false;
+    }
   },
 
   async getAll() {

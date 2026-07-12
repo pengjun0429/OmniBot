@@ -59,13 +59,16 @@ async function loadFromGoogle() {
 async function syncToGoogle() {
   try {
     load();
-    if (!cache || Object.keys(cache).length === 0) return;
+    const keys = Object.keys(cache || {});
+    logger.info(`[GSheet] syncToGoogle: 本地有 ${keys.length} 個伺服器`);
+    if (keys.length === 0) return;
     let count = 0;
     for (const [gid, data] of Object.entries(cache)) {
-      await googleDb.set(gid, data);
-      count++;
+      const ok = await googleDb.set(gid, data);
+      if (ok) count++;
+      else logger.error(`[GSheet] syncToGoogle: ${gid} 寫入失敗`);
     }
-    logger.info(`[GSheet] 已將 ${count} 個伺服器設定上傳到 Google Sheets`);
+    logger.info(`[GSheet] syncToGoogle 完成: ${count}/${keys.length} 個伺服器已上傳`);
   } catch (err) {
     logger.error('[GSheet] syncToGoogle 失敗:', err.message);
   }
