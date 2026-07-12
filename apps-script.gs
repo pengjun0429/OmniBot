@@ -21,6 +21,16 @@ function doGet(e) {
       return json({ allSettings: all });
     }
 
+    if (action === 'debug') {
+      const sheet = getSheet(DB_SHEET);
+      const data = sheet.getDataRange().getValues();
+      const rows = [];
+      for (let i = 0; i < data.length; i++) {
+        rows.push({ row: i, col0: data[i][0]?.slice(0,20), col1: data[i][1]?.slice(0,50), col1Len: data[i][1]?.length });
+      }
+      return json({ sheetName: DB_SHEET, totalRows: data.length, rows });
+    }
+
     if (action === 'getLog') {
       const rows = getLogRows(e?.parameter?.guild, parseInt(e?.parameter?.limit) || 100);
       return json({ rows });
