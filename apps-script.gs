@@ -103,9 +103,11 @@ function getAllProps() {
   for (let i = 1; i < data.length; i++) {
     if (data[i][0]) {
       try {
-        result[String(data[i][0])] = JSON.parse(data[i][1] || '{}');
+        let raw = data[i][1] || '{}';
+        raw = raw.replace(/\{\s*""\s*\}/g, '{}');
+        result[String(data[i][0])] = JSON.parse(raw);
       } catch (e) {
-        console.error(`Row ${i} JSON parse error: ${e.message}, len=${(data[i][1]||'').length}`);
+        console.error(`Row ${i} JSON parse error: ${e.message}`);
       }
     }
   }
