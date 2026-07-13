@@ -1,3 +1,5 @@
+const logger = require('../utils/logger');
+
 const inviteCache = new Map();
 
 module.exports = {
@@ -9,7 +11,10 @@ module.exports = {
         map.set(invite.code, { code: invite.code, uses: invite.uses || 0, inviter: invite.inviter });
       }
       inviteCache.set(guild.id, map);
-    } catch { /* 無權限 */ }
+      logger.info(`[邀請] ${guild.name}: 已快取 ${map.size} 個邀請`);
+    } catch (err) {
+      logger.warn(`[邀請] ${guild.name}: 無法讀取邀請 (需要管理邀請權限) - ${err.message}`);
+    }
   },
 
   getCache(guildId) {

@@ -3,11 +3,11 @@ const inviteTracker = require('../services/invite-tracker');
 
 module.exports = {
   once: true,
-  execute(client) {
+  async execute(client) {
     logger.info(`已登入為 ${client.user.tag}`);
-    for (const [, guild] of client.guilds.cache) {
-      inviteTracker.refresh(guild).catch(() => {});
-    }
-    logger.info('邀請快取已初始化');
+    const guilds = [...client.guilds.cache.values()];
+    const results = await Promise.allSettled(guilds.map(g => inviteTracker.refresh(g)));
+    const ok = results.filter(r => r.status === 'fulfilled').length;
+    logger.info(`邀請快取已初始化: ${ok}/${guilds.length} 個伺服器成功`);
   },
 };
