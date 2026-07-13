@@ -370,7 +370,9 @@ app.get('/server/:id', requireAuth, async (req, res) => {
     const owner = guild.members.cache.get(guild.ownerId);
 
     res.set('Cache-Control', 'no-store');
+    const userGuilds = client.guilds.cache.map(g => ({ id: g.id, name: g.name, icon: g.icon }));
     res.render('server', {
+      userGuilds,
       adminLevel: req.session.adminLevel || null,
       guild: {
         id: guild.id, name: guild.name, icon: guild.icon || '',
@@ -382,7 +384,7 @@ app.get('/server/:id', requireAuth, async (req, res) => {
         categories,
         roles,
         selfRoles: gs.selfRoles || [],
-        autoVoice: gs.autoVoice || { channelId: '' },
+        autoVoice: gs.autoVoice || { channelId: '', categoryId: '', nameTemplate: '', userLimit: 0, bitrate: 64000, rtcRegion: '', logging: false },
         ticket: gs.ticket || { categoryId: '', roleIds: [], channelId: '' },
         autoMod: gs.autoMod || { enabled: false, words: [], regexWords: [], blockLinks: false, logChannelId: '', punishment: 'delete', timeoutMinutes: 10, logLevel: 'all' },
         roleGive: gs.roleGive || { channelId: '' },
@@ -485,7 +487,15 @@ app.post('/api/settings/:guildId/automod', requireAuth, requireTopAdmin, (req, r
 
 app.post('/api/settings/:guildId/autovoice', requireAuth, requireTopAdmin, (req, res) => {
   const gs = settings.getGuildSettings(req.params.guildId);
-  gs.autoVoice = { channelId: req.body.channelId || '', categoryId: req.body.categoryId || '' };
+  gs.autoVoice = {
+    channelId: req.body.channelId || '',
+    categoryId: req.body.categoryId || '',
+    nameTemplate: req.body.nameTemplate || '',
+    userLimit: parseInt(req.body.userLimit, 10) || 0,
+    bitrate: parseInt(req.body.bitrate, 10) || 64000,
+    rtcRegion: req.body.rtcRegion || '',
+    logging: String(req.body.logging).includes('1'),
+  };
   settings.updateGuildSettings(req.params.guildId, gs);
   res.redirect(`/server/${req.params.guildId}#voice`);
 });

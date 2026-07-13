@@ -22,13 +22,19 @@ module.exports = {
     if (newState.channelId === creationId) {
       try {
         const creationChannel = newState.channel;
-        const parentId = gs.autoVoice.categoryId || creationChannel.parentId;
+        const autoVoice = gs.autoVoice || {};
+        const parentId = autoVoice.categoryId || creationChannel.parentId;
         const everyoneRole = guild.roles.everyone;
 
+        const name = (autoVoice.nameTemplate || '🛋️ {user} 的包房').replace(/{user}/g, member.displayName).replace(/{server}/g, guild.name);
+
         const tempChannel = await guild.channels.create({
-          name: `${TEMP_CHANNEL_PREFIX}${member.displayName} 的包房`,
+          name: name.slice(0, 100),
           type: ChannelType.GuildVoice,
           parent: parentId,
+          userLimit: autoVoice.userLimit || 0,
+          bitrate: Math.min(autoVoice.bitrate || 64000, guild.maximumBitrate),
+          rtcRegion: autoVoice.rtcRegion || null,
           permissionOverwrites: [
             { id: everyoneRole.id, allow: [PermissionFlagsBits.Connect] },
             { id: member.id,

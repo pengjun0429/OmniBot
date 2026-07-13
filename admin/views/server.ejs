@@ -154,7 +154,17 @@
 </head>
 <body>
   <div class="top-bar">
-    <a href="/dashboard" class="logo">Omni<span>Bot</span></a>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <a href="/dashboard" class="logo">Omni<span>Bot</span></a>
+      <div style="position:relative;display:inline-block;">
+        <select onchange="if(this.value)window.location.href='/server/'+this.value" style="padding:6px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:#e0e0e0;font-size:13px;cursor:pointer;max-width:180px;">
+          <option value="" disabled selected style="display:none;"><%= guild.name %></option>
+          <% (userGuilds || []).forEach(g => { %>
+            <option value="<%= g.id %>" <%= g.id === guild.id ? 'selected' : '' %>><%= g.name %></option>
+          <% }); %>
+        </select>
+      </div>
+    </div>
     <div class="right">
       <% if (locals.user) { %>
         <span class="user-badge">
@@ -433,13 +443,27 @@
             </select>
           </div>
           <div class="form-group">
-            <label>包房分類（選填，不選則跟創建頻道同一類別）</label>
+            <label>包房分類</label>
             <select name="categoryId">
               <option value="">不指定</option>
               <% guild.categories.forEach(c => { %>
                 <option value="<%= c.id %>" <%= guild.autoVoice.categoryId === c.id ? 'selected' : '' %>>📁 <%= c.name %></option>
               <% }); %>
             </select>
+          </div>
+          <div class="form-group">
+            <label>預設名稱範本（支援 {user} / {server}）</label>
+            <input type="text" name="nameTemplate" value="<%= guild.autoVoice.nameTemplate || '' %>" placeholder="🛋️ {user} 的包房">
+          </div>
+          <div style="display:flex;gap:12px;">
+            <div class="form-group" style="flex:1;">
+              <label>人數上限（0=不限制）</label>
+              <input type="number" name="userLimit" value="<%= guild.autoVoice.userLimit || 0 %>" min="0" max="99">
+            </div>
+            <div class="form-group" style="flex:1;">
+              <label>位元率 (kbps)</label>
+              <input type="number" name="bitrate" value="<%= guild.autoVoice.bitrate || 64000 %>" min="8000" max="384000" step="1000">
+            </div>
           </div>
           <button type="submit" class="btn">儲存設定</button>
         </form>

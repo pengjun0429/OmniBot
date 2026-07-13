@@ -150,7 +150,23 @@ async function handleRoleToggle(interaction) {
   const has = member.roles.cache.has(roleId);
   try {
     if (has) { await member.roles.remove(role); await interaction.reply({ content: `✅ 已移除 ${role.name}`, ephemeral: true }); }
-    else { await member.roles.add(role); await interaction.reply({ content: `✅ 已為你加入 ${role.name}`, ephemeral: true }); }
+    else {
+      const gs = settings.getGuildSettings(interaction.guild.id);
+      for (const group of (gs.roleGroups || [])) {
+        if (!group.roles?.includes(roleId)) continue;
+        const memberGroupRoles = member.roles.cache.filter(r => group.roles.includes(r.id) && r.id !== roleId);
+        if (group.is_mutually_exclusive && memberGroupRoles.size > 0) {
+          await member.roles.remove(memberGroupRoles.first().id);
+        }
+        if (!group.is_mutually_exclusive && group.max_selectable_limit > 0) {
+          if (memberGroupRoles.size >= group.max_selectable_limit) {
+            return interaction.reply({ content: `❌ 已達此群組領取上限 (${group.max_selectable_limit} 個)`, ephemeral: true });
+          }
+        }
+      }
+      await member.roles.add(role);
+      await interaction.reply({ content: `✅ 已為你加入 ${role.name}`, ephemeral: true });
+    }
   } catch (err) {
     logger.error(`身分組操作失敗 (${role.name}):`, err);
     await interaction.reply({ content: `❌ ${err.code === 50013 ? '機器人缺少權限' : '操作失敗：' + err.message}`, ephemeral: true });
