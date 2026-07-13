@@ -1,3 +1,4 @@
+const { PermissionFlagsBits } = require('discord.js');
 const logger = require('../utils/logger');
 const settings = require('../services/settings');
 
