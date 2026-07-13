@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } = require('discord.js');
 const settings = require('../../services/settings');
+const { isTopAdmin } = require('../../utils/permissions');
 
 module.exports = {
   category: '工單',
@@ -43,7 +44,7 @@ module.exports = {
       }
       const gs = settings.getGuildSettings(interaction.guild.id);
       const ticketRoles = gs.ticket?.roleIds || [];
-      const isAdmin = interaction.member.permissions.has(PermissionFlagsBits.Administrator);
+      const isAdmin = interaction.member.permissions.has(PermissionFlagsBits.Administrator) || isTopAdmin(interaction.member, gs.adminRoles?.topIds || []);
       const hasRole = ticketRoles.length === 0 || interaction.member.roles.cache.some(r => ticketRoles.includes(r.id));
       if (!isAdmin && !hasRole) {
         return interaction.reply({ content: '❌ 只有管理員可以關閉工單', ephemeral: true });
