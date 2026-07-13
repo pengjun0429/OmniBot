@@ -150,13 +150,20 @@ async function playSong(queue) {
       adapterCreator: queue.voiceChannel.guild.voiceAdapterCreator,
     });
     queue.connection.subscribe(queue.player);
+
+    queue.connection.on('stateChange', (oldState, newState) => {
+      if (newState.status === 'disconnected' || newState.status === 'destroyed') {
+        queue.playing = false;
+        queues.delete(queue.guildId);
+      }
+    });
   }
 
   const song = queue.songs[0];
   if (!song) { queue.playing = false; return; }
 
   try {
-    const stream = await play.stream(song.url);
+    const stream = await play.stream(song.url, { quality: 0 });
     const resource = createAudioResource(stream.stream, {
       inputType: stream.type,
       inlineVolume: true,
@@ -165,23 +172,27 @@ async function playSong(queue) {
     queue.player.play(resource);
 
     if (queue.textChannel) {
-      const embeds = [new EmbedBuilder()
+      const embed = new EmbedBuilder()
         .setColor(0x1db954)
         .setTitle('▶️ 正在播放')
         .setDescription(`[${song.title}](${song.url})`)
-        .setFooter({ text: `音量 ${queue.volume}%  •  ${song.duration || '?'}` })
-      ];
-      queue.textChannel.send({ embeds }).catch(() => {});
+        .setFooter({ text: `音量 ${queue.volume}%  •  ${song.duration || '?'}` });
+      queue.textChannel.send({ embeds: [embed] }).catch(() => {});
     }
   } catch (err) {
     console.error('播放失敗:', err.message);
     queue.songs.shift();
     if (queue.songs.length > 0) playSong(queue);
-    else { queue.playing = false; queue.connection?.destroy(); queues.delete(queue.guildId); }
+    else {
+      queue.playing = false;
+      queue.connection?.destroy();
+      queues.delete(queue.guildId);
+      if (queue.textChannel) queue.textChannel.send('❌ 無法播放此歌曲').catch(() => {});
+    }
     return;
   }
 
-  queue.player.once(AudioPlayerStatus.Idle, () => {
+  const idleHandler = () => {
     if (queue.loop) {
       queue.songs.push(queue.songs.shift());
     } else {
@@ -190,11 +201,13 @@ async function playSong(queue) {
     if (queue.songs.length > 0) playSong(queue);
     else {
       queue.playing = false;
-      queue.connection?.destroy();
-      queues.delete(queue.guildId);
+      setTimeout(() => { queue.connection?.destroy(); queues.delete(queue.guildId); }, 60000);
       if (queue.textChannel) queue.textChannel.send('🎵 佇列已播放完畢').catch(() => {});
     }
-  });
+  };
+
+  queue.player.removeAllListeners(AudioPlayerStatus.Idle);
+  queue.player.on(AudioPlayerStatus.Idle, idleHandler);
 }
 
 module.exports = music;
