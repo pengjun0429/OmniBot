@@ -11,6 +11,10 @@ module.exports = {
       return handleTicketCreate(interaction);
     }
 
+    if (interaction.isButton() && interaction.customId === 'ticket_close') {
+      return handleTicketClose(interaction);
+    }
+
     if (!interaction.isChatInputCommand()) return;
 
     const command = interaction.client.commands.get(interaction.commandName);
@@ -60,6 +64,21 @@ module.exports = {
   },
 };
 
+async function handleTicketClose(interaction) {
+  if (!interaction.channel.name.startsWith('ticket-')) {
+    return interaction.reply({ content: '❌ 這不是工單頻道', ephemeral: true });
+  }
+  const gs = settings.getGuildSettings(interaction.guild.id);
+  const ticketRoles = gs.ticket?.roleIds || [];
+  const isAdmin = interaction.member.permissions.has(PermissionFlagsBits.Administrator) || interaction.member.roles.cache.some(r => (gs.adminRoles?.topIds || []).includes(r.id));
+  const hasRole = ticketRoles.length === 0 || interaction.member.roles.cache.some(r => ticketRoles.includes(r.id));
+  if (!isAdmin && !hasRole) {
+    return interaction.reply({ content: '❌ 只有管理員可以關閉工單', ephemeral: true });
+  }
+  await interaction.reply({ content: '🔒 此工單將在 5 秒後關閉...' });
+  setTimeout(() => interaction.channel.delete().catch(() => {}), 5000);
+}
+
 async function handleTicketCreate(interaction) {
   try {
     const gs = settings.getGuildSettings(interaction.guild.id);
@@ -81,14 +100,18 @@ async function handleTicketCreate(interaction) {
       ],
     });
 
-    const { EmbedBuilder } = require('discord.js');
+    const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
     const embed = new EmbedBuilder()
       .setColor(0x5865F2)
       .setTitle(`🎫 ${interaction.user.username} 的工單`)
-      .setDescription('管理員即將為你處理，請描述你的問題。\n關閉請使用 `/ticket close`')
+      .setDescription('管理員即將為你處理，請描述你的問題。')
       .setTimestamp();
 
-    await channel.send({ content: `<@${interaction.user.id}>`, embeds: [embed] });
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId('ticket_close').setLabel('🔒 關閉工單').setStyle(ButtonStyle.Danger)
+    );
+
+    await channel.send({ content: `<@${interaction.user.id}>`, embeds: [embed], components: [row] });
     await interaction.reply({ content: `✅ 已建立工單 ${channel}`, ephemeral: true });
   } catch (err) {
     logger.error('建立工單失敗:', err);
