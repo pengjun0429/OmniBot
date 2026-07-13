@@ -197,6 +197,7 @@
       <a href="#" onclick="switchTab('inviteguard', event)">🔗 連結管理</a>
       <a href="#" onclick="switchTab('appeal', event)">📋 申訴</a>
       <a href="#" onclick="switchTab('antiraid', event)">🚨 防轟炸</a>
+      <a href="#" onclick="switchTab('invitelog', event)">🔗 邀請追蹤</a>
       <a href="#" onclick="switchTab('messagelog', event)">📝 記錄日誌</a>
     <% } %>
     <a href="#" onclick="switchTab('announce', event)">📢 公告</a>
@@ -666,6 +667,27 @@
               <option value="">不設定</option>
               <% guild.channels.forEach(c => { %>
                 <option value="<%= c.id %>" <%= guild.antiRaid.logChannelId === c.id ? 'selected' : '' %>>#<%= c.name %></option>
+              <% }); %>
+            </select>
+          </div>
+          <button type="submit" class="btn">儲存設定</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="tab-pane" id="tab-invitelog">
+      <div class="card">
+        <h2>🔗 邀請追蹤</h2>
+        <p style="font-size:13px;color:#888;margin-bottom:12px;">
+          有新成員加入時，Bot 會自動發送加入來源、邀請碼、邀請者和統計資料。
+        </p>
+        <form method="POST" action="/api/settings/<%= guild.id %>/invitelog">
+          <div class="form-group">
+            <label>追蹤頻道</label>
+            <select name="channelId">
+              <option value="">不啟用</option>
+              <% guild.channels.forEach(c => { %>
+                <option value="<%= c.id %>" <%= guild.inviteLog.channelId === c.id ? 'selected' : '' %>>#<%= c.name %></option>
               <% }); %>
             </select>
           </div>

@@ -380,6 +380,7 @@ app.get('/server/:id', requireAuth, async (req, res) => {
         inviteGuard: gs.inviteGuard || { enabled: false, whitelist: [], logChannelId: '' },
         appeal: gs.appeal || { channelId: '' },
         antiRaid: gs.antiRaid || { enabled: false, joinThreshold: 5, joinWindow: 10, spamThreshold: 5, spamWindow: 5, spamTimeout: 1, action: 'kick', logChannelId: '' },
+        inviteLog: gs.inviteLog || { channelId: '' },
         welcome: gs.welcome || { enabled: false, channelId: '', message: '' },
         farewell: gs.farewell || { enabled: false, channelId: '', message: '' },
       },
@@ -576,6 +577,13 @@ app.post('/api/settings/:guildId/antiraid', requireAuth, requireTopAdmin, (req, 
   };
   settings.updateGuildSettings(req.params.guildId, gs);
   res.redirect(`/server/${req.params.guildId}#antiraid`);
+});
+
+app.post('/api/settings/:guildId/invitelog', requireAuth, requireTopAdmin, (req, res) => {
+  const gs = settings.getGuildSettings(req.params.guildId);
+  gs.inviteLog = { channelId: req.body.channelId || '' };
+  settings.updateGuildSettings(req.params.guildId, gs);
+  res.redirect(`/server/${req.params.guildId}#invitelog`);
 });
 
 app.post('/api/server/:id/send-ticket-panel', requireAuth, requireTopAdmin, async (req, res) => {
