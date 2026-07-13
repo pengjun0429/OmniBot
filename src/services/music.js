@@ -180,7 +180,7 @@ async function playSong(queue) {
       queue.textChannel.send({ embeds: [embed] }).catch(() => {});
     }
   } catch (err) {
-    console.error('播放失敗:', err.message);
+    console.error('[音樂] 播放失敗:', err.message, err.stack?.slice(0, 200));
     queue.songs.shift();
     if (queue.songs.length > 0) playSong(queue);
     else {
