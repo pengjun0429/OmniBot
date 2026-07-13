@@ -69,7 +69,15 @@
       font-size: 36px;
     }
     .hero h1 { font-size: 26px; font-weight: 700; color: #fff; margin-bottom: 6px; letter-spacing: -0.3px; }
-    .hero p { color: #6666aa; font-size: 14px; font-weight: 400; }
+    .hero p { color: #6666aa; font-size: 14px; font-weight: 400; margin-bottom: 4px; }
+    .hero p strong { color: #7c6ff0; font-weight: 600; }
+    .invite-btn {
+      display: inline-block; margin-top: 16px; padding: 10px 28px;
+      background: #5865F2; color: #fff; border-radius: 8px;
+      text-decoration: none; font-size: 14px; font-weight: 600;
+      transition: all 0.15s;
+    }
+    .invite-btn:hover { background: #4752C4; transform: translateY(-1px); }
     .hero p strong { color: #7c6ff0; font-weight: 600; }
 
     .stats-row {
@@ -149,8 +157,10 @@
 
   <div class="hero">
     <div class="icon-bg">🤖</div>
-    <h1>選擇一個伺服器</h1>
-    <p>OmniBot 正在 <strong><%= guilds.length %></strong> 個伺服器中服務 <strong><%= totalUsers.toLocaleString() %></strong> 位成員</p>
+    <h1>OmniBot 多功能機器人</h1>
+    <p>管理 · 娛樂 · 經濟 · 工單 · 自動審核 · 語音包房 · 股市 · RPG</p>
+    <p style="font-size:13px;color:#5555aa;">正在 <strong><%= guilds.length %></strong> 個伺服器中服務 <strong><%= totalUsers.toLocaleString() %></strong> 位成員</p>
+    <a class="invite-btn" href="https://discord.com/oauth2/authorize?client_id=1524767770871595191&permissions=8&scope=bot%20applications.commands" target="_blank">📥 邀請 OmniBot</a>
   </div>
 
   <div class="stats-row">

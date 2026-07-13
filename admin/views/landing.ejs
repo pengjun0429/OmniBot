@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniBot - 多功能 Discord 機器人</title>
+  <style>
+    * { margin:0;padding:0;box-sizing:border-box; }
+    body { font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif; background:#0a0a14; color:#e0e0e0; min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    body::before { content:''; position:fixed; top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(ellipse at 30%20%,rgba(124,111,240,0.08)0%,transparent 50%);pointer-events:none; }
+    .card { position:relative;z-index:1;text-align:center;padding:48px; }
+    .logo { font-size:48px;margin-bottom:8px; }
+    h1 { font-size:36px;font-weight:800;color:#fff;margin-bottom:4px;letter-spacing:-0.5px; }
+    h1 span { color:#7c6ff0; }
+    .sub { color:#8888aa;font-size:15px;margin-bottom:24px; }
+    .stats { display:flex;gap:24px;justify-content:center;margin-bottom:32px; }
+    .stat { text-align:center; }
+    .stat .num { font-size:28px;font-weight:700;color:#fff; }
+    .stat .label { font-size:12px;color:#6666aa; }
+    .buttons { display:flex;gap:12px;justify-content:center;flex-wrap:wrap; }
+    .btn { padding:14px 32px;border-radius:10px;font-size:15px;font-weight:600;text-decoration:none;transition:all 0.15s; }
+    .btn-primary { background:linear-gradient(135deg,#7c6ff0,#6a5de0);color:#fff; }
+    .btn-primary:hover { transform:translateY(-2px);box-shadow:0 8px 24px rgba(124,111,240,0.3); }
+    .btn-discord { background:#5865F2;color:#fff; }
+    .btn-discord:hover { background:#4752C4;transform:translateY(-2px); }
+    .btn-outline { border:1px solid rgba(255,255,255,0.1);color:#ccc; }
+    .btn-outline:hover { border-color:#7c6ff0;color:#fff; }
+    .features { display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;max-width:700px;margin:32px auto 0;text-align:left; }
+    .feature { background:rgba(22,22,42,0.4);border:1px solid rgba(255,255,255,0.04);border-radius:8px;padding:10px 14px;font-size:13px; }
+    .feature .icon { margin-right:6px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">🤖</div>
+    <h1>Omni<span>Bot</span></h1>
+    <div class="sub">多功能 Discord 機器人 · 管理 · 娛樂 · 經濟 · 工單 · RPG</div>
+    <div class="stats">
+      <div class="stat"><div class="num"><%= guildCount %></div><div class="label">伺服器</div></div>
+      <div class="stat"><div class="num"><%= userCount.toLocaleString() %></div><div class="label">成員</div></div>
+      <div class="stat"><div class="num"><%= ping %>ms</div><div class="label">延遲</div></div>
+    </div>
+    <div class="buttons">
+      <a class="btn btn-discord" href="https://discord.com/oauth2/authorize?client_id=1524767770871595191&permissions=8&scope=bot%20applications.commands" target="_blank">📥 邀請機器人</a>
+      <a class="btn btn-primary" href="/login">🔐 管理員登入</a>
+      <a class="btn btn-outline" href="/appeal">📋 封禁申訴</a>
+    </div>
+    <div class="features">
+      <div class="feature">🛡️ 管理指令</div><div class="feature">🤖 自動審核</div><div class="feature">🚨 防轟炸</div>
+      <div class="feature">🎫 工單系統</div><div class="feature">🔊 語音包房</div><div class="feature">🎭 身分組</div>
+      <div class="feature">📈 虛擬股市</div><div class="feature">⚔️ RPG 冒險</div><div class="feature">🧩 成語接龍</div>
+      <div class="feature">🎮 娛樂小遊戲</div><div class="feature">📝 訊息紀錄</div><div class="feature">🔗 連結管理</div>
+      <div class="feature">🔮 AI 海龜湯</div><div class="feature">🎂 生日祝賀</div><div class="feature">📊 數據分析</div>
+    </div>
+  </div>
+</body>
+</html>

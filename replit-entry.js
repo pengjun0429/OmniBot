@@ -58,7 +58,9 @@ function requireTopAdmin(req, res, next) {
 
 app.get('/', (req, res) => {
   if (req.session.authenticated) return res.redirect('/dashboard');
-  res.render('login', { error: null });
+  const guildCount = client.guilds.cache.size;
+  const userCount = client.guilds.cache.reduce((s, g) => s + g.memberCount, 0);
+  res.render('landing', { guildCount, userCount, ping: client.ws.ping });
 });
 
 app.get('/login', (req, res) => {
