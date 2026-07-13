@@ -2,6 +2,12 @@ const { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioPlayerSta
 const ytdl = require('@distube/ytdl-core');
 const { EmbedBuilder } = require('discord.js');
 const axios = require('axios');
+const https = require('https');
+
+const agent = new https.Agent({
+  rejectUnauthorized: false,
+  keepAlive: true,
+});
 
 const queues = new Map();
 
@@ -212,6 +218,13 @@ async function playSong(queue) {
       filter: 'audioonly',
       quality: 'lowestaudio',
       highWaterMark: 1 << 25,
+      agent,
+      requestOptions: {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept-Language': 'zh-TW,zh;q=0.9,en;q=0.8',
+        },
+      },
     });
 
     const resource = createAudioResource(stream, { inlineVolume: true });
