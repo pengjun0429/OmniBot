@@ -141,6 +141,11 @@ async function handleRoleToggle(interaction) {
     return interaction.reply({ content: '❌ 機器人的角色層級不足以管理該身分組（請將機器人角色往上移）', ephemeral: true });
   }
 
+  const DANGEROUS_PERMS = ['Administrator', 'ManageRoles', 'ManageGuild', 'ManageChannels', 'KickMembers', 'BanMembers'];
+  if (DANGEROUS_PERMS.some(p => role.permissions.has(p))) {
+    return interaction.reply({ content: '❌ 無法自助領取含有管理權限的身分組', ephemeral: true });
+  }
+
   const member = interaction.member;
   const has = member.roles.cache.has(roleId);
 

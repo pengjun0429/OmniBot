@@ -630,28 +630,37 @@
             <input type="checkbox" name="enabled" value="1" <%= guild.antiRaid.enabled ? 'checked' : '' %>>
             <label>啟用防轟炸</label>
           </div>
+          <div class="form-group">
+            <label>防護模式</label>
+            <select id="raidPreset" onchange="applyPreset(this.value)">
+              <option value="">自訂設定</option>
+              <option value="strict">🔴 嚴格防護 (5人/10秒)</option>
+              <option value="medium">🟡 中等防護 (15人/10秒)</option>
+              <option value="standard">🟢 標準防護 (30人/20秒)</option>
+            </select>
+          </div>
           <div style="display:flex;gap:12px;">
             <div class="form-group" style="flex:1;">
               <label>大量加入門檻（次數）</label>
-              <input type="number" name="joinThreshold" value="<%= guild.antiRaid.joinThreshold || 5 %>" min="2">
+              <input type="number" name="joinThreshold" id="joinThreshold" value="<%= guild.antiRaid.joinThreshold || 5 %>" min="1" max="100">
             </div>
             <div class="form-group" style="flex:1;">
               <label>時間範圍（秒）</label>
-              <input type="number" name="joinWindow" value="<%= guild.antiRaid.joinWindow || 10 %>" min="3">
+              <input type="number" name="joinWindow" id="joinWindow" value="<%= guild.antiRaid.joinWindow || 10 %>" min="2" max="300">
             </div>
           </div>
           <div style="display:flex;gap:12px;">
             <div class="form-group" style="flex:1;">
               <label>大量訊息門檻（則數）</label>
-              <input type="number" name="spamThreshold" value="<%= guild.antiRaid.spamThreshold || 5 %>" min="3">
+              <input type="number" name="spamThreshold" id="spamThreshold" value="<%= guild.antiRaid.spamThreshold || 5 %>" min="1" max="100">
             </div>
             <div class="form-group" style="flex:1;">
               <label>時間範圍（秒）</label>
-              <input type="number" name="spamWindow" value="<%= guild.antiRaid.spamWindow || 5 %>" min="3">
+              <input type="number" name="spamWindow" id="spamWindow" value="<%= guild.antiRaid.spamWindow || 5 %>" min="2" max="300">
             </div>
             <div class="form-group" style="flex:1;">
               <label>禁言分鐘</label>
-              <input type="number" name="spamTimeout" value="<%= guild.antiRaid.spamTimeout || 1 %>" min="1">
+              <input type="number" name="spamTimeout" id="spamTimeout" value="<%= guild.antiRaid.spamTimeout || 1 %>" min="1" max="1440">
             </div>
           </div>
           <div class="form-group">
@@ -775,6 +784,23 @@
       document.querySelector(`.tabs a[onclick*="'${name}'"]`).classList.add('active');
       document.getElementById('tab-' + name).classList.add('active');
       window.location.hash = name;
+    }
+
+    function applyPreset(val) {
+      if (!val) return;
+      const presets = {
+        strict: { jt: 5, jw: 10, st: 5, sw: 5, tm: 5 },
+        medium: { jt: 15, jw: 10, st: 10, sw: 8, tm: 10 },
+        standard: { jt: 30, jw: 20, st: 15, sw: 15, tm: 30 },
+      };
+      const p = presets[val];
+      if (p) {
+        document.getElementById('joinThreshold').value = p.jt;
+        document.getElementById('joinWindow').value = p.jw;
+        document.getElementById('spamThreshold').value = p.st;
+        document.getElementById('spamWindow').value = p.sw;
+        document.getElementById('spamTimeout').value = p.tm;
+      }
     }
 
     window.addEventListener('DOMContentLoaded', () => {

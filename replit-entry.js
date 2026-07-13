@@ -6,6 +6,7 @@ const { registerCommands, registerEvents } = require('./src/utils/command-handle
 const logCapture = require('./src/utils/log-capture');
 const settings = require('./src/services/settings');
 const path = require('path');
+const crypto = require('crypto');
 
 registerCommands(client);
 registerEvents(client);
@@ -71,14 +72,20 @@ app.get('/auth/discord', (req, res) => {
   const clientId = config.discord.clientId;
   const redirectUri = config.discord.redirectUri;
   if (!clientId || !redirectUri) return res.render('login', { error: '未設定 Discord OAuth' });
-  const url = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=identify%20guilds`;
+  const state = crypto.randomBytes(32).toString('hex');
+  req.session.oauthState = state;
+  const url = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=identify%20guilds&state=${state}`;
   res.redirect(url);
 });
 
 app.get('/auth/discord/callback', async (req, res) => {
   try {
-    const { code } = req.query;
+    const { code, state } = req.query;
     if (!code) return res.render('login', { error: '缺少授權碼' });
+    if (!state || state !== req.session.oauthState) {
+      return res.render('login', { error: '狀態驗證失敗，請重新登入' });
+    }
+    delete req.session.oauthState;
 
     const tokenRes = await axios.post('https://discord.com/api/oauth2/token',
       new URLSearchParams({
@@ -221,15 +228,19 @@ app.get('/appeal', (req, res) => {
 });
 
 app.get('/appeal/login', (req, res) => {
+  const state = crypto.randomBytes(32).toString('hex');
+  req.session.oauthState = state;
   const appealRedirectUri = 'https://omnibot-yzti.onrender.com/appeal/callback';
-  const url = `https://discord.com/api/oauth2/authorize?client_id=${config.discord.clientId}&redirect_uri=${encodeURIComponent(appealRedirectUri)}&response_type=code&scope=identify`;
+  const url = `https://discord.com/api/oauth2/authorize?client_id=${config.discord.clientId}&redirect_uri=${encodeURIComponent(appealRedirectUri)}&response_type=code&scope=identify&state=${state}`;
   res.redirect(url);
 });
 
 app.get('/appeal/callback', async (req, res) => {
   try {
-    const { code } = req.query;
+    const { code, state } = req.query;
     if (!code) return res.redirect('/appeal?error=缺少授權碼');
+    if (!state || state !== req.session.oauthState) return res.redirect('/appeal?error=驗證失敗');
+    delete req.session.oauthState;
 
     const appealRedirectUri = 'https://omnibot-yzti.onrender.com/appeal/callback';
 
