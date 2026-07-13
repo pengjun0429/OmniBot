@@ -335,6 +335,24 @@ app.get('/logs', requireAuth, (req, res) => {
   res.render('logs', { logs: logCapture.getLogs(), user: req.session.discordUser || null, adminLevel: req.session.adminLevel || null });
 });
 
+app.get('/analytics', requireAuth, async (req, res) => {
+  const guildData = [];
+  for (const g of client.guilds.cache.values()) {
+    await g.members.fetch().catch(() => {});
+    const bots = g.members.cache.filter(m => m.user.bot).size;
+    const total = g.memberCount;
+    guildData.push({
+      id: g.id, name: g.name, icon: g.icon || '',
+      total, bots, humans: total - bots,
+      channels: g.channels.cache.size,
+      created: Math.floor(g.createdTimestamp / 1000),
+      owner: g.members.cache.get(g.ownerId)?.user?.tag || '?',
+    });
+  }
+  const totalHumans = guildData.reduce((s, g) => s + g.humans, 0);
+  res.render('analytics', { guildData, totalHumans, totalGuilds: guildData.length, user: req.session.discordUser || null, adminLevel: req.session.adminLevel || null });
+});
+
 app.get('/api/logs/stream', requireAuth, (req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
   let index = parseInt(req.query.index, 10) || 0;
