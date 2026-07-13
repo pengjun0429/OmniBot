@@ -63,14 +63,12 @@ async function handleTicketClose(interaction) {
     while (true) {
       const fetched = await channel.messages.fetch({ limit: 100, before: lastId }).catch(() => null);
       if (!fetched || fetched.size === 0) break;
-      allMessages = [...allMessages, ...fetched.values()];
+        allMessages = [...allMessages, ...fetched.values()];
       lastId = fetched.last()?.id;
       if (fetched.size < 100) break;
     }
 
     const msgs = allMessages.reverse();
-    const opener = msgs.find(m => m.author.id === interaction.client.user.id && m.content.startsWith('<@'));
-    const openerId = opener ? opener.content.match(/<@(\d+)>/)?.[1] : '?';
 
     const html = `<!DOCTYPE html><html lang="zh-TW"><head><meta charset="UTF-8"><title>工單記錄 - ${channel.name}</title>
 <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#313338;color:#dbdee1;padding:24px;max-width:800px;margin:0 auto}h1{font-size:20px;color:#fff;margin-bottom:4px}.meta{font-size:12px;color:#888;margin-bottom:24px}.msg{display:flex;gap:12px;margin-bottom:16px}.msg .avatar{width:40px;height:40px;border-radius:50%;background:#5865F2;flex-shrink:0}.msg .name{font-size:14px;font-weight:600;color:#fff}.msg .time{font-size:10px;color:#888;margin-left:8px}.msg .content{font-size:14px;color:#dbdee1;margin-top:2px;line-height:1.4;word-break:break-word}.system{text-align:center;font-size:12px;color:#888;padding:8px;margin:8px 0;border-top:1px solid #40444b;border-bottom:1px solid #40444b}
