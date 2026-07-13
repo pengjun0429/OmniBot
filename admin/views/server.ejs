@@ -449,6 +449,15 @@
               <% }); %>
             </select>
           </div>
+          <div class="form-group">
+            <label>備份頻道（關閉工單時自動上傳對話記錄）</label>
+            <select name="channelId">
+              <option value="">不備份</option>
+              <% guild.channels.forEach(c => { %>
+                <option value="<%= c.id %>" <%= guild.ticket.channelId === c.id ? 'selected' : '' %>>#<%= c.name %></option>
+              <% }); %>
+            </select>
+          </div>
           <button type="submit" class="btn">儲存設定</button>
         </form>
         <div style="margin-top:16px;padding-top:16px;border-top:1px solid #232340;">
@@ -490,6 +499,11 @@
             <input type="hidden" name="blockLinks" value="0">
             <input type="checkbox" name="blockLinks" value="1" <%= guild.autoMod.blockLinks ? 'checked' : '' %>>
             <label>封鎖連結</label>
+          </div>
+          <div class="form-group checkbox">
+            <input type="hidden" name="phishingProtection" value="0">
+            <input type="checkbox" name="phishingProtection" value="1" <%= guild.autoMod.phishingProtection ? 'checked' : '' %>>
+            <label>釣魚/詐騙偵測（自動比對 OpenPhish 資料庫）</label>
           </div>
           <div class="form-group">
             <label>違規懲罰</label>

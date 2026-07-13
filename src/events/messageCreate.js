@@ -84,7 +84,7 @@ module.exports = {
 
     if (!gs.autoMod || !gs.autoMod.enabled) return;
 
-    const { words, regexWords, blockLinks, logChannelId, punishment, timeoutMinutes, logLevel, strikes, strikeResetHours } = gs.autoMod;
+    const { words, regexWords, blockLinks, phishingProtection, logChannelId, punishment, timeoutMinutes, logLevel, strikes, strikeResetHours } = gs.autoMod;
     const normalized = message.content.toLowerCase().replace(/[\s\n\r\t]+/g, '').replace(/[^a-z0-9\u4e00-\u9fff]/g, '');
     let flagged = false;
     let reason = '';
@@ -113,6 +113,15 @@ module.exports = {
             break;
           }
         } catch {}
+      }
+    }
+
+    if (!flagged && phishingProtection) {
+      const phishing = require('../services/phishing');
+      const result = await phishing.check(message.content);
+      if (result.flagged) {
+        flagged = true;
+        reason = result.reason;
       }
     }
 
