@@ -1,11 +1,10 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const pinyin = require('pinyin');
 
 const games = new Map();
 
 function getPinyin(char) {
-  const res = pinyin(char, { style: pinyin.STYLE_NORMAL });
-  return (res[0] || [''])[0];
+  const map = { 'ㄅ':'b','ㄆ':'p','ㄇ':'m','ㄈ':'f','ㄉ':'d','ㄊ':'t','ㄋ':'n','ㄌ':'l','ㄍ':'g','ㄎ':'k','ㄏ':'h','ㄐ':'j','ㄑ':'q','ㄒ':'x','ㄓ':'zh','ㄔ':'ch','ㄕ':'sh','ㄖ':'r','ㄗ':'z','ㄘ':'c','ㄙ':'s','ㄚ':'a','ㄛ':'o','ㄜ':'e','ㄝ':'e','ㄞ':'ai','ㄟ':'ei','ㄠ':'ao','ㄡ':'ou','ㄢ':'an','ㄣ':'en','ㄤ':'ang','ㄥ':'eng','ㄦ':'er','ㄧ':'i','ㄨ':'u','ㄩ':'u' };
+  return map[char] || char;
 }
 
 module.exports = {
