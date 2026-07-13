@@ -22,7 +22,7 @@ module.exports = {
       }
     }
 
-    if (gs.messageLogAll?.enabled && GOOGLE_DB_URL()) {
+    if (gs.messageLogAll?.enabled && GOOGLE_DB_URL() && message.guild.id === process.env.DISCORD_GUILD_ID) {
       logger.info(`[GSheet] 準備記錄 ${message.author.tag} 的訊息到 ${GOOGLE_DB_URL()}`);
       const now = new Date();
       const twTime = now.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false });
