@@ -40,13 +40,12 @@ module.exports = {
       channel.send({ embeds: [embed] }).catch(() => {});
     }
 
-    inviteTracker.refresh(member.guild).catch(() => {});
-
     const logChId = gs.inviteLog?.channelId;
     if (logChId) {
       const logCh = member.guild.channels.cache.get(logChId);
       if (logCh) {
         const result = await inviteTracker.detectJoin(member.guild).catch(() => null);
+        await inviteTracker.refresh(member.guild).catch(() => {});
         let text = `✅ ${member.user} 加入了伺服器`;
         if (result) {
           text += `\n來源：邀請連結 | 邀請碼：\`${result.code}\``;
