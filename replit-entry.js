@@ -133,8 +133,8 @@ app.get('/auth/discord/callback', async (req, res) => {
         continue;
       }
 
-      const topIds = gs.adminRoles?.topIds?.length > 0 ? gs.adminRoles.topIds : config.admin.topRoleIds;
-      const modIds = gs.adminRoles?.modIds?.length > 0 ? gs.adminRoles.modIds : config.admin.modRoleIds;
+      const topIds = gs.adminRoles?.topIds || [];
+      const modIds = gs.adminRoles?.modIds || [];
 
       if (isTopAdmin(member) || memberRoleIds.some(r => topIds.includes(r))) {
         allowed = true;

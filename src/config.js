@@ -16,14 +16,5 @@ module.exports = {
     clientSecret: process.env.DISCORD_CLIENT_SECRET || '',
     redirectUri: process.env.DISCORD_REDIRECT_URI || '',
   },
-  admin: {
-    port: parseInt(process.env.ADMIN_PORT, 10) || 3000,
-    username: process.env.ADMIN_USERNAME || 'admin',
-    password: process.env.ADMIN_PASSWORD || 'admin123',
-    topRoleIds: (process.env.ADMIN_TOP_ROLE_IDS || '').split(',').filter(Boolean),
-    modRoleIds: (process.env.ADMIN_MOD_ROLE_IDS || '').split(',').filter(Boolean),
-  },
   weatherApiKey: process.env.WEATHER_API_KEY || '',
-  welcomeChannelId: process.env.WELCOME_CHANNEL_ID || '',
-  farewellChannelId: process.env.FAREWELL_CHANNEL_ID || '',
 };
