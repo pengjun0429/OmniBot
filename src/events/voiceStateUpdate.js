@@ -2,8 +2,6 @@ const { ChannelType, PermissionFlagsBits } = require('discord.js');
 const settings = require('../services/settings');
 const logger = require('../utils/logger');
 
-const TEMP_CHANNEL_PREFIX = '🛋️ ';
-
 module.exports = {
   async execute(oldState, newState) {
     const guild = newState.guild || oldState.guild;
