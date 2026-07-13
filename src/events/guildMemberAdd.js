@@ -1,7 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
 const settings = require('../services/settings');
-const config = require('../config');
-const logger = require('../utils/logger');
 const raidTracker = require('../services/raid-tracker');
 const inviteTracker = require('../services/invite-tracker');
 

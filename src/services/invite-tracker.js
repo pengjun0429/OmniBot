@@ -1,5 +1,3 @@
-const logger = require('../utils/logger');
-
 const inviteCache = new Map();
 
 module.exports = {
