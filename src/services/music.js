@@ -20,6 +20,32 @@ class MusicQueue {
 }
 
 async function searchYouTube(query) {
+  const apiKey = process.env.YOUTUBE_API_KEY;
+
+  if (apiKey) {
+    try {
+      const res = await axios.get('https://www.googleapis.com/youtube/v3/search', {
+        params: {
+          part: 'snippet',
+          q: query,
+          type: 'video',
+          maxResults: 1,
+          key: apiKey,
+        },
+        timeout: 10000,
+      });
+      const item = res.data?.items?.[0];
+      if (!item) return null;
+      const vid = item.id.videoId;
+      const info = await ytdl.getInfo(vid);
+      return {
+        title: info.videoDetails.title,
+        url: info.videoDetails.video_url,
+        duration: info.videoDetails.lengthSeconds,
+      };
+    } catch { return null; }
+  }
+
   try {
     const res = await axios.get('https://www.youtube.com/results', {
       params: { search_query: query },
