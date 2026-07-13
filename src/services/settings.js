@@ -23,7 +23,7 @@ function getDefaults() {
     selfRoles: [],
     autoVoice: { channelId: '' },
     ticket: { categoryId: '', roleIds: [], channelId: '' },
-    autoMod: { enabled: false, words: [], blockLinks: false, logChannelId: '', punishment: 'delete', timeoutMinutes: 10, logLevel: 'all', strikes: {}, strikeResetHours: 24, userStrikes: {} },
+    autoMod: { enabled: false, words: [], regexWords: [], blockLinks: false, logChannelId: '', punishment: 'delete', timeoutMinutes: 10, logLevel: 'all', strikes: {}, strikeResetHours: 24, userStrikes: {} },
     roleGive: { channelId: '' },
     messageLog: { channelId: '' },
     messageLogAll: { enabled: false },

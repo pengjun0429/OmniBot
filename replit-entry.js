@@ -384,7 +384,7 @@ app.get('/server/:id', requireAuth, async (req, res) => {
         selfRoles: gs.selfRoles || [],
         autoVoice: gs.autoVoice || { channelId: '' },
         ticket: gs.ticket || { categoryId: '', roleIds: [], channelId: '' },
-        autoMod: gs.autoMod || { enabled: false, words: [], blockLinks: false, logChannelId: '', punishment: 'delete', timeoutMinutes: 10, logLevel: 'all' },
+        autoMod: gs.autoMod || { enabled: false, words: [], regexWords: [], blockLinks: false, logChannelId: '', punishment: 'delete', timeoutMinutes: 10, logLevel: 'all' },
         roleGive: gs.roleGive || { channelId: '' },
         messageLog: gs.messageLog || { channelId: '' },
         messageLogAll: gs.messageLogAll || { enabled: false },
@@ -452,9 +452,11 @@ app.post('/api/settings/:guildId/roles', requireAuth, requireTopAdmin, (req, res
 app.post('/api/settings/:guildId/automod', requireAuth, requireTopAdmin, (req, res) => {
   const gs = settings.getGuildSettings(req.params.guildId);
   const words = req.body.words ? req.body.words.split(',').map(w => w.trim()).filter(Boolean) : [];
+  const regexWords = req.body.regexWords ? req.body.regexWords.split('\n').map(r => r.trim()).filter(Boolean) : [];
   gs.autoMod = {
     enabled: String(req.body.enabled).includes('1'),
     words,
+    regexWords,
     blockLinks: String(req.body.blockLinks).includes('1'),
     logChannelId: req.body.logChannelId || '',
     punishment: req.body.punishment || 'delete',

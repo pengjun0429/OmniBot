@@ -84,27 +84,47 @@ module.exports = {
 
     if (!gs.autoMod || !gs.autoMod.enabled) return;
 
-    const { words, blockLinks, logChannelId, punishment, timeoutMinutes, logLevel, strikes, strikeResetHours } = gs.autoMod;
-    const content = message.content.toLowerCase();
+    const { words, regexWords, blockLinks, logChannelId, punishment, timeoutMinutes, logLevel, strikes, strikeResetHours } = gs.autoMod;
+    const normalized = message.content.toLowerCase().replace(/[\s\n\r\t]+/g, '').replace(/[^a-z0-9\u4e00-\u9fff]/g, '');
     let flagged = false;
     let reason = '';
+    let foundWord = '';
 
-    if (blockLinks && /https?:\/\/[^\s]+/.test(content)) {
+    if (blockLinks && /https?:\/\/[^\s]+/i.test(message.content)) {
       flagged = true;
       reason = '發送了連結';
     }
 
     if (!flagged && words.length > 0) {
-      const found = words.find(w => content.includes(w.toLowerCase()));
+      const found = words.find(w => normalized.includes(w.toLowerCase().replace(/[\s\n\r\t]/g, '')));
       if (found) {
         flagged = true;
         reason = `使用了過濾詞：${found}`;
+        foundWord = found;
+      }
+    }
+
+    if (!flagged && regexWords?.length > 0) {
+      for (const pattern of regexWords) {
+        try {
+          if (new RegExp(pattern, 'i').test(normalized)) {
+            flagged = true;
+            reason = `符合正則：${pattern}`;
+            break;
+          }
+        } catch {}
       }
     }
 
     if (!flagged) return;
 
-    const censored = words.reduce((c, w) => c.replace(new RegExp(w, 'gi'), '****'), message.content);
+    let censored = message.content;
+    if (foundWord) censored = censored.replace(new RegExp(foundWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), '****');
+    if (regexWords?.length > 0) {
+      for (const pattern of regexWords) {
+        try { censored = censored.replace(new RegExp(pattern, 'gi'), '****'); } catch {}
+      }
+    }
 
     try {
       await message.delete();

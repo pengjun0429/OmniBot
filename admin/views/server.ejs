@@ -481,6 +481,11 @@
             <label>過濾詞（用逗號分隔）</label>
             <textarea name="words" placeholder="例如：髒話1,髒話2,廣告詞"><%= (guild.autoMod.words || []).join(',') %></textarea>
           </div>
+          <div class="form-group">
+            <label>正則表達式（一行一條）</label>
+            <textarea name="regexWords" placeholder="例如：(?:幹|靠)你|fuck\d*" rows="3"><%= (guild.autoMod.regexWords || []).join('\n') %></textarea>
+            <div class="hint">支援 JS 正則語法，比對前會自動轉小寫、去空白、去符號</div>
+          </div>
           <div class="form-group checkbox">
             <input type="hidden" name="blockLinks" value="0">
             <input type="checkbox" name="blockLinks" value="1" <%= guild.autoMod.blockLinks ? 'checked' : '' %>>
