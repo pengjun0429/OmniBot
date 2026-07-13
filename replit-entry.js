@@ -670,7 +670,7 @@ app.post('/api/server/:id/send-panel', requireAuth, requireTopAdmin, async (req,
   }
 });
 
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '::', () => {
   logger.info(`管理後臺已啟動: 端口 ${PORT}`);
 });
 
