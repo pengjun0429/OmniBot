@@ -5,7 +5,7 @@ const config = require('../src/config');
 const logger = require('../src/utils/logger');
 
 const app = express();
-const PORT = config.admin.port;
+const PORT = process.env.ADMIN_PORT || 3000;
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -35,7 +35,9 @@ app.get('/login', (req, res) => {
 
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
-  if (username === config.admin.username && password === config.admin.password) {
+  const adminUser = process.env.ADMIN_USERNAME || 'admin';
+  const adminPass = process.env.ADMIN_PASSWORD || 'admin123';
+  if (username === adminUser && password === adminPass) {
     req.session.authenticated = true;
     return res.redirect('/dashboard');
   }

@@ -6,7 +6,7 @@ const logger = require('../utils/logger');
 module.exports = {
   async execute(member) {
     const gs = settings.getGuildSettings(member.guild.id);
-    const channelId = gs?.farewell?.channelId || config.farewellChannelId;
+    const channelId = gs?.farewell?.channelId || '';
 
     if (!channelId) return;
 
