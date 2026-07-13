@@ -207,36 +207,57 @@
     <div class="tab-pane active" id="tab-welcome">
       <div class="card">
         <h2>👋 歡迎訊息</h2>
-        <form method="POST" action="/api/settings/<%= guild.id %>">
-          <input type="hidden" name="type" value="welcome">
-          <input type="hidden" name="_tab" value="welcome">
-          <div class="form-group">
-            <label>發送頻道</label>
-            <select name="channelId">
-              <option value="">不啟用</option>
-              <% guild.channels.forEach(c => { %>
-                <option value="<%= c.id %>" <%= guild.welcome.channelId === c.id ? 'selected' : '' %>>#<%= c.name %></option>
-              <% }); %>
-            </select>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div>
+            <form method="POST" action="/api/settings/<%= guild.id %>" id="welcomeForm">
+              <input type="hidden" name="type" value="welcome">
+              <input type="hidden" name="_tab" value="welcome">
+              <div class="form-group">
+                <label>發送頻道</label>
+                <select name="channelId" onchange="updateWelcomePreview()">
+                  <option value="">不啟用</option>
+                  <% guild.channels.forEach(c => { %>
+                    <option value="<%= c.id %>" <%= guild.welcome.channelId === c.id ? 'selected' : '' %>>#<%= c.name %></option>
+                  <% }); %>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>訊息內容</label>
+                <textarea name="message" id="welcomeMsg" oninput="updateWelcomePreview()" placeholder='哈囉 {mention}，歡迎來到 {server}！\n👋 目前伺服器總人數：{count}人\n請先去 {channel} | 領取身分組 {role}\n祝你聊天愉快！'><%= guild.welcome.message %></textarea>
+                <div class="hint"><code>{mention}</code> = @提及 · <code>{user}</code> = 成員名稱 · <code>{server}</code> = 伺服器名稱 · <code>{count}</code> = 成員數 · <code>{channel}</code> = 頻道連結 · <code>{role}</code> = 身分組連結</div>
+              </div>
+              <div class="form-group checkbox">
+                <input type="checkbox" name="enabled" value="1" <%= guild.welcome.enabled ? 'checked' : '' %>>
+                <label>啟用歡迎訊息</label>
+              </div>
+              <div class="form-group">
+                <label>歡迎圖片 URL</label>
+                <input type="text" name="image" id="welcomeImg" value="<%= guild.welcome.image || '' %>" oninput="updateWelcomePreview()" placeholder="貼上圖片網址">
+              </div>
+              <button type="submit" class="btn">儲存</button>
+            </form>
           </div>
-          <div class="form-group">
-            <label>訊息內容</label>
-            <textarea name="message" placeholder='哈囉 {mention}，歡迎來到 {server}！\n👋 目前伺服器總人數：{count}人\n請先去 {channel} | 領取身分組 {role}\n祝你聊天愉快！'><%= guild.welcome.message %></textarea>
-            <div class="hint"><code>{mention}</code> = @提及 · <code>{user}</code> = 成員名稱 · <code>{server}</code> = 伺服器名稱 · <code>{count}</code> = 成員數 · <code>{channel}</code> = 頻道連結 · <code>{role}</code> = 身分組連結</div>
+          <div id="welcomePreview" style="background:#313338;border-radius:8px;padding:16px;min-height:200px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+            <div style="background:#2b2d31;border-radius:4px;padding:12px;border-left:4px solid #5865F2;">
+              <div style="font-size:12px;color:#888;margin-bottom:4px;">🎉 歡迎加入伺服器</div>
+              <div id="welcomePreviewText" style="font-size:14px;color:#dbdee1;line-height:1.5;">哈囉 @小明，歡迎來到 吃飽睡好活的老！</div>
+              <div style="font-size:11px;color:#888;margin-top:8px;">今天 00:00</div>
+            </div>
           </div>
-          <div class="form-group checkbox">
-            <input type="checkbox" name="enabled" value="1" <%= guild.welcome.enabled ? 'checked' : '' %>>
-            <label>啟用歡迎訊息</label>
-          </div>
-          <div class="form-group">
-            <label>歡迎圖片 URL（選填）</label>
-            <input type="text" name="image" value="<%= guild.welcome.image || '' %>" placeholder="貼上圖片網址" style="width:100%;padding:10px 14px;background:rgba(12,12,24,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:#e0e0e0;font-size:13px;">
-            <div class="hint">貼上圖片網址，歡迎訊息底部會顯示大圖</div>
-          </div>
-          <button type="submit" class="btn">儲存</button>
-        </form>
+        </div>
       </div>
     </div>
+    <script>
+      function updateWelcomePreview() {
+        const msg = document.getElementById('welcomeMsg')?.value || '';
+        const img = document.getElementById('welcomeImg')?.value || '';
+        const preview = document.getElementById('welcomePreviewText');
+        if (preview) {
+          let text = msg.replace(/{mention}/g, '@小明').replace(/{user}/g, '小明#1234').replace(/{server}/g, '吃飽睡好活的老').replace(/{count}/g, '42').replace(/{channel}/g, '#歡迎').replace(/{role}/g, '@一般成員');
+          preview.innerHTML = text.replace(/\n/g, '<br>');
+        }
+      }
+    </script>
 
     <div class="tab-pane" id="tab-farewell">
       <div class="card">
