@@ -27,8 +27,10 @@ class MusicQueue {
 async function getVideoInfo(query) {
   const urlMatch = query.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
   if (urlMatch) {
-    const info = await play.video_info(urlMatch[1]);
-    return { title: info.video_details.title, url: info.video_details.url, duration: info.video_details.durationInSec };
+    const videoUrl = `https://www.youtube.com/watch?v=${urlMatch[1]}`;
+    const info = await play.video_info(videoUrl).catch(() => null);
+    if (!info) return { title: 'Unknown', url: videoUrl, duration: 0 };
+    return { title: info.video_details.title, url: videoUrl, duration: info.video_details.durationInSec };
   }
   const apiKey = process.env.YOUTUBE_API_KEY;
   if (apiKey) {
@@ -158,6 +160,7 @@ async function playSong(queue) {
   if (!song) { queue.playing = false; return; }
 
   try {
+    console.log('[音樂] 正在串流:', song.url);
     const stream = await play.stream(song.url, { quality: 0 });
     const resource = createAudioResource(stream.stream, { inputType: stream.type, inlineVolume: true });
     resource.volume?.setVolumeLogarithmic(queue.volume / 100);
