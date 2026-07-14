@@ -95,9 +95,13 @@ const music = {
     let song;
     const urlMatch = query.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
     if (urlMatch) {
-      const vid = urlMatch[1];
-      const info = await ytdl.getInfo(vid);
-      song = { title: info.videoDetails.title, url: info.videoDetails.video_url, duration: info.videoDetails.lengthSeconds };
+      try {
+        const vid = urlMatch[1];
+        const info = await ytdl.getInfo(vid);
+        song = { title: info.videoDetails.title, url: info.videoDetails.video_url, duration: info.videoDetails.lengthSeconds };
+      } catch {
+        return interaction.editReply('❌ 無法取得影片資訊，請確認網址正確。若持續失敗，請嘗試使用 `/play 關鍵字` 搜尋');
+      }
     } else {
       const result = await searchYouTube(query);
       if (!result) return interaction.editReply('❌ 找不到結果');
