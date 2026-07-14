@@ -58,16 +58,25 @@ module.exports = {
             { name: '僅懲罰紀錄', value: 'punish_only' },
             { name: '不紀錄', value: 'off' },
           )))
+    .addSubcommand(sub =>
+      sub.setName('ai')
+        .setDescription('啟用/停用 AI 智慧違禁詞言論分析'))
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
   async execute(interaction) {
     const sub = interaction.options.getSubcommand();
     const gs = settings.getGuildSettings(interaction.guild.id);
-    if (!gs.autoMod) gs.autoMod = { enabled: false, words: [], blockLinks: false, logChannelId: '', punishment: 'delete', timeoutMinutes: 10, logLevel: 'all', strikes: { 2: 'timeout', 3: 'kick' }, strikeResetHours: 24, userStrikes: {} };
+    if (!gs.autoMod) gs.autoMod = { enabled: false, aiEnabled: false, words: [], blockLinks: false, logChannelId: '', punishment: 'delete', timeoutMinutes: 10, logLevel: 'all', strikes: { 2: 'timeout', 3: 'kick' }, strikeResetHours: 24, userStrikes: {} };
 
     if (sub === 'toggle') {
       gs.autoMod.enabled = !gs.autoMod.enabled;
       settings.updateGuildSettings(interaction.guild.id, gs);
       return interaction.reply({ content: `✅ 自動審核已${gs.autoMod.enabled ? '啟用' : '停用'}`, ephemeral: true });
+    }
+
+    if (sub === 'ai') {
+      gs.autoMod.aiEnabled = !gs.autoMod.aiEnabled;
+      settings.updateGuildSettings(interaction.guild.id, gs);
+      return interaction.reply({ content: `✅ AI 智慧違禁詞分析已${gs.autoMod.aiEnabled ? '啟用' : '停用'}`, ephemeral: true });
     }
 
     if (sub === 'word') {

@@ -34,4 +34,50 @@ ${faq || '無'}
   }
 }
 
-module.exports = { askGemini };
+async function moderateMessage(content) {
+  const key = GEMINI_KEY();
+  if (!key || !content || content.trim().length === 0) return { flagged: false };
+
+  const prompt = `You are a Discord Automod AI. Analyze the following message for content policy violations:
+- Toxicity (insults, severe harassment, extreme hate speech, racism)
+- Scams/Phishing (fake Nitro, crypto scams, phishing links, credentials harvesting)
+- Severe profanity or spam (repetitive nonsensical text, wall of text)
+- Sexual content/NSFW (explicit verbal descriptions of sexual acts)
+
+Analyze carefully and output a JSON object strictly in the following format, with no extra text or markdown formatting:
+{
+  "flagged": true,
+  "reason": "toxicity/scam/profanity/sexual/none",
+  "explanation": "Brief explanation in Traditional Chinese about why it is flagged"
+}
+If there are no violations, output:
+{
+  "flagged": false,
+  "reason": "none",
+  "explanation": ""
+}
+
+Message to analyze:
+"${content}"`;
+
+  try {
+    const res = await axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
+      { contents: [{ parts: [{ text: prompt }] }] },
+      { timeout: 8000 }
+    );
+    let text = res.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    const data = JSON.parse(text);
+    return {
+      flagged: !!data.flagged,
+      reason: data.reason || 'none',
+      explanation: data.explanation || ''
+    };
+  } catch (err) {
+    logger.error('[AI Automod] 審核失敗:', err.message);
+    return { flagged: false };
+  }
+}
+
+module.exports = { askGemini, moderateMessage };

@@ -131,6 +131,15 @@ module.exports = {
       }
     }
 
+    if (!flagged && gs.autoMod.aiEnabled) {
+      const ai = require('../services/ai');
+      const aiResult = await ai.moderateMessage(message.content);
+      if (aiResult.flagged) {
+        flagged = true;
+        reason = `AI 智慧判定違規 (${aiResult.explanation})`;
+      }
+    }
+
     if (!flagged) return;
 
     let censored = message.content;

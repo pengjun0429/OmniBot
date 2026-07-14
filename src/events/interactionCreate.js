@@ -18,15 +18,18 @@ module.exports = {
     if (interaction.isButton() && interaction.customId === 'ticket_close') {
       return handleTicketClose(interaction);
     }
+    if (interaction.isButton() && interaction.customId.startsWith('music_')) {
+      return handleMusicButton(interaction);
+    }
     if (!interaction.isChatInputCommand()) return;
 
     const command = interaction.client.commands.get(interaction.commandName);
     if (!command) return;
 
     const { cooldowns } = interaction.client;
-    if (!cooldowns.has(command.datescapeHTML(a.name))) cooldowns.set(command.datescapeHTML(a.name), new Map());
+    if (!cooldowns.has(command.data.name)) cooldowns.set(command.data.name, new Map());
     const now = Date.now();
-    const timestamps = cooldowns.get(command.datescapeHTML(a.name));
+    const timestamps = cooldowns.get(command.data.name);
     const cooldownAmount = (command.cooldown || 3) * 1000;
 
     if (timestamps.has(interaction.user.id)) {
@@ -189,5 +192,62 @@ async function handleRoleToggle(interaction) {
   } catch (err) {
     logger.error(`身分組操作失敗 (${role.name}):`, err);
     await interaction.reply({ content: `❌ ${err.code === 50013 ? '機器人缺少權限' : '操作失敗：' + err.message}`, ephemeral: true });
+  }
+}
+
+async function handleMusicButton(interaction) {
+  const music = require('../services/music');
+  const queue = music.queues.get(interaction.guild.id);
+  
+  if (!queue || !queue.playing) {
+    return interaction.reply({ content: '❌ 當前沒有播放中的音樂佇列', ephemeral: true });
+  }
+
+  const voiceChannel = interaction.member.voice.channel;
+  if (!voiceChannel || voiceChannel.id !== queue.voiceChannel.id) {
+    return interaction.reply({ content: '❌ 你必須與機器人在同一個語音頻道中才能控制播放', ephemeral: true });
+  }
+
+  const customId = interaction.customId;
+
+  try {
+    if (customId === 'music_toggle') {
+      if (queue.player.state.status === 'paused') {
+        queue.player.unpause();
+      } else {
+        queue.player.pause();
+      }
+    } else if (customId === 'music_skip') {
+      queue.player.stop();
+      await interaction.reply({ content: '⏭️ 已跳過當前歌曲', ephemeral: true });
+      return;
+    } else if (customId === 'music_stop') {
+      queue.songs = [];
+      queue.player.stop();
+      queue.connection?.destroy();
+      if (queue.interval) clearInterval(queue.interval);
+      if (queue.controllerMessage) {
+        await queue.controllerMessage.delete().catch(() => {});
+      }
+      music.queues.delete(interaction.guild.id);
+      await interaction.reply({ content: '⏹️ 已停止播放並關閉語音', ephemeral: true });
+      return;
+    } else if (customId === 'music_loop') {
+      queue.loop = !queue.loop;
+    } else if (customId === 'music_vol_up') {
+      queue.volume = Math.min(100, queue.volume + 10);
+      queue.player.state.resource?.volume?.setVolumeLogarithmic(queue.volume / 100);
+    } else if (customId === 'music_vol_down') {
+      queue.volume = Math.max(0, queue.volume - 10);
+      queue.player.state.resource?.volume?.setVolumeLogarithmic(queue.volume / 100);
+    }
+
+    const card = music.createPlayerCard(queue);
+    if (card) {
+      await interaction.update(card).catch(() => {});
+    }
+  } catch (err) {
+    logger.error('音樂按鈕控制失敗:', err.message);
+    await interaction.reply({ content: '❌ 控制失敗：' + err.message, ephemeral: true }).catch(() => {});
   }
 }
