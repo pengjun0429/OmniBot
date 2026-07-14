@@ -1,4 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
+const logger = require('../utils/logger');
 const settings = require('./settings');
 
 async function logModAction(guild, action, target, moderator, reason, extra) {
@@ -31,7 +32,7 @@ async function logModAction(guild, action, target, moderator, reason, extra) {
     }
   }
 
-  await channel.send({ embeds: [embed] }).catch(() => {});
+  await channel.send({ embeds: [embed] }).catch(err => logger.warn('modlog 傳送失敗:', err.message));
 }
 
 module.exports = { logModAction };

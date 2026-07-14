@@ -115,7 +115,7 @@ module.exports = {
         .setDescription('請重新輸入 `/role` 開啟新選單')
         .setTimestamp();
 
-      await interaction.editReply({ embeds: [expiredEmbed], components: [] }).catch(() => {});
+      await interaction.editReply({ embeds: [expiredEmbed], components: [] }).catch(err => logger.warn('role 編輯回覆失敗:', err.message));
     });
   },
 };

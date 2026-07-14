@@ -101,7 +101,7 @@ ${msgs.map(m => {
     }
   } catch (err) { logger.error('工單備份失敗:', err.message); }
 
-  setTimeout(() => channel.delete().catch(() => {}), 5000);
+  setTimeout(() => channel.delete().catch(err => logger.warn('工單頻道刪除失敗:', err.message)), 5000);
 }
 
 async function handleTicketCreate(interaction) {

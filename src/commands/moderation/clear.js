@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const logger = require('../../utils/logger');
 const { logModAction } = require('../../services/modlog');
 
 module.exports = {
@@ -21,6 +22,6 @@ module.exports = {
       .setTimestamp();
 
     const reply = await interaction.reply({ embeds: [embed] });
-    setTimeout(() => reply.delete().catch(() => {}), 3000);
+    setTimeout(() => reply.delete().catch(err => logger.warn('clear 回覆刪除失敗:', err.message)), 3000);
   },
 };

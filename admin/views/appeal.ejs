@@ -57,6 +57,7 @@
   </div>
   <% if (locals.user) { %>
   <script>
+    const CSRF_TOKEN = '<%= csrfToken %>';
     document.getElementById('appealForm').addEventListener('submit', async e => {
       e.preventDefault();
       const status = document.getElementById('status');
@@ -64,7 +65,7 @@
       try {
         const res = await fetch('/api/appeal/submit', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF_TOKEN },
           body: JSON.stringify({ reason: document.getElementById('reason').value }),
         });
         const data = await res.json();

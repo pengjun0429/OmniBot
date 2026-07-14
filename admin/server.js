@@ -9,15 +9,22 @@ function startAdmin(client) {
   const app = express();
   const PORT = process.env.ADMIN_PORT || 3000;
 
+  if (!process.env.SESSION_SECRET) {
+    logger.warn('⚠️ 未設定 SESSION_SECRET 環境變數，使用隨機金鑰（重啟後 session 將失效）');
+  }
+  if (!process.env.ADMIN_USERNAME || !process.env.ADMIN_PASSWORD) {
+    logger.warn('⚠️ 未設定 ADMIN_USERNAME/ADMIN_PASSWORD，請盡快設定');
+  }
+
   app.set('view engine', 'ejs');
   app.set('views', path.join(__dirname, 'views'));
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
 
   app.use(session({
-    secret: process.env.SESSION_SECRET || 'omnibot-admin-session-fallback-change-me',
+    secret: process.env.SESSION_SECRET || require('crypto').randomBytes(32).toString('hex'),
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
     cookie: {
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
@@ -25,9 +32,27 @@ function startAdmin(client) {
     }
   }));
 
+  // CSRF token middleware
+  app.use((req, res, next) => {
+    if (req.session) {
+      if (!req.session.csrfToken) {
+        req.session.csrfToken = require('crypto').randomBytes(32).toString('hex');
+      }
+      res.locals.csrfToken = req.session.csrfToken;
+    }
+    next();
+  });
+
   function requireAuth(req, res, next) {
     if (req.session.authenticated) return next();
     res.redirect('/login');
+  }
+
+  function requireCSRF(req, res, next) {
+    if (req.method !== 'POST') return next();
+    if (req.headers['x-csrf-token'] === req.session?.csrfToken) return next();
+    if (req.body?._csrf === req.session?.csrfToken) return next();
+    res.status(403).json({ success: false, error: 'CSRF token 無效' });
   }
 
   function getGuildData(guild) {
@@ -85,10 +110,12 @@ function startAdmin(client) {
     const { username, password } = req.body;
     const adminUser = process.env.ADMIN_USERNAME;
     const adminPass = process.env.ADMIN_PASSWORD;
-    const finalUser = adminUser || 'admin';
-    const finalPass = adminPass || 'admin123';
-    if (username === finalUser && password === finalPass) {
+    if (!adminUser || !adminPass) {
+      return res.render('login', { error: '未設定管理員帳號密碼，請聯絡系統管理員' });
+    }
+    if (username === adminUser && password === adminPass) {
       req.session.authenticated = true;
+      req.session.csrfToken = require('crypto').randomBytes(32).toString('hex');
       return res.redirect('/dashboard');
     }
     res.render('login', { error: '帳號或密碼錯誤' });
@@ -179,7 +206,7 @@ function startAdmin(client) {
     res.json({ guild: getGuildData(guild) });
   });
 
-  app.post('/api/settings/:id', requireAuth, async (req, res) => {
+  app.post('/api/settings/:id', requireAuth, requireCSRF, async (req, res) => {
     const guild = client.guilds.cache.get(req.params.id);
     if (!guild) return res.status(404).json({ success: false, error: '找不到伺服器' });
     const gs = settings.getGuildSettings(guild.id);
@@ -207,7 +234,7 @@ function startAdmin(client) {
     res.redirect(redirect);
   });
 
-  app.post('/api/settings/:id/roles', requireAuth, async (req, res) => {
+  app.post('/api/settings/:id/roles', requireAuth, requireCSRF, async (req, res) => {
     const guild = client.guilds.cache.get(req.params.id);
     if (!guild) return res.status(404).json({ success: false, error: '找不到伺服器' });
     const gs = settings.getGuildSettings(guild.id);
@@ -216,7 +243,7 @@ function startAdmin(client) {
     res.redirect('/settings');
   });
 
-  app.post('/api/settings/:id/autovoice', requireAuth, async (req, res) => {
+  app.post('/api/settings/:id/autovoice', requireAuth, requireCSRF, async (req, res) => {
     const guild = client.guilds.cache.get(req.params.id);
     if (!guild) return res.status(404).json({ success: false, error: '找不到伺服器' });
     const gs = settings.getGuildSettings(guild.id);
@@ -231,7 +258,7 @@ function startAdmin(client) {
     res.redirect(`/server/${guild.id}#voice`);
   });
 
-  app.post('/api/settings/:id/ticket', requireAuth, async (req, res) => {
+  app.post('/api/settings/:id/ticket', requireAuth, requireCSRF, async (req, res) => {
     const guild = client.guilds.cache.get(req.params.id);
     if (!guild) return res.status(404).json({ success: false, error: '找不到伺服器' });
     const gs = settings.getGuildSettings(guild.id);
@@ -244,7 +271,7 @@ function startAdmin(client) {
     res.redirect(`/server/${guild.id}#ticket`);
   });
 
-  app.post('/api/settings/:id/automod', requireAuth, async (req, res) => {
+  app.post('/api/settings/:id/automod', requireAuth, requireCSRF, async (req, res) => {
     const guild = client.guilds.cache.get(req.params.id);
     if (!guild) return res.status(404).json({ success: false, error: '找不到伺服器' });
     const gs = settings.getGuildSettings(guild.id);
@@ -273,7 +300,7 @@ function startAdmin(client) {
     res.redirect(`/server/${guild.id}#automod`);
   });
 
-  app.post('/api/settings/:id/antiraid', requireAuth, async (req, res) => {
+  app.post('/api/settings/:id/antiraid', requireAuth, requireCSRF, async (req, res) => {
     const guild = client.guilds.cache.get(req.params.id);
     if (!guild) return res.status(404).json({ success: false, error: '找不到伺服器' });
     const gs = settings.getGuildSettings(guild.id);
@@ -291,7 +318,7 @@ function startAdmin(client) {
     res.redirect(`/server/${guild.id}#antiraid`);
   });
 
-  app.post('/api/settings/:id/inviteguard', requireAuth, async (req, res) => {
+  app.post('/api/settings/:id/inviteguard', requireAuth, requireCSRF, async (req, res) => {
     const guild = client.guilds.cache.get(req.params.id);
     if (!guild) return res.status(404).json({ success: false, error: '找不到伺服器' });
     const gs = settings.getGuildSettings(guild.id);
@@ -302,7 +329,7 @@ function startAdmin(client) {
     res.redirect(`/server/${guild.id}#inviteguard`);
   });
 
-  app.post('/api/settings/:id/invitelog', requireAuth, async (req, res) => {
+  app.post('/api/settings/:id/invitelog', requireAuth, requireCSRF, async (req, res) => {
     const guild = client.guilds.cache.get(req.params.id);
     if (!guild) return res.status(404).json({ success: false, error: '找不到伺服器' });
     const gs = settings.getGuildSettings(guild.id);
@@ -311,7 +338,7 @@ function startAdmin(client) {
     res.redirect(`/server/${guild.id}#invitelog`);
   });
 
-  app.post('/api/settings/:id/messagelog', requireAuth, async (req, res) => {
+  app.post('/api/settings/:id/messagelog', requireAuth, requireCSRF, async (req, res) => {
     const guild = client.guilds.cache.get(req.params.id);
     if (!guild) return res.status(404).json({ success: false, error: '找不到伺服器' });
     const gs = settings.getGuildSettings(guild.id);
@@ -324,7 +351,7 @@ function startAdmin(client) {
     res.redirect(`/server/${guild.id}#messagelog`);
   });
 
-  app.post('/api/settings/:id/rolegive', requireAuth, async (req, res) => {
+  app.post('/api/settings/:id/rolegive', requireAuth, requireCSRF, async (req, res) => {
     const guild = client.guilds.cache.get(req.params.id);
     if (!guild) return res.status(404).json({ success: false, error: '找不到伺服器' });
     const gs = settings.getGuildSettings(guild.id);
@@ -333,7 +360,7 @@ function startAdmin(client) {
     res.redirect(`/server/${guild.id}#rolegive`);
   });
 
-  app.post('/api/settings/:id/appeal', requireAuth, async (req, res) => {
+  app.post('/api/settings/:id/appeal', requireAuth, requireCSRF, async (req, res) => {
     const guild = client.guilds.cache.get(req.params.id);
     if (!guild) return res.status(404).json({ success: false, error: '找不到伺服器' });
     const gs = settings.getGuildSettings(guild.id);
@@ -342,7 +369,7 @@ function startAdmin(client) {
     res.redirect(`/server/${guild.id}#appeal`);
   });
 
-  app.post('/api/server/:id/send-panel', requireAuth, async (req, res) => {
+  app.post('/api/server/:id/send-panel', requireAuth, requireCSRF, async (req, res) => {
     const guild = client.guilds.cache.get(req.params.id);
     if (!guild) return res.status(404).json({ success: false, error: '找不到伺服器' });
     const channel = guild.channels.cache.get(req.body.channelId);
@@ -372,7 +399,7 @@ function startAdmin(client) {
     } catch (err) { res.json({ success: false, error: err.message }); }
   });
 
-  app.post('/api/server/:id/send-ticket-panel', requireAuth, async (req, res) => {
+  app.post('/api/server/:id/send-ticket-panel', requireAuth, requireCSRF, async (req, res) => {
     const guild = client.guilds.cache.get(req.params.id);
     if (!guild) return res.status(404).json({ success: false, error: '找不到伺服器' });
     const channel = guild.channels.cache.get(req.body.channelId);
@@ -388,7 +415,7 @@ function startAdmin(client) {
     } catch (err) { res.json({ success: false, error: err.message }); }
   });
 
-  app.post('/api/announce/send', requireAuth, async (req, res) => {
+  app.post('/api/announce/send', requireAuth, requireCSRF, async (req, res) => {
     const { channelId, title, message, color } = req.body;
     const channel = client.channels.cache.get(channelId);
     if (!channel) return res.json({ success: false, error: '找不到頻道' });

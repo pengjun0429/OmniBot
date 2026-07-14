@@ -1,3 +1,4 @@
+const logger = require('../utils/logger');
 const settings = require('../services/settings');
 
 module.exports = {
@@ -24,6 +25,6 @@ module.exports = {
         footer: { text: `作者ID: ${authorId}` },
         timestamp: new Date().toISOString(),
       }],
-    }).catch(() => {});
+    }).catch(err => logger.warn('messageDelete 日誌傳送失敗:', err.message));
   },
 };

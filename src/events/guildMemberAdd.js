@@ -1,4 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
+const logger = require('../utils/logger');
 const settings = require('../services/settings');
 const raidTracker = require('../services/raid-tracker');
 const inviteTracker = require('../services/invite-tracker');
@@ -10,7 +11,7 @@ module.exports = {
     if (gs.autoRoleId) {
       const role = member.guild.roles.cache.get(gs.autoRoleId);
       if (role && role.position < member.guild.members.me.roles.highest.position) {
-        member.roles.add(role).catch(() => {});
+        member.roles.add(role).catch(err => logger.warn('guildMemberAdd 操作失敗:', err.message));
       }
     }
 
@@ -19,7 +20,7 @@ module.exports = {
       const recent = raidTracker.getJoinCount(member.guild.id, (gs.antiRaid.joinWindow || 10) * 1000);
       if (recent >= (gs.antiRaid.joinThreshold || 5)) {
         try {
-          if (gs.antiRaid.action === 'kick') await member.kick('防轟炸：大量加入').catch(() => {});
+          if (gs.antiRaid.action === 'kick') await member.kick('防轟炸：大量加入').catch(err => logger.warn('guildMemberAdd 操作失敗:', err.message));
           const logCh = gs.antiRaid.logChannelId ? member.guild.channels.cache.get(gs.antiRaid.logChannelId) : null;
           if (logCh) logCh.send(`🚨 **防轟炸觸發**\n偵測到 ${recent} 人在 ${gs.antiRaid.joinWindow || 10} 秒內加入`);
         } catch { return; }
@@ -44,7 +45,7 @@ module.exports = {
 
       const imageUrl = gs.welcome?.image;
       if (imageUrl) embed.setImage(imageUrl);
-      channel.send({ embeds: [embed] }).catch(() => {});
+      channel.send({ embeds: [embed] }).catch(err => logger.warn('guildMemberAdd 操作失敗:', err.message));
     }
 
     const logChId = gs.inviteLog?.channelId;
@@ -52,7 +53,7 @@ module.exports = {
       const logCh = member.guild.channels.cache.get(logChId);
       if (logCh) {
         const result = await inviteTracker.detectJoin(member.guild).catch(() => null);
-        await inviteTracker.refresh(member.guild).catch(() => {});
+        await inviteTracker.refresh(member.guild).catch(err => logger.warn('guildMemberAdd 操作失敗:', err.message));
         let text = `✅ ${member.user} 加入了伺服器`;
         if (result) {
           text += `\n來源：邀請連結 | 邀請碼：\`${result.code}\``;
@@ -63,7 +64,7 @@ module.exports = {
           const active = [...allInvites.values()].filter(i => i.code === result.code).reduce((s, i) => s + (i.uses || 0), 0);
           text += `\n累計：${totalUses}，有效：${active}`;
         }
-        logCh.send(text).catch(() => {});
+        logCh.send(text).catch(err => logger.warn('guildMemberAdd 操作失敗:', err.message));
       }
     }
   },

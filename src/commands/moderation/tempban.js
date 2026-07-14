@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const settings = require('../../services/settings');
 const { logModAction } = require('../../services/modlog');
+const { canTarget } = require('../../utils/permissions');
 
 module.exports = {
   category: '管理',
@@ -20,6 +21,12 @@ module.exports = {
     const reason = interaction.options.getString('原因') || '未提供原因';
 
     if (!target) return interaction.reply({ content: '找不到該成員', ephemeral: true });
+    if (target.id === interaction.client.user.id) {
+      return interaction.reply({ content: '❌ 無法封鎖機器人自己', ephemeral: true });
+    }
+    if (!canTarget(interaction.member, target)) {
+      return interaction.reply({ content: '❌ 你的身分組層級不足以封鎖該成員', ephemeral: true });
+    }
     if (!target.bannable) return interaction.reply({ content: '無法封鎖該成員（權限不足）', ephemeral: true });
 
     const expiresAt = Date.now() + minutes * 60 * 1000;

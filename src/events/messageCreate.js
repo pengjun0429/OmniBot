@@ -54,8 +54,8 @@ module.exports = {
         if (!gs.inviteGuard.whitelist?.includes(code)) {
           try {
             await message.delete();
-            const warn = await message.channel.send(`${message.author} 不允許張貼邀請連結`).catch(() => {});
-            setTimeout(() => warn?.delete().catch(() => {}), 3000);
+            const warn = await message.channel.send(`${message.author} 不允許張貼邀請連結`).catch(err => logger.warn('messageCreate 操作失敗:', err.message));
+            setTimeout(() => warn?.delete().catch(err => logger.warn('messageCreate 操作失敗:', err.message)), 3000);
             if (gs.inviteGuard.logChannelId) {
               const logCh = message.guild.channels.cache.get(gs.inviteGuard.logChannelId);
               if (logCh) logCh.send(`🚫 ${message.author} 張貼了非白名單邀請：\`${code}\``);
@@ -76,9 +76,9 @@ module.exports = {
           const fetched = await channel.messages.fetch({ limit: 50 }).catch(() => null);
           if (fetched) {
             const userMsgs = fetched.filter(m => m.author.id === message.author.id && m.deletable);
-            await channel.bulkDelete(userMsgs).catch(() => {});
+            await channel.bulkDelete(userMsgs).catch(err => logger.warn('messageCreate 操作失敗:', err.message));
           }
-          await message.member.timeout((gs.antiRaid.spamTimeout || 1) * 60 * 1000, '防轟炸：短時間大量訊息').catch(() => {});
+          await message.member.timeout((gs.antiRaid.spamTimeout || 1) * 60 * 1000, '防轟炸：短時間大量訊息').catch(err => logger.warn('messageCreate 操作失敗:', err.message));
           const logCh = gs.antiRaid.logChannelId ? message.guild.channels.cache.get(gs.antiRaid.logChannelId) : null;
           if (logCh) logCh.send(`🚨 **防轟炸** ${message.author} 短時間發送大量訊息，已禁言 ${gs.antiRaid.spamTimeout || 1} 分鐘`);
         } catch {}
@@ -181,8 +181,8 @@ module.exports = {
         await message.member.timeout(effectiveDuration * 60 * 1000, `自動審核(${strikeCount}次)：${reason}`).catch(err => logger.error(`自動審核 timeout 失敗:`, err.message));
         punished = true;
       } else if (effectivePunishment === 'warn') {
-        const warnMsg = await message.channel.send(`⚠️ ${message.author}，請注意言詞！您已被系統警告 (${strikeCount}犯)。`).catch(() => {});
-        if (warnMsg) setTimeout(() => warnMsg.delete().catch(() => {}), 5000);
+        const warnMsg = await message.channel.send(`⚠️ ${message.author}，請注意言詞！您已被系統警告 (${strikeCount}犯)。`).catch(err => logger.warn('messageCreate 操作失敗:', err.message));
+        if (warnMsg) setTimeout(() => warnMsg.delete().catch(err => logger.warn('messageCreate 操作失敗:', err.message)), 5000);
         punished = true;
       } else if (effectivePunishment === 'kick') {
         await message.member.kick(`自動審核(${strikeCount}次)：${reason}`).catch(err => logger.error(`自動審核 kick 失敗:`, err.message));

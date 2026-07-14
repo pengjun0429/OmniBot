@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, ChannelType, PermissionFlagsBits } = require('discord.js');
+const logger = require('../../utils/logger');
 const settings = require('../../services/settings');
 
 module.exports = {
@@ -32,11 +33,11 @@ module.exports = {
 async function updateCounter(channel, type) {
   try {
     const guild = channel.guild;
-    await guild.members.fetch().catch(() => {});
+    await guild.members.fetch().catch(err => logger.warn('counter 操作失敗:', err.message));
     const total = guild.memberCount;
     const online = guild.members.cache.filter(m => m.presence?.status === 'online' || m.presence?.status === 'idle' || m.presence?.status === 'dnd').size;
     const count = type === 'members' ? total : online;
     const name = type === 'members' ? `👥 成員：${count}` : `📶 在線：${count}`;
-    await channel.setName(name).catch(() => {});
+    await channel.setName(name).catch(err => logger.warn('counter 操作失敗:', err.message));
   } catch {}
 }

@@ -1,3 +1,4 @@
+const logger = require('../utils/logger');
 const settings = require('../services/settings');
 
 module.exports = {
@@ -28,6 +29,6 @@ module.exports = {
         footer: { text: `作者ID: ${newMessage.author.id}` },
         timestamp: new Date().toISOString(),
       }],
-    }).catch(() => {});
+    }).catch(err => logger.warn('messageUpdate 日誌傳送失敗:', err.message));
   },
 };

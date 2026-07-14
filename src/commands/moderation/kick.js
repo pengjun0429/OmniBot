@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const { logModAction } = require('../../services/modlog');
+const { canTarget } = require('../../utils/permissions');
 
 module.exports = {
   category: '管理',
@@ -19,6 +20,12 @@ module.exports = {
       return interaction.reply({ content: '找不到該成員', ephemeral: true });
     }
 
+    if (target.id === interaction.client.user.id) {
+      return interaction.reply({ content: '❌ 無法踢出機器人自己', ephemeral: true });
+    }
+    if (!canTarget(interaction.member, target)) {
+      return interaction.reply({ content: '❌ 你的身分組層級不足以踢出該成員', ephemeral: true });
+    }
     if (!target.kickable) {
       return interaction.reply({ content: '無法踢出該成員（權限不足）', ephemeral: true });
     }
