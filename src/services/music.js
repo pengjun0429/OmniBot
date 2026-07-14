@@ -9,6 +9,21 @@ const agent = new https.Agent({
   keepAlive: true,
 });
 
+const cookies = process.env.YOUTUBE_COOKIES || '';
+const ytdlOptions = {
+  filter: 'audioonly',
+  quality: 'lowestaudio',
+  highWaterMark: 1 << 25,
+  agent,
+  requestOptions: {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept-Language': 'zh-TW,zh;q=0.9,en;q=0.8',
+      ...(cookies ? { Cookie: cookies } : {}),
+    },
+  },
+};
+
 const queues = new Map();
 
 class MusicQueue {
@@ -202,18 +217,7 @@ async function playSong(queue) {
   if (!song) { queue.playing = false; return; }
 
   try {
-    const stream = ytdl(song.url, {
-      filter: 'audioonly',
-      quality: 'lowestaudio',
-      highWaterMark: 1 << 25,
-      agent,
-      requestOptions: {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept-Language': 'zh-TW,zh;q=0.9,en;q=0.8',
-        },
-      },
-    });
+    const stream = ytdl(song.url, ytdlOptions);
 
     const resource = createAudioResource(stream, { inlineVolume: true });
     resource.volume?.setVolumeLogarithmic(queue.volume / 100);
