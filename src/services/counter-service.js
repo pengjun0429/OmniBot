@@ -1,5 +1,4 @@
 const settings = require('./settings');
-const logger = require('./logger');
 
 let client = null;
 
