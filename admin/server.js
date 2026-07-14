@@ -206,7 +206,7 @@ function startAdmin(client) {
   });
 
   app.get('/appeal', (req, res) => {
-    res.render('appeal', { error: null, success: null });
+    res.render('appeal', { error: null, success: null, csrfToken: req.session?.csrfToken || '' });
   });
 
   app.get('/privacy', (req, res) => {
@@ -460,7 +460,7 @@ function startAdmin(client) {
     res.json({ guild: guild.name, id: guild.id, settings: gs });
   });
 
-  app.post('/api/appeal/submit', async (req, res) => {
+  app.post('/api/appeal/submit', requireCSRF, async (req, res) => {
     try {
       const { reason, userId, userName } = req.body;
       if (!reason || !reason.trim()) return res.json({ success: false, error: '請填寫申訴原因' });

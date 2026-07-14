@@ -5,7 +5,6 @@ const IMAGES = [
   'https://upload.wikimedia.org/wikipedia/en/3/33/Patrick_Star.svg',
   'https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/Patrick_Star.svg/480px-Patrick_Star.svg.png',
   'https://upload.wikimedia.org/wikipedia/en/thumb/3/33/Patrick_Star.svg/240px-Patrick_Star.svg.png',
-  'https://upload.wikimedia.org/wikipedia/commons/2/28/Patrick_Star_character.png',
 ];
 
 module.exports = {

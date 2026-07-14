@@ -11,7 +11,7 @@ module.exports = {
     if (gs.autoRoleId) {
       const role = member.guild.roles.cache.get(gs.autoRoleId);
       if (role && role.position < member.guild.members.me.roles.highest.position) {
-        member.roles.add(role).catch(err => logger.warn('guildMemberAdd 操作失敗:', err.message));
+        await member.roles.add(role).catch(err => logger.warn('guildMemberAdd 操作失敗:', err.message));
       }
     }
 

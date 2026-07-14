@@ -13,12 +13,20 @@ module.exports = {
   async execute(interaction) {
     const amount = interaction.options.getInteger('數量');
 
-    const messages = await interaction.channel.bulkDelete(amount, true);
-    await logModAction(interaction.guild, 'clear', interaction.user, interaction.user, `清除 ${messages.size} 則訊息`);
+    let deletedSize = 0;
+    try {
+      const messages = await interaction.channel.bulkDelete(amount, true);
+      deletedSize = messages.size;
+    } catch (err) {
+      logger.warn('clear bulkDelete 失敗:', err.message);
+      const messages = await interaction.channel.bulkDelete(amount, false);
+      deletedSize = messages.size;
+    }
+    await logModAction(interaction.guild, 'clear', interaction.user, interaction.user, `清除 ${deletedSize} 則訊息`);
 
     const embed = new EmbedBuilder()
       .setColor(0x00ff00)
-      .setDescription(`已清除 ${messages.size} 則訊息`)
+      .setDescription(`已清除 ${deletedSize} 則訊息`)
       .setTimestamp();
 
     const reply = await interaction.reply({ embeds: [embed] });

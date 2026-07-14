@@ -67,7 +67,8 @@ module.exports = {
     }
 
     if (gs.antiRaid?.enabled) {
-      if (!message.member || !message.guild.members.me.permissions.has('ModerateMembers')) return;
+      const { PermissionFlagsBits } = require('discord.js');
+      if (!message.member || !message.guild.members.me.permissions.has(PermissionFlagsBits.ModerateMembers)) return;
       const raidTracker = require('../services/raid-tracker');
       const windowMs = (gs.antiRaid.spamWindow || 5) * 1000;
       const dupCount = raidTracker.checkDuplicate(message.guild.id, message.author.id, message.content, windowMs);

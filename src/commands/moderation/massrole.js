@@ -40,10 +40,10 @@ module.exports = {
         const member = await interaction.guild.members.fetch(id).catch(() => null);
         if (!member) { fail++; failedUsers.push(id); continue; }
         if (sub === 'add') {
-          if (member.roles.cache.has(role.id)) { fail++; continue; }
+          if (member.roles.cache.has(role.id)) { success++; continue; }
           await member.roles.add(role);
         } else {
-          if (!member.roles.cache.has(role.id)) { fail++; continue; }
+          if (!member.roles.cache.has(role.id)) { success++; continue; }
           await member.roles.remove(role);
         }
         success++;
