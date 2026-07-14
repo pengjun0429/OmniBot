@@ -30,8 +30,8 @@ module.exports = {
         .replace(/{count}/g, member.guild.memberCount)
         .replace(/{server}/g, member.guild.name)
         .slice(0, 32);
-      if (nickname && member.roles.highest.position < member.guild.members.me.roles.highest.position) {
-        await member.setNickname(nickname).catch(err => logger.warn('guildMemberAdd 自動暱稱失敗:', err.message));
+      if (nickname) {
+        await member.setNickname(nickname).catch(() => {});
       }
     }
 
