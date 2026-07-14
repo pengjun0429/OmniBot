@@ -12,8 +12,6 @@ const ytdlOptions = {
   highWaterMark: 1 << 25,
 };
 
-const queues = new Map();
-
 class MusicQueue {
   constructor(guildId, channel, textChannel) {
     this.guildId = guildId;
