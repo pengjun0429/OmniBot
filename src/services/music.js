@@ -1,27 +1,15 @@
+process.env.YTDL_NO_UPDATE = '1';
 const { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioPlayerStatus } = require('@discordjs/voice');
 const ytdl = require('@distube/ytdl-core');
 const { EmbedBuilder } = require('discord.js');
 const axios = require('axios');
-const https = require('https');
 
-const agent = new https.Agent({
-  rejectUnauthorized: false,
-  keepAlive: true,
-});
+const queues = new Map();
 
-const cookies = process.env.YOUTUBE_COOKIES || '';
 const ytdlOptions = {
   filter: 'audioonly',
   quality: 'lowestaudio',
   highWaterMark: 1 << 25,
-  agent,
-  requestOptions: {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      'Accept-Language': 'zh-TW,zh;q=0.9,en;q=0.8',
-      ...(cookies ? { Cookie: cookies } : {}),
-    },
-  },
 };
 
 const queues = new Map();
@@ -261,8 +249,8 @@ async function playSong(queue) {
 
   queue.player.removeAllListeners('error');
   queue.player.on('error', (err) => {
-    console.error('[音樂] 串流錯誤:', err.message);
-    if (queue.textChannel) queue.textChannel.send('❌ 播放時發生串流錯誤').catch(() => {});
+    console.error('[音樂] 串流錯誤:', err.message, err.stack?.slice(0, 200));
+    if (queue.textChannel) queue.textChannel.send('❌ 播放時發生串流錯誤: ' + err.message.slice(0, 50)).catch(() => {});
   });
 }
 
