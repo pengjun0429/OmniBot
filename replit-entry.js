@@ -1,5 +1,9 @@
+console.log('[BOOT] Starting OmniBot...');
+
 const client = require('./src/client');
+console.log('[BOOT] client OK');
 const config = require('./src/config');
+console.log('[BOOT] config OK');
 const logger = require('./src/utils/logger');
 const { deploy } = require('./src/utils/deploy-commands');
 const { registerCommands, registerEvents } = require('./src/utils/command-handler');
@@ -8,8 +12,10 @@ const settings = require('./src/services/settings');
 const path = require('path');
 const crypto = require('crypto');
 
+console.log('[BOOT] registering commands/events...');
 registerCommands(client);
 registerEvents(client);
+console.log('[BOOT] commands/events registered');
 
 async function startBot() {
   await settings.init();
@@ -20,6 +26,8 @@ async function startBot() {
 
 startBot().catch(err => {
   logger.error('Bot 啟動失敗:', err);
+  console.error('完整錯誤:', err.stack);
+  process.exit(1);
 });
 
 const express = require('express');
