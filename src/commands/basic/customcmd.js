@@ -1,5 +1,4 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { isTopAdmin } = require('../../utils/permissions');
 const settings = require('../../services/settings');
 
 module.exports = {
@@ -21,9 +20,6 @@ module.exports = {
         .setDescription('列出所有自訂指令')),
   async execute(interaction) {
     const gs = settings.getGuildSettings(interaction.guild.id);
-    if (!isTopAdmin(interaction.member, gs.adminRoles?.topIds || [])) {
-      return interaction.reply({ content: '只有可愛的管管們才能使用此指令', ephemeral: true });
-    }
     if (!gs.customCommands) gs.customCommands = {};
     const sub = interaction.options.getSubcommand();
 

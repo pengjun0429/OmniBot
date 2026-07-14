@@ -1,5 +1,6 @@
 const settings = require('../services/settings');
 const logger = require('../utils/logger');
+const { isTopAdmin } = require('../utils/permissions');
 const axios = require('axios');
 
 const GOOGLE_DB_URL = () => process.env.GOOGLE_DB_URL;
@@ -18,6 +19,9 @@ module.exports = {
       const args = message.content.slice(prefix.length).trim().split(/\s+/);
       const cmdName = args[0]?.toLowerCase();
       if (cmdName && gs.customCommands?.[cmdName]) {
+        if (!isTopAdmin(message.member, gs.adminRoles?.topIds || [])) {
+          return;
+        }
         return message.channel.send(gs.customCommands[cmdName]);
       }
     }
