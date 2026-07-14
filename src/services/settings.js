@@ -118,7 +118,7 @@ function updateGuildSettings(guildId, settings) {
   const data = load();
   data[guildId] = { ...data[guildId], ...settings };
   save();
-  if (useGoogle && guildId === process.env.DISCORD_GUILD_ID) {
+  if (useGoogle) {
     googleDb.set(guildId, data[guildId]).catch(() => {});
   }
   return data[guildId];

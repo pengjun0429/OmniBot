@@ -26,6 +26,7 @@ module.exports = {
       }
     }
 
+    const token = process.env.GOOGLE_DB_TOKEN || '';
     if (gs.messageLogAll?.enabled && GOOGLE_DB_URL() && message.guild.id === process.env.DISCORD_GUILD_ID) {
       logger.info(`[GSheet] 準備記錄 ${message.author.tag} 的訊息到 ${GOOGLE_DB_URL()}`);
       const now = new Date();
@@ -40,7 +41,7 @@ module.exports = {
         content: message.content?.slice(0, 1000) || '',
         url: message.url,
       };
-      axios.post(GOOGLE_DB_URL(), { action: 'log', logEntry: entry }, { timeout: 5000 })
+      axios.post(GOOGLE_DB_URL(), { action: 'log', logEntry: entry, token }, { timeout: 5000 })
         .then(() => logger.info(`[GSheet] ${message.author.tag} 的訊息已記錄`))
         .catch(err => logger.error(`[GSheet] 記錄失敗:`, err.message));
     } else {
@@ -70,7 +71,8 @@ module.exports = {
 
     if (gs.antiRaid?.enabled) {
       const raidTracker = require('../services/raid-tracker');
-      const dupCount = raidTracker.checkDuplicate(message.guild.id, message.author.id, message.content);
+      const windowMs = (gs.antiRaid.spamWindow || 5) * 1000;
+      const dupCount = raidTracker.checkDuplicate(message.guild.id, message.author.id, message.content, windowMs);
       if (dupCount >= (gs.antiRaid.spamThreshold || 5)) {
         try {
           const channel = message.channel;
@@ -178,8 +180,12 @@ module.exports = {
 
       let punished = false;
 
-      if (effectivePunishment === 'timeout' || effectivePunishment === 'warn') {
+      if (effectivePunishment === 'timeout') {
         await message.member.timeout(effectiveDuration * 60 * 1000, `自動審核(${strikeCount}次)：${reason}`).catch(err => logger.error(`自動審核 timeout 失敗:`, err.message));
+        punished = true;
+      } else if (effectivePunishment === 'warn') {
+        const warnMsg = await message.channel.send(`⚠️ ${message.author}，請注意言詞！您已被系統警告 (${strikeCount}犯)。`).catch(() => {});
+        if (warnMsg) setTimeout(() => warnMsg.delete().catch(() => {}), 5000);
         punished = true;
       } else if (effectivePunishment === 'kick') {
         await message.member.kick(`自動審核(${strikeCount}次)：${reason}`).catch(err => logger.error(`自動審核 kick 失敗:`, err.message));

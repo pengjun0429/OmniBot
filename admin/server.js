@@ -13,9 +13,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.use(session({
-  secret: 'omnibot-admin-session',
+  secret: process.env.SESSION_SECRET || 'omnibot-admin-session-fallback-change-me',
   resave: false,
   saveUninitialized: true,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    sameSite: 'lax'
+  }
 }));
 
 function requireAuth(req, res, next) {
@@ -35,9 +40,18 @@ app.get('/login', (req, res) => {
 
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
-  const adminUser = process.env.ADMIN_USERNAME || 'admin';
-  const adminPass = process.env.ADMIN_PASSWORD || 'admin123';
-  if (username === adminUser && password === adminPass) {
+  const isProduction = process.env.NODE_ENV === 'production';
+  const adminUser = process.env.ADMIN_USERNAME;
+  const adminPass = process.env.ADMIN_PASSWORD;
+
+  if (isProduction && (!adminUser || !adminPass)) {
+    return res.render('login', { error: '安全限制：生產環境必須設定 ADMIN_USERNAME 與 ADMIN_PASSWORD' });
+  }
+
+  const finalUser = adminUser || 'admin';
+  const finalPass = adminPass || 'admin123';
+
+  if (username === finalUser && password === finalPass) {
     req.session.authenticated = true;
     return res.redirect('/dashboard');
   }
