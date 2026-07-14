@@ -1,4 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const logger = require('../../utils/logger');
+const { logModAction } = require('../../services/modlog');
 
 module.exports = {
   category: '管理',
@@ -12,6 +14,7 @@ module.exports = {
     const amount = interaction.options.getInteger('數量');
 
     const messages = await interaction.channel.bulkDelete(amount, true);
+    await logModAction(interaction.guild, 'clear', interaction.user, interaction.user, `清除 ${messages.size} 則訊息`);
 
     const embed = new EmbedBuilder()
       .setColor(0x00ff00)
@@ -19,6 +22,6 @@ module.exports = {
       .setTimestamp();
 
     const reply = await interaction.reply({ embeds: [embed] });
-    setTimeout(() => reply.delete().catch(() => {}), 3000);
+    setTimeout(() => reply.delete().catch(err => logger.warn('clear 回覆刪除失敗:', err.message)), 3000);
   },
 };

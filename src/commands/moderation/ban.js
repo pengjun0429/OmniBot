@@ -1,4 +1,7 @@
+const APPEAL_URL = process.env.APPEAL_URL || 'https://omnibot-yzti.onrender.com/appeal';
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { logModAction } = require('../../services/modlog');
+const { canTarget } = require('../../utils/permissions');
 
 module.exports = {
   category: '管理',
@@ -18,17 +21,26 @@ module.exports = {
       return interaction.reply({ content: '找不到該成員', ephemeral: true });
     }
 
+    if (target.id === interaction.client.user.id) {
+      return interaction.reply({ content: '❌ 無法封鎖機器人自己', ephemeral: true });
+    }
+    if (!canTarget(interaction.member, target)) {
+      return interaction.reply({ content: '❌ 你的身分組層級不足以封鎖該成員', ephemeral: true });
+    }
     if (!target.bannable) {
       return interaction.reply({ content: '無法封鎖該成員（權限不足）', ephemeral: true });
     }
 
+    await interaction.deferReply();
+
     try {
-      await target.send(`你已在伺服器 **${interaction.guild.name}** 被封鎖\n原因: ${reason}\n\n📋 申訴：https://omnibot-yzti.onrender.com/appeal`);
+      await target.send(`你已在伺服器 **${interaction.guild.name}** 被封鎖\n原因: ${reason}\n\n📋 申訴：${APPEAL_URL}`);
     } catch {
       // 私訊失敗不影響封鎖
     }
 
     await target.ban({ reason });
+    await logModAction(interaction.guild, 'ban', target.user, interaction.user, reason);
 
     const embed = new EmbedBuilder()
       .setColor(0xff0000)
@@ -40,6 +52,6 @@ module.exports = {
       )
       .setTimestamp();
 
-    await interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
   },
 };

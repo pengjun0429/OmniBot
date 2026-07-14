@@ -1,4 +1,4 @@
-const { PermissionFlagsBits } = require('discord.js');
+const { ChannelType, PermissionFlagsBits } = require('discord.js');
 
 function escapeHTML(str) {
   if (!str) return '';
@@ -9,6 +9,9 @@ const settings = require('../services/settings');
 
 module.exports = {
   async execute(interaction) {
+    if (interaction.isButton() && interaction.customId === 'verify_click') {
+      return handleVerifyClick(interaction);
+    }
     if (interaction.isButton() && interaction.customId.startsWith('role_toggle_')) {
       return handleRoleToggle(interaction);
     }
@@ -18,15 +21,18 @@ module.exports = {
     if (interaction.isButton() && interaction.customId === 'ticket_close') {
       return handleTicketClose(interaction);
     }
+    if (interaction.isAutocomplete()) {
+      return handleAutocomplete(interaction);
+    }
     if (!interaction.isChatInputCommand()) return;
 
     const command = interaction.client.commands.get(interaction.commandName);
     if (!command) return;
 
     const { cooldowns } = interaction.client;
-    if (!cooldowns.has(command.datescapeHTML(a.name))) cooldowns.set(command.datescapeHTML(a.name), new Map());
+    if (!cooldowns.has(command.data.name)) cooldowns.set(command.data.name, new Map());
     const now = Date.now();
-    const timestamps = cooldowns.get(command.datescapeHTML(a.name));
+    const timestamps = cooldowns.get(command.data.name);
     const cooldownAmount = (command.cooldown || 3) * 1000;
 
     if (timestamps.has(interaction.user.id)) {
@@ -98,7 +104,7 @@ ${msgs.map(m => {
     }
   } catch (err) { logger.error('工單備份失敗:', err.message); }
 
-  setTimeout(() => channel.delete().catch(() => {}), 5000);
+  setTimeout(() => channel.delete().catch(err => logger.warn('工單頻道刪除失敗:', err.message)), 5000);
 }
 
 async function handleTicketCreate(interaction) {
@@ -125,7 +131,7 @@ async function handleTicketCreate(interaction) {
     }
 
     const channel = await interaction.guild.channels.create({
-      name: channelName, type: 0, parent: categoryId || null,
+      name: channelName, type: ChannelType.GuildText, parent: categoryId || null,
       permissionOverwrites,
     });
 
@@ -158,7 +164,7 @@ async function handleRoleToggle(interaction) {
   if (!selfRoles.includes(roleId)) return interaction.reply({ content: '❌ 此身分組已不再允許自助領取', ephemeral: true });
 
   const me = interaction.guild.members.me;
-  if (!me.permissions.has('ManageRoles')) return interaction.reply({ content: '❌ 機器人缺少「管理身分組」權限', ephemeral: true });
+      if (!me.permissions.has(PermissionFlagsBits.ManageRoles)) return interaction.reply({ content: '❌ 機器人缺少「管理身分組」權限', ephemeral: true });
   if (role.position >= me.roles.highest.position) return interaction.reply({ content: '❌ 機器人的角色層級不足以管理該身分組', ephemeral: true });
   if (role.managed) return interaction.reply({ content: '❌ 無法領取託管身分組（如機器人角色）', ephemeral: true });
 
@@ -189,5 +195,39 @@ async function handleRoleToggle(interaction) {
   } catch (err) {
     logger.error(`身分組操作失敗 (${role.name}):`, err);
     await interaction.reply({ content: `❌ ${err.code === 50013 ? '機器人缺少權限' : '操作失敗：' + err.message}`, ephemeral: true });
+  }
+}
+
+async function handleAutocomplete(interaction) {
+  if (interaction.commandName !== 'tag') return;
+  const gs = settings.getGuildSettings(interaction.guild.id);
+  const cmds = gs.customCommands || {};
+  const names = Object.keys(cmds);
+  const focused = interaction.options.getFocused().toLowerCase();
+  const choices = names.filter(n => n.includes(focused)).slice(0, 25);
+  await interaction.respond(choices.map(n => ({ name: n, value: n })));
+}
+
+async function handleVerifyClick(interaction) {
+  const gs = settings.getGuildSettings(interaction.guild.id);
+  const verifyConfig = gs.verification || {};
+  if (!verifyConfig.enabled) {
+    return interaction.reply({ content: '❌ 驗證系統未啟用', ephemeral: true });
+  }
+
+  const role = interaction.guild.roles.cache.get(verifyConfig.roleId);
+  if (!role) return interaction.reply({ content: '❌ 驗證身分組已不存在', ephemeral: true });
+
+  const member = interaction.member;
+  if (member.roles.cache.has(role.id)) {
+    return interaction.reply({ content: '✅ 你已經驗證過了', ephemeral: true });
+  }
+
+  try {
+    await member.roles.add(role);
+    await interaction.reply({ content: '✅ 驗證成功！你已獲得伺服器權限', ephemeral: true });
+  } catch (err) {
+    logger.error(`驗證失敗 (${interaction.user.id}):`, err);
+    await interaction.reply({ content: '❌ 驗證失敗，請聯繫管理員', ephemeral: true });
   }
 }
