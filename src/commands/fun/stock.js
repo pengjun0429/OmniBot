@@ -8,8 +8,8 @@ module.exports = {
     .setDescription('📈 虛擬股市')
     .addSubcommand(s => s.setName('list').setDescription('查看所有股票'))
     .addSubcommand(s => s.setName('view').setDescription('查看股票詳情').addStringOption(o => o.setName('代號').setDescription('股票代號').setRequired(true)))
-    .addSubcommand(s => s.setName('buy').setDescription('買入股票').addStringOption(o => o.setName('代號').setRequired(true)).addIntegerOption(o => o.setName('股數').setRequired(true).setMinValue(1)))
-    .addSubcommand(s => s.setName('sell').setDescription('賣出股票').addStringOption(o => o.setName('代號').setRequired(true)).addIntegerOption(o => o.setName('股數').setRequired(true).setMinValue(1)))
+    .addSubcommand(s => s.setName('buy').setDescription('買入股票').addStringOption(o => o.setName('代號').setDescription('股票代號').setRequired(true)).addIntegerOption(o => o.setName('股數').setDescription('購買股數').setRequired(true).setMinValue(1)))
+    .addSubcommand(s => s.setName('sell').setDescription('賣出股票').addStringOption(o => o.setName('代號').setDescription('股票代號').setRequired(true)).addIntegerOption(o => o.setName('股數').setDescription('賣出股數').setRequired(true).setMinValue(1)))
     .addSubcommand(s => s.setName('portfolio').setDescription('查看你的持股')),
   async execute(interaction) {
     const gs = settings.getGuildSettings(interaction.guild.id);
