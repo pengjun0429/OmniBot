@@ -15,6 +15,26 @@ module.exports = {
       }
     }
 
+    if (gs.autoNick?.enabled && gs.autoNick?.template) {
+      const roleTemplates = gs.autoNick.roles || {};
+      let template = gs.autoNick.template;
+      const sortedRoles = [...member.roles.cache.values()]
+        .filter(r => roleTemplates[r.id])
+        .sort((a, b) => b.position - a.position);
+      if (sortedRoles.length > 0) template = roleTemplates[sortedRoles[0].id];
+      const nickname = template
+        .replace(/{user}/g, member.user.username)
+        .replace(/{tag}/g, member.user.tag)
+        .replace(/{id}/g, member.id)
+        .replace(/{nick}/g, member.user.username)
+        .replace(/{count}/g, member.guild.memberCount)
+        .replace(/{server}/g, member.guild.name)
+        .slice(0, 32);
+      if (nickname && member.roles.highest.position < member.guild.members.me.roles.highest.position) {
+        await member.setNickname(nickname).catch(err => logger.warn('guildMemberAdd 自動暱稱失敗:', err.message));
+      }
+    }
+
     if (gs.antiRaid?.enabled) {
       raidTracker.trackJoin(member.guild.id);
       const recent = raidTracker.getJoinCount(member.guild.id, (gs.antiRaid.joinWindow || 10) * 1000);

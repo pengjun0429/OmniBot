@@ -94,6 +94,7 @@ function startAdmin(client) {
       messageLogAll: gs.messageLogAll || { enabled: false },
       verification: gs.verification || { enabled: false },
       modLog: gs.modLog || { channelId: '' },
+      autoNick: gs.autoNick || { enabled: false, template: '', roles: {} },
     };
   }
 
