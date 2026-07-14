@@ -33,6 +33,8 @@ module.exports = {
       return interaction.reply({ content: '無法禁言該成員（權限不足）', ephemeral: true });
     }
 
+    await interaction.deferReply();
+
     const duration = minutes * 60 * 1000;
     await target.timeout(duration, reason);
     await logModAction(interaction.guild, 'timeout', target.user, interaction.user, reason, { 時長: `${minutes} 分鐘` });
@@ -48,6 +50,6 @@ module.exports = {
       )
       .setTimestamp();
 
-    await interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
   },
 };

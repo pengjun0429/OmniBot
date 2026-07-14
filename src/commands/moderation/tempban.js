@@ -29,6 +29,8 @@ module.exports = {
     }
     if (!target.bannable) return interaction.reply({ content: '無法封鎖該成員（權限不足）', ephemeral: true });
 
+    await interaction.deferReply();
+
     const expiresAt = Date.now() + minutes * 60 * 1000;
 
     try {
@@ -55,6 +57,6 @@ module.exports = {
       )
       .setTimestamp();
 
-    await interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
   },
 };

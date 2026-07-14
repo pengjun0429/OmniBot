@@ -5,6 +5,12 @@ module.exports = {
   async execute(oldMessage, newMessage) {
     if (newMessage.author?.bot) return;
     if (!newMessage.guild) return;
+    if (newMessage.partial) {
+      try { await newMessage.fetch(); } catch { return; }
+    }
+    if (oldMessage.partial) {
+      try { await oldMessage.fetch(); } catch { /* partial data ok */ }
+    }
     if (oldMessage.content === newMessage.content) return;
 
     const gs = settings.getGuildSettings(newMessage.guild.id);

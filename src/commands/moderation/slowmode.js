@@ -13,6 +13,9 @@ module.exports = {
   async execute(interaction) {
     const seconds = interaction.options.getInteger('秒數');
     const channel = interaction.options.getChannel('頻道') || interaction.channel;
+    if (!interaction.guild.members.me.permissions.has(PermissionFlagsBits.ManageChannels)) {
+      return interaction.reply({ content: '❌ 機器人缺少管理頻道權限', ephemeral: true });
+    }
     await channel.setRateLimitPerUser(seconds);
     const msg = seconds === 0 ? '已關閉慢速模式' : `慢速模式已設為 ${seconds} 秒`;
     await interaction.reply({ content: `⏱️ ${channel} ${msg}`, ephemeral: false });

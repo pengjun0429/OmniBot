@@ -10,6 +10,9 @@ module.exports = {
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels),
   async execute(interaction) {
     const channel = interaction.options.getChannel('頻道') || interaction.channel;
+    if (!interaction.guild.members.me.permissions.has(PermissionFlagsBits.ManageChannels)) {
+      return interaction.reply({ content: '❌ 機器人缺少管理頻道權限', ephemeral: true });
+    }
     await channel.permissionOverwrites.edit(interaction.guild.roles.everyone, { SendMessages: false });
     await interaction.reply({ content: `🔒 已鎖定 ${channel}，僅管理員可發言`, ephemeral: false });
   },

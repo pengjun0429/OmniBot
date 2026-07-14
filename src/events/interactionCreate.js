@@ -1,4 +1,4 @@
-const { PermissionFlagsBits } = require('discord.js');
+const { ChannelType, PermissionFlagsBits } = require('discord.js');
 
 function escapeHTML(str) {
   if (!str) return '';
@@ -20,6 +20,9 @@ module.exports = {
     }
     if (interaction.isButton() && interaction.customId === 'ticket_close') {
       return handleTicketClose(interaction);
+    }
+    if (interaction.isAutocomplete()) {
+      return handleAutocomplete(interaction);
     }
     if (!interaction.isChatInputCommand()) return;
 
@@ -128,7 +131,7 @@ async function handleTicketCreate(interaction) {
     }
 
     const channel = await interaction.guild.channels.create({
-      name: channelName, type: 0, parent: categoryId || null,
+      name: channelName, type: ChannelType.GuildText, parent: categoryId || null,
       permissionOverwrites,
     });
 
@@ -161,7 +164,7 @@ async function handleRoleToggle(interaction) {
   if (!selfRoles.includes(roleId)) return interaction.reply({ content: '❌ 此身分組已不再允許自助領取', ephemeral: true });
 
   const me = interaction.guild.members.me;
-  if (!me.permissions.has('ManageRoles')) return interaction.reply({ content: '❌ 機器人缺少「管理身分組」權限', ephemeral: true });
+      if (!me.permissions.has(PermissionFlagsBits.ManageRoles)) return interaction.reply({ content: '❌ 機器人缺少「管理身分組」權限', ephemeral: true });
   if (role.position >= me.roles.highest.position) return interaction.reply({ content: '❌ 機器人的角色層級不足以管理該身分組', ephemeral: true });
   if (role.managed) return interaction.reply({ content: '❌ 無法領取託管身分組（如機器人角色）', ephemeral: true });
 
@@ -193,6 +196,16 @@ async function handleRoleToggle(interaction) {
     logger.error(`身分組操作失敗 (${role.name}):`, err);
     await interaction.reply({ content: `❌ ${err.code === 50013 ? '機器人缺少權限' : '操作失敗：' + err.message}`, ephemeral: true });
   }
+}
+
+async function handleAutocomplete(interaction) {
+  if (interaction.commandName !== 'tag') return;
+  const gs = settings.getGuildSettings(interaction.guild.id);
+  const cmds = gs.customCommands || {};
+  const names = Object.keys(cmds);
+  const focused = interaction.options.getFocused().toLowerCase();
+  const choices = names.filter(n => n.includes(focused)).slice(0, 25);
+  await interaction.respond(choices.map(n => ({ name: n, value: n })));
 }
 
 async function handleVerifyClick(interaction) {

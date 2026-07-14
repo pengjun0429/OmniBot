@@ -4,6 +4,9 @@ const settings = require('../services/settings');
 module.exports = {
   async execute(message) {
     if (!message.guild) return;
+    if (message.partial) {
+      try { await message.fetch(); } catch { return; }
+    }
 
     const gs = settings.getGuildSettings(message.guild.id);
     const channelId = gs.messageLog?.channelId;

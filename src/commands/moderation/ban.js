@@ -1,3 +1,4 @@
+const APPEAL_URL = process.env.APPEAL_URL || 'https://omnibot-yzti.onrender.com/appeal';
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const { logModAction } = require('../../services/modlog');
 const { canTarget } = require('../../utils/permissions');
@@ -30,8 +31,10 @@ module.exports = {
       return interaction.reply({ content: '無法封鎖該成員（權限不足）', ephemeral: true });
     }
 
+    await interaction.deferReply();
+
     try {
-      await target.send(`你已在伺服器 **${interaction.guild.name}** 被封鎖\n原因: ${reason}\n\n📋 申訴：https://omnibot-yzti.onrender.com/appeal`);
+      await target.send(`你已在伺服器 **${interaction.guild.name}** 被封鎖\n原因: ${reason}\n\n📋 申訴：${APPEAL_URL}`);
     } catch {
       // 私訊失敗不影響封鎖
     }
@@ -49,6 +52,6 @@ module.exports = {
       )
       .setTimestamp();
 
-    await interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
   },
 };

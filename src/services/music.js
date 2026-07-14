@@ -1,6 +1,6 @@
 const logger = require('../utils/logger');
-const { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioPlayerStatus } = require('@discordjs/voice');
-const { EmbedBuilder } = require('discord.js');
+const { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioPlayerStatus, entersState } = require('@discordjs/voice');
+const { EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const play = require('play-dl');
 
 // Initialize SoundCloud
@@ -31,7 +31,7 @@ const music = {
     const voice = interaction.member.voice.channel;
     if (!voice) return interaction.reply({ content: '❌ 你不在語音頻道中', ephemeral: true });
     const perms = voice.permissionsFor(interaction.client.user);
-    if (!perms.has('Connect') || !perms.has('Speak')) return interaction.reply({ content: '❌ 機器人沒有權限加入/發聲', ephemeral: true });
+    if (!perms.has(PermissionFlagsBits.Connect) || !perms.has(PermissionFlagsBits.Speak)) return interaction.reply({ content: '❌ 機器人沒有權限加入/發聲', ephemeral: true });
     await interaction.deferReply();
 
     let guildQueue = queues.get(interaction.guild.id);

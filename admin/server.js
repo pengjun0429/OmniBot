@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
+const { ChannelType } = require('discord.js');
 const config = require('../src/config');
 const logger = require('../src/utils/logger');
 const settings = require('../src/services/settings');
@@ -28,7 +29,8 @@ function startAdmin(client) {
     cookie: {
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
-      sameSite: 'lax'
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000,
     }
   }));
 
@@ -57,9 +59,9 @@ function startAdmin(client) {
 
   function getGuildData(guild) {
     const gs = settings.getGuildSettings(guild.id);
-    const channels = [...guild.channels.cache.filter(c => c.type === 0).values()];
-    const voiceChannels = [...guild.channels.cache.filter(c => c.type === 2).values()];
-    const categories = [...guild.channels.cache.filter(c => c.type === 4).values()];
+    const channels = [...guild.channels.cache.filter(c => c.type === ChannelType.GuildText).values()];
+    const voiceChannels = [...guild.channels.cache.filter(c => c.type === ChannelType.GuildVoice).values()];
+    const categories = [...guild.channels.cache.filter(c => c.type === ChannelType.GuildCategory).values()];
     const roles = [...guild.roles.cache.filter(r => r.name !== '@everyone').values()].sort((a, b) => b.position - a.position);
 
     return {
@@ -434,6 +436,36 @@ function startAdmin(client) {
     if (!guild) return res.status(404).json({ error: '找不到伺服器' });
     const gs = settings.getGuildSettings(guild.id);
     res.json({ guild: guild.name, id: guild.id, settings: gs });
+  });
+
+  app.post('/api/appeal/submit', async (req, res) => {
+    try {
+      const { reason, userId, userName } = req.body;
+      if (!reason || !reason.trim()) return res.json({ success: false, error: '請填寫申訴原因' });
+      const guildIds = [...client.guilds.cache.keys()];
+      let sent = false;
+      for (const gid of guildIds) {
+        const gs = settings.getGuildSettings(gid);
+        if (gs.appeal?.channelId) {
+          const ch = client.channels.cache.get(gs.appeal.channelId);
+          if (ch) {
+            const { EmbedBuilder } = require('discord.js');
+            await ch.send({
+              embeds: [new EmbedBuilder()
+                .setColor(0xffa500).setTitle('📋 新申訴')
+                .setDescription(`**使用者**：${userName || '匿名'} (<@${userId || '?'}>)\n**原因**：${reason}`)
+                .setTimestamp()]
+            });
+            sent = true;
+          }
+        }
+      }
+      if (!sent) return res.json({ success: false, error: '目前沒有伺服器設定申訴頻道' });
+      res.json({ success: true });
+    } catch (err) {
+      logger.error('申訴提交失敗:', err.message);
+      res.json({ success: false, error: '申訴提交失敗' });
+    }
   });
 
   app.listen(PORT, () => {

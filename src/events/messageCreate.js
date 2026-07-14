@@ -67,6 +67,7 @@ module.exports = {
     }
 
     if (gs.antiRaid?.enabled) {
+      if (!message.member || !message.guild.members.me.permissions.has('ModerateMembers')) return;
       const raidTracker = require('../services/raid-tracker');
       const windowMs = (gs.antiRaid.spamWindow || 5) * 1000;
       const dupCount = raidTracker.checkDuplicate(message.guild.id, message.author.id, message.content, windowMs);
@@ -108,7 +109,10 @@ module.exports = {
     }
 
     if (!flagged && regexWords?.length > 0) {
+      const SAFE_REGEX_LIMIT = 100;
       for (const pattern of regexWords) {
+        if (pattern.length > SAFE_REGEX_LIMIT) continue;
+        if (/(.).*\1{3,}/.test(pattern) || /\(.*\+.*\)/.test(pattern)) continue;
         try {
           if (new RegExp(pattern, 'i').test(normalized)) {
             flagged = true;
@@ -133,7 +137,10 @@ module.exports = {
     let censored = message.content;
     if (foundWord) censored = censored.replace(new RegExp(foundWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), '****');
     if (regexWords?.length > 0) {
+      const SAFE_REGEX_LIMIT = 100;
       for (const pattern of regexWords) {
+        if (pattern.length > SAFE_REGEX_LIMIT) continue;
+        if (/(.).*\1{3,}/.test(pattern) || /\(.*\+.*\)/.test(pattern)) continue;
         try { censored = censored.replace(new RegExp(pattern, 'gi'), '****'); } catch {}
       }
     }
@@ -178,13 +185,16 @@ module.exports = {
       let punished = false;
 
       if (effectivePunishment === 'timeout') {
+        if (!message.member) return;
         await message.member.timeout(effectiveDuration * 60 * 1000, `自動審核(${strikeCount}次)：${reason}`).catch(err => logger.error(`自動審核 timeout 失敗:`, err.message));
         punished = true;
       } else if (effectivePunishment === 'warn') {
+        if (!message.member) return;
         const warnMsg = await message.channel.send(`⚠️ ${message.author}，請注意言詞！您已被系統警告 (${strikeCount}犯)。`).catch(err => logger.warn('messageCreate 操作失敗:', err.message));
         if (warnMsg) setTimeout(() => warnMsg.delete().catch(err => logger.warn('messageCreate 操作失敗:', err.message)), 5000);
         punished = true;
       } else if (effectivePunishment === 'kick') {
+        if (!message.member) return;
         await message.member.kick(`自動審核(${strikeCount}次)：${reason}`).catch(err => logger.error(`自動審核 kick 失敗:`, err.message));
         punished = true;
       }
