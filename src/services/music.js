@@ -95,9 +95,13 @@ const music = {
     let song;
     const urlMatch = query.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
     if (urlMatch) {
-      const vid = urlMatch[1];
-      const info = await ytdl.getInfo(vid);
-      song = { title: info.videoDetails.title, url: info.videoDetails.video_url, duration: info.videoDetails.lengthSeconds };
+      try {
+        const vid = urlMatch[1];
+        const info = await ytdl.getInfo(vid);
+        song = { title: info.videoDetails.title, url: info.videoDetails.video_url, duration: info.videoDetails.lengthSeconds };
+      } catch {
+        return interaction.editReply('❌ 無法取得影片資訊，請確認網址正確');
+      }
     } else {
       const result = await searchYouTube(query);
       if (!result) return interaction.editReply('❌ 找不到結果');
@@ -122,7 +126,7 @@ const music = {
   skip(interaction) {
     const guildQueue = queues.get(interaction.guild.id);
     if (!guildQueue || !guildQueue.playing) return interaction.reply({ content: '❌ 目前沒有播放中的音樂', ephemeral: true });
-    guildQueue.player.stop();
+    guildQueue.player.stop(true);
     return interaction.reply({ content: '⏭️ 已跳過', ephemeral: true });
   },
 
@@ -266,6 +270,12 @@ async function playSong(queue) {
 
   queue.player.removeAllListeners(AudioPlayerStatus.Idle);
   queue.player.on(AudioPlayerStatus.Idle, idleHandler);
+
+  queue.player.removeAllListeners('error');
+  queue.player.on('error', (err) => {
+    console.error('[音樂] 串流錯誤:', err.message);
+    if (queue.textChannel) queue.textChannel.send('❌ 播放時發生串流錯誤').catch(() => {});
+  });
 }
 
 module.exports = music;
