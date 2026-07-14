@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { logModAction } = require('../../services/modlog');
 
 module.exports = {
   category: '管理',
@@ -27,6 +28,7 @@ module.exports = {
 
     const duration = minutes * 60 * 1000;
     await target.timeout(duration, reason);
+    await logModAction(interaction.guild, 'timeout', target.user, interaction.user, reason, { 時長: `${minutes} 分鐘` });
 
     const embed = new EmbedBuilder()
       .setColor(0xffff00)

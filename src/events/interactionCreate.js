@@ -9,6 +9,9 @@ const settings = require('../services/settings');
 
 module.exports = {
   async execute(interaction) {
+    if (interaction.isButton() && interaction.customId === 'verify_click') {
+      return handleVerifyClick(interaction);
+    }
     if (interaction.isButton() && interaction.customId.startsWith('role_toggle_')) {
       return handleRoleToggle(interaction);
     }
@@ -189,5 +192,29 @@ async function handleRoleToggle(interaction) {
   } catch (err) {
     logger.error(`身分組操作失敗 (${role.name}):`, err);
     await interaction.reply({ content: `❌ ${err.code === 50013 ? '機器人缺少權限' : '操作失敗：' + err.message}`, ephemeral: true });
+  }
+}
+
+async function handleVerifyClick(interaction) {
+  const gs = settings.getGuildSettings(interaction.guild.id);
+  const verifyConfig = gs.verification || {};
+  if (!verifyConfig.enabled) {
+    return interaction.reply({ content: '❌ 驗證系統未啟用', ephemeral: true });
+  }
+
+  const role = interaction.guild.roles.cache.get(verifyConfig.roleId);
+  if (!role) return interaction.reply({ content: '❌ 驗證身分組已不存在', ephemeral: true });
+
+  const member = interaction.member;
+  if (member.roles.cache.has(role.id)) {
+    return interaction.reply({ content: '✅ 你已經驗證過了', ephemeral: true });
+  }
+
+  try {
+    await member.roles.add(role);
+    await interaction.reply({ content: '✅ 驗證成功！你已獲得伺服器權限', ephemeral: true });
+  } catch (err) {
+    logger.error(`驗證失敗 (${interaction.user.id}):`, err);
+    await interaction.reply({ content: '❌ 驗證失敗，請聯繫管理員', ephemeral: true });
   }
 }

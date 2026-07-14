@@ -35,6 +35,11 @@ function getDefaults() {
     adminRoles: { topIds: [], modIds: [] },
     blockedUsers: [],
     customCommands: {},
+    autoRoleId: '',
+    warnings: {},
+    verification: { channelId: '', roleId: '', messageId: '', enabled: false },
+    modLog: { channelId: '' },
+    tempBans: {},
   };
 }
 

@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { logModAction } = require('../../services/modlog');
 
 module.exports = {
   category: '管理',
@@ -29,6 +30,7 @@ module.exports = {
     }
 
     await target.ban({ reason });
+    await logModAction(interaction.guild, 'ban', target.user, interaction.user, reason);
 
     const embed = new EmbedBuilder()
       .setColor(0xff0000)

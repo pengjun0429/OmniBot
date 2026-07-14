@@ -7,6 +7,13 @@ module.exports = {
   async execute(member) {
     const gs = settings.getGuildSettings(member.guild.id);
 
+    if (gs.autoRoleId) {
+      const role = member.guild.roles.cache.get(gs.autoRoleId);
+      if (role && role.position < member.guild.members.me.roles.highest.position) {
+        member.roles.add(role).catch(() => {});
+      }
+    }
+
     if (gs.antiRaid?.enabled) {
       raidTracker.trackJoin(member.guild.id);
       const recent = raidTracker.getJoinCount(member.guild.id, (gs.antiRaid.joinWindow || 10) * 1000);

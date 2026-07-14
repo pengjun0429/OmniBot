@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { logModAction } = require('../../services/modlog');
 
 module.exports = {
   category: '管理',
@@ -12,6 +13,7 @@ module.exports = {
     const amount = interaction.options.getInteger('數量');
 
     const messages = await interaction.channel.bulkDelete(amount, true);
+    await logModAction(interaction.guild, 'clear', interaction.user, interaction.user, `清除 ${messages.size} 則訊息`);
 
     const embed = new EmbedBuilder()
       .setColor(0x00ff00)
