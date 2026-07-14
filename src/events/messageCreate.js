@@ -89,6 +89,11 @@ module.exports = {
 
     if (!gs.autoMod || !gs.autoMod.enabled) return;
 
+    const isMod = message.member?.permissions?.has('Administrator') ||
+      (gs.adminRoles?.topIds || []).some(id => message.member?.roles?.cache?.has(id)) ||
+      (gs.adminRoles?.modIds || []).some(id => message.member?.roles?.cache?.has(id));
+    if (isMod) return;
+
     const { words=[], regexWords=[], blockLinks, phishingProtection, logChannelId, punishment, timeoutMinutes, logLevel, strikes, strikeResetHours } = gs.autoMod;
     const normalized = message.content.toLowerCase().replace(/[\s\n\r\t]+/g, '').replace(/[^a-z0-9\u4e00-\u9fff]/g, '');
     let flagged = false;

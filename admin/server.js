@@ -14,7 +14,8 @@ function startAdmin(client) {
     logger.warn('⚠️ 未設定 SESSION_SECRET 環境變數，使用隨機金鑰（重啟後 session 將失效）');
   }
   if (!process.env.ADMIN_USERNAME || !process.env.ADMIN_PASSWORD) {
-    logger.warn('⚠️ 未設定 ADMIN_USERNAME/ADMIN_PASSWORD，請盡快設定');
+    logger.error('❌ 未設定 ADMIN_USERNAME/ADMIN_PASSWORD，管理員後臺啟動終止');
+    return;
   }
 
   app.set('view engine', 'ejs');
@@ -27,7 +28,7 @@ function startAdmin(client) {
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: process.env.NODE_ENV === 'production',
+      secure: false,
       httpOnly: true,
       sameSite: 'lax',
       maxAge: 24 * 60 * 60 * 1000,
@@ -63,12 +64,15 @@ function startAdmin(client) {
     const voiceChannels = [...guild.channels.cache.filter(c => c.type === ChannelType.GuildVoice).values()];
     const categories = [...guild.channels.cache.filter(c => c.type === ChannelType.GuildCategory).values()];
     const roles = [...guild.roles.cache.filter(r => r.name !== '@everyone').values()].sort((a, b) => b.position - a.position);
+    const botCount = guild.members.cache.filter(m => m.user.bot).size;
 
     return {
       id: guild.id,
       name: guild.name,
       icon: guild.iconURL({ size: 64 }),
       memberCount: guild.memberCount,
+      botCount,
+      createdAt: guild.createdAt,
       ownerTag: guild.members.cache.get(guild.ownerId)?.user?.tag || '?',
       channels: channels.map(c => ({ id: c.id, name: c.name })),
       voiceChannels: voiceChannels.map(c => ({ id: c.id, name: c.name })),
@@ -254,8 +258,8 @@ function startAdmin(client) {
     }
 
     settings.updateGuildSettings(guild.id, gs);
-    const redirect = _tab ? `/server/${guild.id}#${_tab}` : `/settings`;
-    res.redirect(redirect);
+    if (!_tab) return res.json({ success: true });
+    res.redirect(`/server/${guild.id}#${_tab}`);
   });
 
   app.post('/api/settings/:id/roles', requireAuth, requireCSRF, async (req, res) => {
@@ -264,7 +268,7 @@ function startAdmin(client) {
     const gs = settings.getGuildSettings(guild.id);
     gs.selfRoles = Array.isArray(req.body.roles) ? req.body.roles : [];
     settings.updateGuildSettings(guild.id, gs);
-    res.redirect('/settings');
+    res.redirect(`/server/${guild.id}#roles`);
   });
 
   app.post('/api/settings/:id/autovoice', requireAuth, requireCSRF, async (req, res) => {
@@ -453,11 +457,13 @@ function startAdmin(client) {
     } catch (err) { res.json({ success: false, error: err.message }); }
   });
 
-  app.get('/api/export/:id', requireAuth, async (req, res) => {
-    const guild = client.guilds.cache.get(req.params.id);
-    if (!guild) return res.status(404).json({ error: '找不到伺服器' });
-    const gs = settings.getGuildSettings(guild.id);
-    res.json({ guild: guild.name, id: guild.id, settings: gs });
+  app.get('/export', requireAuth, async (req, res) => {
+    const exportData = {};
+    for (const [gid, guild] of client.guilds.cache) {
+      const gs = settings.getGuildSettings(gid);
+      exportData[gid] = { guild: guild.name, id: gid, settings: gs };
+    }
+    res.json(exportData);
   });
 
   app.post('/api/appeal/submit', requireCSRF, async (req, res) => {
