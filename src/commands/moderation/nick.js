@@ -138,13 +138,16 @@ module.exports = {
       if (target.roles.highest.position >= interaction.member.roles.highest.position && interaction.member.id !== interaction.guild.ownerId) {
         return interaction.reply({ content: '❌ 你的身分組層級不足以修改該成員暱稱', ephemeral: true });
       }
+      if (target.roles.highest.position >= interaction.guild.members.me.roles.highest.position) {
+        return interaction.reply({ content: '❌ 機器人的身分組層級不足以修改該成員暱稱', ephemeral: true });
+      }
       const nickname = interaction.options.getString('名稱');
       try {
         await target.setNickname(nickname);
         await interaction.reply({ content: `✅ ${nickname ? `已將 ${target.user.tag} 的暱稱設為：${nickname}` : `已重設 ${target.user.tag} 的暱稱`}`, ephemeral: true });
       } catch (err) {
         logger.error(`nick set 失敗:`, err.message);
-        await interaction.reply({ content: '❌ 暱稱設定失敗（可能身分組層級不足）', ephemeral: true });
+        await interaction.reply({ content: '❌ 暱稱設定失敗，請檢查機器人權限', ephemeral: true });
       }
       return;
     }
@@ -162,6 +165,7 @@ module.exports = {
       const tasks = members.map(async (member) => {
         if (member.id === interaction.client.user.id) return;
         if (member.id === interaction.guild.ownerId) return;
+        if (member.roles.highest.position >= interaction.guild.members.me.roles.highest.position) return;
         const template = getTemplateForMember(gs, member);
         if (!template) return;
         const nickname = applyTemplate(template, member, interaction.guild).slice(0, 32);
