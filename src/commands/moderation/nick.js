@@ -3,13 +3,25 @@ const logger = require('../../utils/logger');
 const settings = require('../../services/settings');
 
 function applyTemplate(template, member, guild) {
+  const daysSince = (date) => Math.floor((Date.now() - date) / 86400000);
+  const pad = (n) => String(n).padStart(2, '0');
+  const fmtDate = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const highestRole = member.roles.highest.name === '@everyone' ? '' : member.roles.highest.name;
   return template
     .replace(/{user}/g, member.user.username)
     .replace(/{tag}/g, member.user.tag)
     .replace(/{id}/g, member.id)
     .replace(/{nick}/g, member.nickname || member.user.username)
     .replace(/{count}/g, guild.memberCount)
-    .replace(/{server}/g, guild.name);
+    .replace(/{server}/g, guild.name)
+    .replace(/{created}/g, fmtDate(member.user.createdAt))
+    .replace(/{age}/g, `${daysSince(member.user.createdAt)}天`)
+    .replace(/{joined}/g, fmtDate(member.joinedAt || new Date()))
+    .replace(/{days}/g, `${daysSince(member.joinedAt || new Date())}天`)
+    .replace(/{color}/g, highestRole ? member.roles.highest.hexColor : '')
+    .replace(/{boost}/g, member.premiumSince ? '💎' : '')
+    .replace(/{role}/g, highestRole)
+    .replace(/{random}/g, Math.random().toString(36).slice(2, 6).toUpperCase());
 }
 
 function getTemplateForMember(gs, member) {
@@ -73,7 +85,7 @@ module.exports = {
         gs.autoNick.template = template;
         gs.autoNick.enabled = true;
         settings.updateGuildSettings(interaction.guild.id, gs);
-        return interaction.reply({ content: `✅ 預設暱稱格式已設為：\`${template}\`\n可用變數：\`{user}\` 使用者名稱、\`{tag}\` 完整標籤、\`{id}\` ID、\`{count}\` 人數、\`{server}\` 伺服器`, ephemeral: true });
+        return interaction.reply({ content: `✅ 預設暱稱格式已設為：\`${template}\`\n可用變數：\`{user}\` 名稱、\`{tag}\` 標籤、\`{id}\` ID、\`{nick}\` 當前暱稱、\`{count}\` 人數、\`{server}\` 伺服器、\`{created}\` 建立日、\`{age}\` 帳號年齡、\`{joined}\` 加入日、\`{days}\` 加入天數、\`{color}\` 角色顏色、\`{boost}\` 💎、\`{role}\` 最高身分組、\`{random}\` 亂數`, ephemeral: true });
       }
 
       if (sub === 'role') {
