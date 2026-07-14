@@ -190,7 +190,7 @@
     <div class="stats">
       <div class="stat"><div class="num"><%= guild.memberCount %></div><div class="label">成員</div></div>
       <div class="stat"><div class="num"><%= guild.channels.length %></div><div class="label">頻道</div></div>
-      <div class="stat"><div class="num"><%= guild.roleCount || 0 %></div><div class="label">身分組</div></div>
+      <div class="stat"><div class="num"><%= guild.roles ? guild.roles.length : 0 %></div><div class="label">身分組</div></div>
     </div>
   </div>
 

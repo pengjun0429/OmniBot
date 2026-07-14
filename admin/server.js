@@ -170,6 +170,24 @@ function startAdmin(client) {
     res.render('logs', { logs });
   });
 
+  app.get('/api/logs/stream', requireAuth, (req, res) => {
+    const logCapture = require('../src/utils/log-capture');
+    let index = parseInt(req.query.index) || 0;
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+    });
+    const interval = setInterval(() => {
+      const newLogs = logCapture.getLogsSince(index);
+      if (newLogs.length > 0) {
+        res.write(`data: ${JSON.stringify(newLogs)}\n\n`);
+        index += newLogs.length;
+      }
+    }, 1000);
+    req.on('close', () => clearInterval(interval));
+  });
+
   app.get('/cmd', requireAuth, (req, res) => {
     const commands = [...client.commands.values()].map(c => ({
       name: c.data.name,
@@ -180,7 +198,11 @@ function startAdmin(client) {
   });
 
   app.get('/analytics', requireAuth, (req, res) => {
-    res.render('analytics', { guilds: [...client.guilds.cache.values()] });
+    const guilds = [...client.guilds.cache.values()];
+    const guildData = guilds.map(g => getGuildData(g));
+    const totalGuilds = guilds.length;
+    const totalHumans = guilds.reduce((s, g) => s + g.memberCount, 0);
+    res.render('analytics', { guilds, guildData, totalGuilds, totalHumans, user: req.session.user || null });
   });
 
   app.get('/appeal', (req, res) => {
