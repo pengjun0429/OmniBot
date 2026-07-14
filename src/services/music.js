@@ -31,42 +31,26 @@ async function searchYouTube(query) {
   if (apiKey) {
     try {
       const res = await axios.get('https://www.googleapis.com/youtube/v3/search', {
-        params: {
-          part: 'snippet',
-          q: query,
-          type: 'video',
-          maxResults: 1,
-          key: apiKey,
-        },
+        params: { part: 'snippet', q: query, type: 'video', maxResults: 1, key: apiKey },
         timeout: 10000,
       });
       const item = res.data?.items?.[0];
       if (!item) return null;
       const vid = item.id.videoId;
-      const info = await ytdl.getInfo(vid);
-      return {
-        title: info.videoDetails.title,
-        url: info.videoDetails.video_url,
-        duration: info.videoDetails.lengthSeconds,
-      };
+      return { title: item.snippet.title, url: `https://www.youtube.com/watch?v=${vid}`, duration: 0 };
     } catch { return null; }
   }
 
   try {
     const res = await axios.get('https://www.youtube.com/results', {
       params: { search_query: query },
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+      headers: { 'User-Agent': 'Mozilla/5.0' },
       timeout: 10000,
     });
     const matches = res.data.match(/watch\?v=([a-zA-Z0-9_-]{11})/g);
     if (!matches) return null;
     const vid = matches[0].replace('watch?v=', '');
-    const info = await ytdl.getInfo(vid);
-    return {
-      title: info.videoDetails.title,
-      url: info.videoDetails.video_url,
-      duration: info.videoDetails.lengthSeconds,
-    };
+    return { title: query, url: `https://www.youtube.com/watch?v=${vid}`, duration: 0 };
   } catch { return null; }
 }
 
