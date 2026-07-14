@@ -1,25 +1,13 @@
 process.env.YTDL_NO_UPDATE = '1';
 const { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioPlayerStatus } = require('@discordjs/voice');
-const ytdl = require('@distube/ytdl-core');
+const play = require('play-dl');
 const { EmbedBuilder } = require('discord.js');
 const axios = require('axios');
 
 const queues = new Map();
 
-const ytdlOptions = {
-  filter: 'audioonly',
-  quality: 'lowestaudio',
-  highWaterMark: 1 << 25,
-};
-
-const youtubeCookies = process.env.YOUTUBE_COOKIES;
-if (youtubeCookies) {
-  ytdlOptions.requestOptions = {
-    headers: {
-      Cookie: youtubeCookies,
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-    },
-  };
+if (process.env.YOUTUBE_COOKIES) {
+  play.setToken({ youtube: { cookie: process.env.YOUTUBE_COOKIES } });
 }
 
 class MusicQueue {
@@ -36,9 +24,13 @@ class MusicQueue {
   }
 }
 
-async function searchYouTube(query) {
+async function getVideoInfo(query) {
+  const urlMatch = query.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  if (urlMatch) {
+    const info = await play.video_info(urlMatch[1]);
+    return { title: info.video_details.title, url: info.video_details.url, duration: info.video_details.durationInSec };
+  }
   const apiKey = process.env.YOUTUBE_API_KEY;
-
   if (apiKey) {
     try {
       const res = await axios.get('https://www.googleapis.com/youtube/v3/search', {
@@ -51,29 +43,17 @@ async function searchYouTube(query) {
       return { title: item.snippet.title, url: `https://www.youtube.com/watch?v=${vid}`, duration: 0 };
     } catch { return null; }
   }
-
-  try {
-    const res = await axios.get('https://www.youtube.com/results', {
-      params: { search_query: query },
-      headers: { 'User-Agent': 'Mozilla/5.0' },
-      timeout: 10000,
-    });
-    const matches = res.data.match(/watch\?v=([a-zA-Z0-9_-]{11})/g);
-    if (!matches) return null;
-    const vid = matches[0].replace('watch?v=', '');
-    return { title: query, url: `https://www.youtube.com/watch?v=${vid}`, duration: 0 };
-  } catch { return null; }
+  const results = await play.search(query, { limit: 1 });
+  if (results.length === 0) return null;
+  return { title: results[0].title, url: results[0].url, duration: results[0].durationInSec };
 }
 
 const music = {
   async play(interaction, query) {
     const voice = interaction.member.voice.channel;
     if (!voice) return interaction.reply({ content: '❌ 你不在語音頻道中', ephemeral: true });
-
     const perms = voice.permissionsFor(interaction.client.user);
-    if (!perms.has('Connect') || !perms.has('Speak')) {
-      return interaction.reply({ content: '❌ 機器人沒有權限加入/發聲', ephemeral: true });
-    }
+    if (!perms.has('Connect') || !perms.has('Speak')) return interaction.reply({ content: '❌ 機器人沒有權限加入/發聲', ephemeral: true });
 
     await interaction.deferReply();
 
@@ -82,46 +62,30 @@ const music = {
       guildQueue = new MusicQueue(interaction.guild.id, voice, interaction.channel);
       queues.set(interaction.guild.id, guildQueue);
     }
+    if (guildQueue.voiceChannel.id !== voice.id) return interaction.editReply({ content: '❌ 機器人已在其他語音頻道' });
 
-    if (guildQueue.voiceChannel.id !== voice.id) {
-      return interaction.editReply({ content: '❌ 機器人已在其他語音頻道' });
+    try {
+      const song = await getVideoInfo(query);
+      if (!song) return interaction.editReply('❌ 找不到結果');
+
+      guildQueue.songs.push(song);
+      if (!guildQueue.playing) playSong(guildQueue);
+
+      const embed = new EmbedBuilder()
+        .setColor(0x1db954).setTitle('🎵 已加入佇列')
+        .setDescription(`[${song.title}](${song.url})`)
+        .setFooter({ text: `位置 #${guildQueue.songs.length} • ${Math.floor(song.duration / 60)}:${String(song.duration % 60).padStart(2, '0')}` });
+      await interaction.editReply({ embeds: [embed] });
+    } catch (err) {
+      console.error('[音樂] 搜尋失敗:', err.message);
+      await interaction.editReply('❌ 找不到結果');
     }
-
-    let song;
-    const urlMatch = query.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-    if (urlMatch) {
-      try {
-        const vid = urlMatch[1];
-        const info = await ytdl.getInfo(vid);
-        song = { title: info.videoDetails.title, url: info.videoDetails.video_url, duration: info.videoDetails.lengthSeconds };
-      } catch {
-        return interaction.editReply('❌ 無法取得影片資訊，請確認網址正確。若持續失敗，請嘗試使用 `/play 關鍵字` 搜尋');
-      }
-    } else {
-      const result = await searchYouTube(query);
-      if (!result) return interaction.editReply('❌ 找不到結果');
-      song = result;
-    }
-
-    guildQueue.songs.push(song);
-
-    if (!guildQueue.playing) {
-      playSong(guildQueue);
-    }
-
-    const embed = new EmbedBuilder()
-      .setColor(0x1db954)
-      .setTitle('🎵 已加入佇列')
-      .setDescription(`[${song.title}](${song.url})`)
-      .setFooter({ text: `位置 #${guildQueue.songs.length} • ${Math.floor(song.duration / 60)}:${String(song.duration % 60).padStart(2, '0')}` });
-
-    await interaction.editReply({ embeds: [embed] });
   },
 
   skip(interaction) {
     const guildQueue = queues.get(interaction.guild.id);
     if (!guildQueue || !guildQueue.playing) return interaction.reply({ content: '❌ 目前沒有播放中的音樂', ephemeral: true });
-    guildQueue.player.stop(true);
+    guildQueue.player.stop();
     return interaction.reply({ content: '⏭️ 已跳過', ephemeral: true });
   },
 
@@ -137,28 +101,16 @@ const music = {
 
   nowplaying(interaction) {
     const guildQueue = queues.get(interaction.guild.id);
-    if (!guildQueue || !guildQueue.playing || guildQueue.songs.length === 0) {
-      return interaction.reply({ content: '❌ 目前沒有播放中的音樂', ephemeral: true });
-    }
+    if (!guildQueue || !guildQueue.playing || guildQueue.songs.length === 0) return interaction.reply({ content: '❌ 目前沒有播放中的音樂', ephemeral: true });
     const song = guildQueue.songs[0];
-    const embed = new EmbedBuilder()
-      .setColor(0x1db954)
-      .setTitle('🎵 正在播放')
-      .setDescription(`[${song.title}](${song.url})`)
-      .setFooter({ text: `佇列：${guildQueue.songs.length - 1} 首` });
-    return interaction.reply({ embeds: [embed], ephemeral: true });
+    return interaction.reply({ embeds: [new EmbedBuilder().setColor(0x1db954).setTitle('🎵 正在播放').setDescription(`[${song.title}](${song.url})`)], ephemeral: true });
   },
 
   queue(interaction) {
     const guildQueue = queues.get(interaction.guild.id);
     if (!guildQueue || guildQueue.songs.length === 0) return interaction.reply({ content: '❌ 佇列為空', ephemeral: true });
     const list = guildQueue.songs.map((s, i) => `${i === 0 ? '▶️' : `${i}.`} [${s.title}](${s.url})`).slice(0, 10).join('\n');
-    const embed = new EmbedBuilder()
-      .setColor(0x1db954)
-      .setTitle('🎶 播放佇列')
-      .setDescription(list)
-      .setFooter({ text: `共 ${guildQueue.songs.length} 首` });
-    return interaction.reply({ embeds: [embed], ephemeral: true });
+    return interaction.reply({ embeds: [new EmbedBuilder().setColor(0x1db954).setTitle('🎶 播放佇列').setDescription(list)], ephemeral: true });
   },
 
   pause(interaction) {
@@ -196,35 +148,25 @@ async function playSong(queue) {
 
   if (!queue.connection) {
     queue.connection = joinVoiceChannel({
-      channelId: queue.voiceChannel.id,
-      guildId: queue.guildId,
+      channelId: queue.voiceChannel.id, guildId: queue.guildId,
       adapterCreator: queue.voiceChannel.guild.voiceAdapterCreator,
     });
     queue.connection.subscribe(queue.player);
-    queue.connection.on('stateChange', (oldState, newState) => {
-      if (newState.status === 'disconnected' || newState.status === 'destroyed') {
-        queue.playing = false;
-        queues.delete(queue.guildId);
-      }
-    });
   }
 
   const song = queue.songs[0];
   if (!song) { queue.playing = false; return; }
 
   try {
-    const stream = ytdl(song.url, ytdlOptions);
-
-    const resource = createAudioResource(stream, { inlineVolume: true });
+    const stream = await play.stream(song.url, { quality: 0 });
+    const resource = createAudioResource(stream.stream, { inputType: stream.type, inlineVolume: true });
     resource.volume?.setVolumeLogarithmic(queue.volume / 100);
     queue.player.play(resource);
 
     if (queue.textChannel) {
       const embed = new EmbedBuilder()
-        .setColor(0x1db954)
-        .setTitle('▶️ 正在播放')
-        .setDescription(`[${song.title}](${song.url})`)
-        .setFooter({ text: `音量 ${queue.volume}%` });
+        .setColor(0x1db954).setTitle('▶️ 正在播放')
+        .setDescription(`[${song.title}](${song.url})`).setFooter({ text: `音量 ${queue.volume}%` });
       queue.textChannel.send({ embeds: [embed] }).catch(() => {});
     }
   } catch (err) {
@@ -243,7 +185,6 @@ async function playSong(queue) {
   const idleHandler = () => {
     if (queue.loop) queue.songs.push(queue.songs.shift());
     else queue.songs.shift();
-
     if (queue.songs.length > 0) playSong(queue);
     else {
       queue.playing = false;
@@ -257,8 +198,8 @@ async function playSong(queue) {
 
   queue.player.removeAllListeners('error');
   queue.player.on('error', (err) => {
-    console.error('[音樂] 串流錯誤:', err.message, err.stack?.slice(0, 200));
-    if (queue.textChannel) queue.textChannel.send('❌ 播放時發生串流錯誤: ' + err.message.slice(0, 50)).catch(() => {});
+    console.error('[音樂] 串流錯誤:', err.message);
+    if (queue.textChannel) queue.textChannel.send('❌ 播放時發生串流錯誤').catch(() => {});
   });
 }
 
