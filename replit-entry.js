@@ -1,9 +1,5 @@
-console.log('[BOOT] Starting OmniBot...');
-
 const client = require('./src/client');
-console.log('[BOOT] client OK');
 const config = require('./src/config');
-console.log('[BOOT] config OK');
 const logger = require('./src/utils/logger');
 const { deploy } = require('./src/utils/deploy-commands');
 const { registerCommands, registerEvents } = require('./src/utils/command-handler');
@@ -12,10 +8,8 @@ const settings = require('./src/services/settings');
 const path = require('path');
 const crypto = require('crypto');
 
-console.log('[BOOT] registering commands/events...');
 registerCommands(client);
 registerEvents(client);
-console.log('[BOOT] commands/events registered');
 
 async function startBot() {
   await settings.init();
@@ -698,7 +692,7 @@ app.post('/api/server/:id/send-panel', requireAuth, requireTopAdmin, async (req,
   }
 });
 
-app.listen(PORT, '::', () => {
+app.listen(PORT, '0.0.0.0', () => {
   logger.info(`管理後臺已啟動: 端口 ${PORT}`);
 });
 
