@@ -12,6 +12,16 @@ const ytdlOptions = {
   highWaterMark: 1 << 25,
 };
 
+const youtubeCookies = process.env.YOUTUBE_COOKIES;
+if (youtubeCookies) {
+  ytdlOptions.requestOptions = {
+    headers: {
+      Cookie: youtubeCookies,
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+    },
+  };
+}
+
 class MusicQueue {
   constructor(guildId, channel, textChannel) {
     this.guildId = guildId;
