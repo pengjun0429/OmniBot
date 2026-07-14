@@ -17,6 +17,13 @@ function clean() {
     }
     if (Object.keys(messages[gid]).length === 0) delete messages[gid];
   }
+  for (const gid of Object.keys(lastContents)) {
+    for (const uid of Object.keys(lastContents[gid])) {
+      lastContents[gid][uid] = lastContents[gid][uid].filter(h => now - h.time < RAID_WINDOW);
+      if (lastContents[gid][uid].length === 0) delete lastContents[gid][uid];
+    }
+    if (Object.keys(lastContents[gid]).length === 0) delete lastContents[gid];
+  }
 }
 
 setInterval(clean, 30000);
@@ -35,13 +42,13 @@ module.exports = {
     return messages[guildId][userId].length;
   },
 
-  checkDuplicate(guildId, userId, content) {
+  checkDuplicate(guildId, userId, content, windowMs = 5000) {
     if (!lastContents[guildId]) lastContents[guildId] = {};
     if (!lastContents[guildId][userId]) lastContents[guildId][userId] = [];
     const history = lastContents[guildId][userId];
     history.push({ content, time: Date.now() });
     if (history.length > 20) history.shift();
-    const recent = history.filter(h => Date.now() - h.time < 10000);
+    const recent = history.filter(h => Date.now() - h.time < windowMs);
     const count = recent.filter(h => h.content === content).length;
     return count;
   },

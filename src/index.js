@@ -4,8 +4,10 @@ const logger = require('./utils/logger');
 const { deploy } = require('./utils/deploy-commands');
 const { registerCommands, registerEvents } = require('./utils/command-handler');
 const firebase = require('./services/firebase');
+const settings = require('./services/settings');
 
 async function start() {
+  await settings.init();
   firebase.init();
   registerCommands(client);
   registerEvents(client);
