@@ -51,7 +51,7 @@ module.exports = {
     }
 
     const ownerId = interaction.client.voiceOwners?.get(interaction.member.voice.channelId);
-    if (interaction.member.voice.channelId !== ownerId) {
+    if (interaction.member.id !== ownerId) {
       return interaction.reply({ content: '❌ 你不在自己的包房中', ephemeral: true });
     }
 

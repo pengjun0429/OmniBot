@@ -44,9 +44,6 @@ module.exports = {
       axios.post(GOOGLE_DB_URL(), { action: 'log', logEntry: entry, token }, { timeout: 5000 })
         .then(() => logger.info(`[GSheet] ${message.author.tag} 的訊息已記錄`))
         .catch(err => logger.error(`[GSheet] 記錄失敗:`, err.message));
-    } else {
-      if (!gs.messageLogAll?.enabled) logger.info('[GSheet] 未啟用');
-      if (!GOOGLE_DB_URL()) logger.info('[GSheet] 未設定 GOOGLE_DB_URL');
     }
 
     if (gs.inviteGuard?.enabled) {

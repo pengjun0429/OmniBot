@@ -24,9 +24,9 @@ module.exports = {
     if (!command) return;
 
     const { cooldowns } = interaction.client;
-    if (!cooldowns.has(command.datescapeHTML(a.name))) cooldowns.set(command.datescapeHTML(a.name), new Map());
+    if (!cooldowns.has(command.data.name)) cooldowns.set(command.data.name, new Map());
     const now = Date.now();
-    const timestamps = cooldowns.get(command.datescapeHTML(a.name));
+    const timestamps = cooldowns.get(command.data.name);
     const cooldownAmount = (command.cooldown || 3) * 1000;
 
     if (timestamps.has(interaction.user.id)) {

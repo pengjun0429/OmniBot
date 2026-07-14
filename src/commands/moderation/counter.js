@@ -40,21 +40,3 @@ async function updateCounter(channel, type) {
     await channel.setName(name).catch(() => {});
   } catch {}
 }
-
-setInterval(async () => {
-  const fs = require('fs');
-  const path = require('path');
-  const p = path.join(__dirname, '..', '..', 'data', 'settings.json');
-  if (!fs.existsSync(p)) return;
-  try {
-    const cache = JSON.parse(fs.readFileSync(p, 'utf-8'));
-    for (const [, gs] of Object.entries(cache)) {
-      if (!gs.counters) continue;
-      for (const [, cfg] of Object.entries(gs.counters)) {
-        if (!global.client) continue;
-        const guild = global.client.guilds.cache.get(global.client.guilds.cache.first()?.id);
-        // counters are updated from ready.js
-      }
-    }
-  } catch {}
-}, 300000);

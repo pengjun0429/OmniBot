@@ -34,6 +34,9 @@
 | `/automod strikereset 小時` | 重置時間 | Administrator |
 | `/automod resetuser @成員` | 重設某人累犯 | Administrator |
 | `/automod log 級別` | 公告級別 | Administrator |
+| `/automod logchannel #頻道` | 設定紀錄頻道 | Administrator |
+| `/automod phishing` | 啟用/停用釣魚連結偵測 | Administrator |
+| `/automod regex add/remove/list 正則` | 管理正則過濾 | Administrator |
 
 ## 🚨 防轟炸
 
@@ -87,7 +90,7 @@
 | `/customcmd delete 名稱` | 刪除 | 可愛管管們 |
 | `/customcmd list` | 列表 | 可愛管管們 |
 | `/tag 名稱` | 使用自訂指令 | 所有人 |
-| `@Bot 名稱` | 使用自訂指令 | 所有人 |
+| `@Bot 名稱` | 使用自訂指令 | 可愛管管們 |
 
 ## 🎁 抽獎
 
