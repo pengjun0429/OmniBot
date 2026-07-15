@@ -95,4 +95,27 @@ async function playSong(queue) {
   queue.player.on('error', (err) => { logger.error('音樂 錯誤:', err.message); if (queue.textChannel) queue.textChannel.send('❌ 播放錯誤').catch(err => logger.warn('music 操作失敗:', err.message)); });
 }
 
+music.getQueue = (guildId) => queues.get(guildId);
+music.queues = queues;
+
+music.playFromWeb = async (guildId, channelId, query, userId) => {
+  const guild = global.client?.guilds.cache.get(guildId);
+  if (!guild) throw new Error('找不到伺服器');
+  const voiceChannel = guild.channels.cache.get(channelId);
+  if (!voiceChannel) throw new Error('找不到語音頻道');
+
+  let guildQueue = queues.get(guildId);
+  if (!guildQueue) {
+    guildQueue = new MusicQueue(guildId, voiceChannel, null);
+    queues.set(guildId, guildQueue);
+  }
+
+  const song = await searchSC(query);
+  if (!song) throw new Error('找不到結果');
+
+  guildQueue.songs.push(song);
+  if (!guildQueue.playing) playSong(guildQueue);
+  return song;
+};
+
 module.exports = music;
