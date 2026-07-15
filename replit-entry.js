@@ -47,7 +47,7 @@ if (!sessionSecret) {
   }
 }
 
-if (isProduction && (!process.env.SESSION_SECRET || !publicBaseUrl)) {
+if (isProduction && (!sessionSecret || !publicBaseUrl)) {
   throw new Error('正式環境必須設定 SESSION_SECRET 與 PUBLIC_BASE_URL');
 }
 
