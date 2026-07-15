@@ -1,9 +1,17 @@
-const { PermissionFlagsBits } = require('discord.js');
+const { ChannelType, PermissionFlagsBits } = require('discord.js');
+
+function escapeHTML(str) {
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
 const logger = require('../utils/logger');
 const settings = require('../services/settings');
 
 module.exports = {
   async execute(interaction) {
+    if (interaction.isButton() && interaction.customId === 'verify_click') {
+      return handleVerifyClick(interaction);
+    }
     if (interaction.isButton() && interaction.customId.startsWith('role_toggle_')) {
       return handleRoleToggle(interaction);
     }
@@ -12,6 +20,9 @@ module.exports = {
     }
     if (interaction.isButton() && interaction.customId === 'ticket_close') {
       return handleTicketClose(interaction);
+    }
+    if (interaction.isAutocomplete()) {
+      return handleAutocomplete(interaction);
     }
     if (!interaction.isChatInputCommand()) return;
 
@@ -70,16 +81,16 @@ async function handleTicketClose(interaction) {
 
     const msgs = allMessages.reverse();
 
-    const html = `<!DOCTYPE html><html lang="zh-TW"><head><meta charset="UTF-8"><title>工單記錄 - ${channel.name}</title>
+    const html = `<!DOCTYPE html><html lang="zh-TW"><head><meta charset="UTF-8"><title>工單記錄 - ${escapeHTML(channel.name)}</title>
 <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#313338;color:#dbdee1;padding:24px;max-width:800px;margin:0 auto}h1{font-size:20px;color:#fff;margin-bottom:4px}.meta{font-size:12px;color:#888;margin-bottom:24px}.msg{display:flex;gap:12px;margin-bottom:16px}.msg .avatar{width:40px;height:40px;border-radius:50%;background:#5865F2;flex-shrink:0}.msg .name{font-size:14px;font-weight:600;color:#fff}.msg .time{font-size:10px;color:#888;margin-left:8px}.msg .content{font-size:14px;color:#dbdee1;margin-top:2px;line-height:1.4;word-break:break-word}.system{text-align:center;font-size:12px;color:#888;padding:8px;margin:8px 0;border-top:1px solid #40444b;border-bottom:1px solid #40444b}
-</style></head><body><h1>🎫 ${channel.name}</h1><div class="meta">📅 ${new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}</div>
+</style></head><body><h1>🎫 ${escapeHTML(channel.name)}</h1><div class="meta">📅 ${new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}</div>
 ${msgs.map(m => {
   if (m.author.id === interaction.client.user.id && m.content.startsWith('<@')) return '';
   const avatar = m.author.displayAvatarURL({ format: 'png', size: 32 });
   const color = m.member?.displayHexColor || '#5865F2';
-  return `<div class="msg"><img class="avatar" src="${avatar}" style="background:${color}"><div><div class="name">${m.author.username} <span class="time">${m.createdAt.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}</span></div><div class="content">${m.content || '(附件)'}${m.attachments.size ? '<br>📎 '+[...m.attachments.values()].map(a => `<a href="${a.url}" style="color:#00a8fc">${a.name}</a>`).join(', ') : ''}</div></div></div>`;
+  return `<div class="msg"><img class="avatar" src="${avatar}" style="background:${color}"><div><div class="name">${escapeHTML(m.author.username)} <span class="time">${m.createdAt.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}</span></div><div class="content">${escapeHTML(m.content || '') || '(附件)'}${m.attachments.size ? '<br>📎 '+[...m.attachments.values()].map(a => `<a href="${escapeHTML(a.url)}" style="color:#00a8fc">${escapeHTML(a.name)}</a>`).join(', ') : ''}</div></div></div>`;
 }).join('')}
-<hr style="border:none;border-top:1px solid #40444b;margin:24px 0"><div class="system">✅ 工單關閉 · ${interaction.user.tag} · ${new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}</div>
+<hr style="border:none;border-top:1px solid #40444b;margin:24px 0"><div class="system">✅ 工單關閉 · ${escapeHTML(interaction.user.tag)} · ${new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}</div>
 </body></html>`;
 
     const logChId = gs.ticket?.channelId;
@@ -93,7 +104,7 @@ ${msgs.map(m => {
     }
   } catch (err) { logger.error('工單備份失敗:', err.message); }
 
-  setTimeout(() => channel.delete().catch(() => {}), 5000);
+  setTimeout(() => channel.delete().catch(err => logger.warn('工單頻道刪除失敗:', err.message)), 5000);
 }
 
 async function handleTicketCreate(interaction) {
@@ -101,18 +112,27 @@ async function handleTicketCreate(interaction) {
     const gs = settings.getGuildSettings(interaction.guild.id);
     const ticketConfig = gs.ticket || {};
     const categoryId = ticketConfig.categoryId;
-    const roleIds = ticketConfig.roleIds.length > 0 ? ticketConfig.roleIds : [interaction.guild.roles.everyone.id];
+    const roleIds = Array.isArray(ticketConfig.roleIds) ? ticketConfig.roleIds : [];
 
     const ticketNumber = Date.now().toString(36).slice(-4);
     const channelName = `ticket-${interaction.user.username.toLowerCase().replace(/[^a-z0-9]/g, '')}-${ticketNumber}`;
 
+    const permissionOverwrites = [
+      { id: interaction.guild.roles.everyone.id, deny: [PermissionFlagsBits.ViewChannel] },
+      { id: interaction.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory] }
+    ];
+    for (const rid of roleIds) {
+      if (rid && rid !== interaction.guild.roles.everyone.id) {
+        permissionOverwrites.push({
+          id: rid,
+          allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory]
+        });
+      }
+    }
+
     const channel = await interaction.guild.channels.create({
-      name: channelName, type: 0, parent: categoryId || null,
-      permissionOverwrites: [
-        { id: interaction.guild.roles.everyone.id, deny: ['ViewChannel'] },
-        { id: interaction.user.id, allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory'] },
-        ...roleIds.map(id => ({ id, allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory'] })),
-      ],
+      name: channelName, type: ChannelType.GuildText, parent: categoryId || null,
+      permissionOverwrites,
     });
 
     const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
@@ -139,9 +159,14 @@ async function handleRoleToggle(interaction) {
   const role = interaction.guild.roles.cache.get(roleId);
   if (!role) return interaction.reply({ content: '身分組已不存在', ephemeral: true });
 
+  const gs = settings.getGuildSettings(interaction.guild.id);
+  const selfRoles = gs.selfRoles || [];
+  if (!selfRoles.includes(roleId)) return interaction.reply({ content: '❌ 此身分組已不再允許自助領取', ephemeral: true });
+
   const me = interaction.guild.members.me;
-  if (!me.permissions.has('ManageRoles')) return interaction.reply({ content: '❌ 機器人缺少「管理身分組」權限', ephemeral: true });
+      if (!me.permissions.has(PermissionFlagsBits.ManageRoles)) return interaction.reply({ content: '❌ 機器人缺少「管理身分組」權限', ephemeral: true });
   if (role.position >= me.roles.highest.position) return interaction.reply({ content: '❌ 機器人的角色層級不足以管理該身分組', ephemeral: true });
+  if (role.managed) return interaction.reply({ content: '❌ 無法領取託管身分組（如機器人角色）', ephemeral: true });
 
   const DANGEROUS_PERMS = ['Administrator', 'ManageRoles', 'ManageGuild', 'ManageChannels', 'KickMembers', 'BanMembers'];
   if (DANGEROUS_PERMS.some(p => role.permissions.has(p))) return interaction.reply({ content: '❌ 無法自助領取含有管理權限的身分組', ephemeral: true });
@@ -170,5 +195,39 @@ async function handleRoleToggle(interaction) {
   } catch (err) {
     logger.error(`身分組操作失敗 (${role.name}):`, err);
     await interaction.reply({ content: `❌ ${err.code === 50013 ? '機器人缺少權限' : '操作失敗：' + err.message}`, ephemeral: true });
+  }
+}
+
+async function handleAutocomplete(interaction) {
+  if (interaction.commandName !== 'tag') return;
+  const gs = settings.getGuildSettings(interaction.guild.id);
+  const cmds = gs.customCommands || {};
+  const names = Object.keys(cmds);
+  const focused = interaction.options.getFocused().toLowerCase();
+  const choices = names.filter(n => n.includes(focused)).slice(0, 25);
+  await interaction.respond(choices.map(n => ({ name: n, value: n })));
+}
+
+async function handleVerifyClick(interaction) {
+  const gs = settings.getGuildSettings(interaction.guild.id);
+  const verifyConfig = gs.verification || {};
+  if (!verifyConfig.enabled) {
+    return interaction.reply({ content: '❌ 驗證系統未啟用', ephemeral: true });
+  }
+
+  const role = interaction.guild.roles.cache.get(verifyConfig.roleId);
+  if (!role) return interaction.reply({ content: '❌ 驗證身分組已不存在', ephemeral: true });
+
+  const member = interaction.member;
+  if (member.roles.cache.has(role.id)) {
+    return interaction.reply({ content: '✅ 你已經驗證過了', ephemeral: true });
+  }
+
+  try {
+    await member.roles.add(role);
+    await interaction.reply({ content: '✅ 驗證成功！你已獲得伺服器權限', ephemeral: true });
+  } catch (err) {
+    logger.error(`驗證失敗 (${interaction.user.id}):`, err);
+    await interaction.reply({ content: '❌ 驗證失敗，請聯繫管理員', ephemeral: true });
   }
 }
