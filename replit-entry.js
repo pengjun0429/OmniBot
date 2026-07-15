@@ -124,15 +124,6 @@ async function getGuildAccess(req, guildId) {
   return { guild, member, settings: gs, top, mod };
 }
 
-async function requireGuildAccess(req, res, guildId, level = 'mod') {
-  const access = await getGuildAccess(req, guildId);
-  if (!access || !access[level]) {
-    res.status(403).send('你沒有管理此伺服器的權限');
-    return null;
-  }
-  return access;
-}
-
 async function getAccessibleGuilds(req, level = 'mod') {
   const entries = await Promise.all(
     [...client.guilds.cache.keys()].map(async id => ({ id, access: await getGuildAccess(req, id) }))
@@ -475,6 +466,10 @@ app.post('/api/github-webhook', async (req, res) => {
 });
 
 app.get('/dashboard', requireAuth, async (req, res) => {
+  const accessible = await getAccessibleGuilds(req, 'mod');
+  const guilds = accessible.map(acc => ({
+    id: acc.guild.id, name: acc.guild.name, memberCount: acc.guild.memberCount,
+    icon: acc.guild.icon ? `<img src="https://cdn.discordapp.com/icons/${acc.guild.id}/${acc.guild.icon}.png?size=48" style="width:48px;height:48px;border-radius:10px;">` : '🌐',
   }));
   const totalUsers = guilds.reduce((s, g) => s + g.memberCount, 0);
   res.render('dashboard', {
