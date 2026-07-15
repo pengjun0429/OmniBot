@@ -11,7 +11,39 @@ module.exports = {
     if (gs.autoRoleId) {
       const role = member.guild.roles.cache.get(gs.autoRoleId);
       if (role && role.position < member.guild.members.me.roles.highest.position) {
-        member.roles.add(role).catch(err => logger.warn('guildMemberAdd 操作失敗:', err.message));
+        await member.roles.add(role).catch(err => logger.warn('guildMemberAdd 操作失敗:', err.message));
+      }
+    }
+
+    if (gs.autoNick?.enabled && gs.autoNick?.template) {
+      const roleTemplates = gs.autoNick.roles || {};
+      let template = gs.autoNick.template;
+      const sortedRoles = [...member.roles.cache.values()]
+        .filter(r => roleTemplates[r.id])
+        .sort((a, b) => b.position - a.position);
+      if (sortedRoles.length > 0) template = roleTemplates[sortedRoles[0].id];
+      const daysSince = (date) => Math.floor((Date.now() - date) / 86400000);
+      const pad = (n) => String(n).padStart(2, '0');
+      const fmtDate = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+      const highestRole = member.roles.highest.name === '@everyone' ? '' : member.roles.highest.name;
+      const nickname = template
+        .replace(/{user}/g, member.user.username)
+        .replace(/{tag}/g, member.user.tag)
+        .replace(/{id}/g, member.id)
+        .replace(/{nick}/g, member.user.username)
+        .replace(/{count}/g, member.guild.memberCount)
+        .replace(/{server}/g, member.guild.name)
+        .replace(/{created}/g, fmtDate(member.user.createdAt))
+        .replace(/{age}/g, `${daysSince(member.user.createdAt)}天`)
+        .replace(/{joined}/g, fmtDate(member.joinedAt || new Date()))
+        .replace(/{days}/g, `${daysSince(member.joinedAt || new Date())}天`)
+        .replace(/{color}/g, highestRole ? member.roles.highest.hexColor : '')
+        .replace(/{boost}/g, member.premiumSince ? '💎' : '')
+        .replace(/{role}/g, highestRole)
+        .replace(/{random}/g, Math.random().toString(36).slice(2, 6).toUpperCase())
+        .slice(0, 32);
+      if (nickname && member.roles.highest.position < member.guild.members.me.roles.highest.position) {
+        await member.setNickname(nickname).catch(err => logger.warn('guildMemberAdd 自動暱稱失敗:', err.message));
       }
     }
 

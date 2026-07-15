@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, ChannelType, PermissionFlagsBits } = require('discord.js');
 
 module.exports = {
   category: '管理',
@@ -13,6 +13,9 @@ module.exports = {
   async execute(interaction) {
     const seconds = interaction.options.getInteger('秒數');
     const channel = interaction.options.getChannel('頻道') || interaction.channel;
+    if (channel.type !== ChannelType.GuildText && channel.type !== ChannelType.GuildAnnouncement) {
+      return interaction.reply({ content: '❌ 請選擇一個文字頻道', ephemeral: true });
+    }
     if (!interaction.guild.members.me.permissions.has(PermissionFlagsBits.ManageChannels)) {
       return interaction.reply({ content: '❌ 機器人缺少管理頻道權限', ephemeral: true });
     }

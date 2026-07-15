@@ -67,7 +67,8 @@ module.exports = {
     }
 
     if (gs.antiRaid?.enabled) {
-      if (!message.member || !message.guild.members.me.permissions.has('ModerateMembers')) return;
+      const { PermissionFlagsBits } = require('discord.js');
+      if (!message.member || !message.guild.members.me.permissions.has(PermissionFlagsBits.ModerateMembers)) return;
       const raidTracker = require('../services/raid-tracker');
       const windowMs = (gs.antiRaid.spamWindow || 5) * 1000;
       const dupCount = raidTracker.checkDuplicate(message.guild.id, message.author.id, message.content, windowMs);
@@ -87,6 +88,11 @@ module.exports = {
     }
 
     if (!gs.autoMod || !gs.autoMod.enabled) return;
+
+    const isMod = message.member?.permissions?.has('Administrator') ||
+      (gs.adminRoles?.topIds || []).some(id => message.member?.roles?.cache?.has(id)) ||
+      (gs.adminRoles?.modIds || []).some(id => message.member?.roles?.cache?.has(id));
+    if (isMod) return;
 
     const { words=[], regexWords=[], blockLinks, phishingProtection, logChannelId, punishment, timeoutMinutes, logLevel, strikes, strikeResetHours } = gs.autoMod;
     const normalized = message.content.toLowerCase().replace(/[\s\n\r\t]+/g, '').replace(/[^a-z0-9\u4e00-\u9fff]/g, '');

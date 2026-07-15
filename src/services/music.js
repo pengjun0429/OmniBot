@@ -77,7 +77,7 @@ async function playSong(queue) {
     queue.player.play(resource);
     if (queue.textChannel) queue.textChannel.send({ embeds: [new EmbedBuilder().setColor(0xff7700).setTitle('▶️ 正在播放').setDescription(song.title).setFooter({ text: 'SoundCloud' })] }).catch(err => logger.warn('music 操作失敗:', err.message));
   } catch (err) {
-    console.error('[音樂] 播放失敗:', err.message);
+    logger.error('音樂 播放失敗:', err.message);
     queue.songs.shift();
     if (queue.songs.length > 0) playSong(queue);
     else { queue.playing = false; queue.connection?.destroy(); queues.delete(queue.guildId); }
@@ -92,7 +92,7 @@ async function playSong(queue) {
   });
 
   queue.player.removeAllListeners('error');
-  queue.player.on('error', (err) => { console.error('[音樂] 錯誤:', err.message); if (queue.textChannel) queue.textChannel.send('❌ 播放錯誤').catch(err => logger.warn('music 操作失敗:', err.message)); });
+  queue.player.on('error', (err) => { logger.error('音樂 錯誤:', err.message); if (queue.textChannel) queue.textChannel.send('❌ 播放錯誤').catch(err => logger.warn('music 操作失敗:', err.message)); });
 }
 
 module.exports = music;

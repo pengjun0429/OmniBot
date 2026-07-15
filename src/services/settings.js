@@ -42,6 +42,7 @@ function getDefaults() {
     verification: { channelId: '', roleId: '', messageId: '', enabled: false },
     modLog: { channelId: '' },
     tempBans: {},
+    autoNick: { enabled: false, template: '', roles: {} },
   };
 }
 

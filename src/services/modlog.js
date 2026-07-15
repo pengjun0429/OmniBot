@@ -12,7 +12,7 @@ async function logModAction(guild, action, target, moderator, reason, extra) {
 
   const colors = {
     ban: 0xff0000, tempban: 0xff4400, kick: 0xffa500,
-    timeout: 0xffff00, warn: 0xffcc00, clear: 0x00ff00, forceunmute: 0x00ff00,
+    timeout: 0xffff00, warn: 0xffcc00, clear: 0x00ff00, forceunmute: 0x00ff00, lockdown: 0xef4444,
   };
 
   const embed = new EmbedBuilder()

@@ -26,6 +26,9 @@ module.exports = {
     if (target.id === interaction.client.user.id) {
       return interaction.reply({ content: '❌ 無法禁言機器人自己', ephemeral: true });
     }
+    if (target.id === interaction.guild.ownerId) {
+      return interaction.reply({ content: '❌ 無法禁言伺服器擁有者', ephemeral: true });
+    }
     if (!canTarget(interaction.member, target)) {
       return interaction.reply({ content: '❌ 你的身分組層級不足以禁言該成員', ephemeral: true });
     }
