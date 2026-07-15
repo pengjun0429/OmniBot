@@ -206,6 +206,7 @@
       <a href="#" onclick="switchTab('rolegive', event)">🎁 公開派發</a>
       <a href="#" onclick="switchTab('inviteguard', event)">🔗 連結管理</a>
       <a href="#" onclick="switchTab('appeal', event)">📋 申訴</a>
+      <a href="#" onclick="switchTab('githubwebhook', event)">🐙 GitHub</a>
       <a href="#" onclick="switchTab('antiraid', event)">🚨 防轟炸</a>
       <a href="#" onclick="switchTab('invitelog', event)">🔗 邀請追蹤</a>
       <a href="#" onclick="switchTab('messagelog', event)">📝 記錄日誌</a>
@@ -656,6 +657,28 @@
             </select>
           </div>
           <button type="submit" class="btn">儲存設定</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="tab-pane" id="tab-githubwebhook">
+      <div class="card">
+        <h2>🐙 GitHub Webhook</h2>
+        <p style="font-size:13px;color:#888;margin-bottom:12px;">
+          當 GitHub 有 PR 建立/合併/審核或 Issue 建立時，自動發送通知到 DC。<br>
+          Webhook URL：<code>https://omnibot-yzti.onrender.com/api/github-webhook</code>
+        </p>
+        <form method="POST" action="/api/settings/<%= guild.id %>/githubwebhook">
+          <div class="form-group">
+            <label>通知頻道</label>
+            <select name="channelId">
+              <option value="">不啟用</option>
+              <% guild.channels.forEach(c => { %>
+                <option value="<%= c.id %>" <%= guild.githubWebhook.channelId === c.id ? 'selected' : '' %>>#<%= c.name %></option>
+              <% }); %>
+            </select>
+          </div>
+          <button type="submit" class="btn">儲存</button>
         </form>
       </div>
     </div>

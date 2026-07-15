@@ -322,6 +322,65 @@ app.post('/api/appeal/submit', async (req, res) => {
   }
 });
 
+app.post('/api/github-webhook', express.json(), async (req, res) => {
+  try {
+    const event = req.headers['x-github-event'];
+    const body = req.body;
+
+    if (event === 'ping') return res.json({ ok: true });
+
+    if (!['pull_request', 'pull_request_review', 'issues'].includes(event)) {
+      return res.status(200).json({ ignored: true });
+    }
+
+    const action = body.action;
+    const pr = body.pull_request || body.issue;
+    if (!pr) return res.status(200).json({ ignored: true });
+
+    let color = 0x888888;
+    let title = '';
+    let fields = [];
+
+    if (event === 'pull_request') {
+      if (action === 'opened') { color = 0x2ecc71; title = '🟢 PR 已建立'; fields.push({ name: '標題', value: pr.title }); }
+      else if (action === 'closed' && pr.merged) { color = 0x9b59b6; title = '✅ PR 已合併'; fields.push({ name: '標題', value: pr.title }); }
+      else if (action === 'closed') { color = 0xe74c3c; title = '❌ PR 已關閉'; fields.push({ name: '標題', value: pr.title }); }
+      else return res.status(200).json({ ignored: true });
+      fields.push({ name: '作者', value: pr.user?.login || '?', inline: true });
+      fields.push({ name: '分支', value: `${pr.head?.ref || '?'} → ${pr.base?.ref || '?'}`, inline: true });
+      if (pr.html_url) fields.push({ name: '連結', value: pr.html_url });
+    } else if (event === 'pull_request_review' && action === 'submitted') {
+      const review = body.review;
+      if (review.state === 'approved') { color = 0x2ecc71; title = '✅ PR 審核通過'; }
+      else if (review.state === 'changes_requested') { color = 0xe74c3c; title = '🔴 PR 需修改'; }
+      else return res.status(200).json({ ignored: true });
+      fields.push({ name: 'PR', value: body.pull_request?.title || '?' });
+      fields.push({ name: '審核者', value: review.user?.login || '?', inline: true });
+    } else if (event === 'issues' && action === 'opened') {
+      color = 0xf39c12; title = '🟡 新 Issue';
+      fields.push({ name: '標題', value: pr.title });
+      fields.push({ name: '建立者', value: pr.user?.login || '?', inline: true });
+      if (pr.html_url) fields.push({ name: '連結', value: pr.html_url });
+    } else return res.status(200).json({ ignored: true });
+
+    for (const guild of client.guilds.cache.values()) {
+      const gs = settings.getGuildSettings(guild.id);
+      const chId = gs.githubWebhook?.channelId;
+      if (!chId) continue;
+      const ch = guild.channels.cache.get(chId);
+      if (!ch) continue;
+      const embed = new (require('discord.js').EmbedBuilder)()
+        .setColor(color).setTitle(title).addFields(fields).setTimestamp();
+      await ch.send({ embeds: [embed] }).catch(() => {});
+    }
+
+    res.json({ ok: true });
+  } catch (err) {
+    logger.error('GitHub Webhook 錯誤:', err.message);
+    res.status(200).json({ ok: true });
+  }
+});
+
 app.get('/dashboard', requireAuth, (req, res) => {
   const guilds = client.guilds.cache.map(g => ({
     id: g.id, name: g.name, memberCount: g.memberCount,
@@ -414,6 +473,7 @@ app.get('/server/:id', requireAuth, async (req, res) => {
         messageLogAll: gs.messageLogAll || { enabled: false },
         inviteGuard: gs.inviteGuard || { enabled: false, whitelist: [], logChannelId: '' },
         appeal: gs.appeal || { channelId: '' },
+        githubWebhook: gs.githubWebhook || { channelId: '' },
         antiRaid: gs.antiRaid || { enabled: false, joinThreshold: 5, joinWindow: 10, spamThreshold: 5, spamWindow: 5, spamTimeout: 1, action: 'kick', logChannelId: '' },
         inviteLog: gs.inviteLog || { channelId: '' },
         welcome: gs.welcome || { enabled: false, channelId: '', message: '' },
@@ -630,6 +690,13 @@ app.post('/api/settings/:guildId/invitelog', requireAuth, requireTopAdmin, (req,
   gs.inviteLog = { channelId: req.body.channelId || '' };
   settings.updateGuildSettings(req.params.guildId, gs);
   res.redirect(`/server/${req.params.guildId}#invitelog`);
+});
+
+app.post('/api/settings/:guildId/githubwebhook', requireAuth, requireTopAdmin, (req, res) => {
+  const gs = settings.getGuildSettings(req.params.guildId);
+  gs.githubWebhook = { channelId: req.body.channelId || '' };
+  settings.updateGuildSettings(req.params.guildId, gs);
+  res.redirect(`/server/${req.params.guildId}#githubwebhook`);
 });
 
 app.post('/api/server/:id/send-ticket-panel', requireAuth, requireTopAdmin, async (req, res) => {
