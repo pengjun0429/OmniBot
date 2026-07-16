@@ -87,12 +87,15 @@ module.exports = {
       }
     }
 
-    if (!gs.autoMod || !gs.autoMod.enabled) return;
+    if (!gs.autoMod || !gs.autoMod.enabled) {
+      if (process.env.NODE_ENV !== 'production') logger.info(`[AutoMod] 未啟用 (guild=${message.guild.id})`);
+      return;
+    }
 
     const isMod = message.member?.permissions?.has('Administrator') ||
       (gs.adminRoles?.topIds || []).some(id => message.member?.roles?.cache?.has(id)) ||
       (gs.adminRoles?.modIds || []).some(id => message.member?.roles?.cache?.has(id));
-    if (isMod) return;
+    if (isMod) { if (process.env.NODE_ENV !== 'production') logger.info(`[AutoMod] ${message.author.tag} 是管理員，跳過`); return; }
 
     const { words=[], allowedWords=[], regexWords=[], blockLinks, phishingProtection, logChannelId, punishment, timeoutMinutes, logLevel, strikes, strikeResetHours } = gs.autoMod;
     const normalized = message.content.toLowerCase().replace(/[\s\n\r\t]+/g, '').replace(/[^a-z0-9\u4e00-\u9fff]/g, '');
@@ -113,6 +116,7 @@ module.exports = {
     if (!flagged && words.length > 0) {
       const found = words.find(w => normalized.includes(w.toLowerCase().replace(/[\s\n\r\t]/g, '')));
       if (found) {
+        if (process.env.NODE_ENV !== 'production') logger.info(`[AutoMod] ${message.author.tag} 觸發過濾詞：${found}（內容：${message.content.slice(0, 50)}）`);
         flagged = true;
         reason = `使用了過濾詞：${found}`;
         foundWord = found;
