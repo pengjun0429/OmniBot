@@ -134,6 +134,7 @@ async function getAccessibleGuilds(req, level = 'mod') {
 function requireSystemAdmin(req, res, next) {
   const allowedIds = new Set((process.env.SYSTEM_ADMIN_USER_IDS || '').split(',').map(id => id.trim()).filter(Boolean));
   if (allowedIds.has(req.session.discordUser?.id)) return next();
+  if (req.session.adminLevel === 'top') return next();
   res.status(403).send('此功能僅限系統管理員使用');
 }
 
