@@ -560,6 +560,11 @@
             <label>AI 語意過濾（Gemini 判斷是否為惡意）</label>
           </div>
           <div class="form-group">
+            <label>AI 提示詞（選填）</label>
+            <textarea name="aiPrompt" rows="3" placeholder="判斷以下訊息是否為惡意或有害內容。僅回傳 JSON：{&quot;harmful&quot;: true/false, &quot;reason&quot;: &quot;簡短說明&quot;}"><%= guild.autoMod.aiPrompt || "" %></textarea>
+            <div class="hint">自訂 Gemini 判斷規則，留空使用預設提示詞</div>
+          </div>
+          <div class="form-group">
             <label>違規懲罰</label>
             <select name="punishment">
               <option value="delete" <%= guild.autoMod.punishment === 'delete' ? 'selected' : '' %>>刪除訊息</option>

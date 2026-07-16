@@ -634,6 +634,7 @@ app.post('/api/settings/:guildId/automod', requireAuth, requireTopAdmin, (req, r
     blockLinks: String(req.body.blockLinks).includes('1'),
     phishingProtection: String(req.body.phishingProtection).includes('1'),
     aiFilter: String(req.body.aiFilter).includes('1'),
+    aiPrompt: req.body.aiPrompt || '',
     logChannelId: req.body.logChannelId || '',
     punishment: req.body.punishment || 'delete',
     timeoutMinutes: parseInt(req.body.timeoutMinutes, 10) || 10,

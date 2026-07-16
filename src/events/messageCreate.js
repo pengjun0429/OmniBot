@@ -150,10 +150,10 @@ module.exports = {
       let aiResult = null;
       for (const apiKey of geminiKeys) {
         try {
-          const prompt = `判斷以下訊息是否為惡意或有害內容。僅回傳 JSON：{"harmful": true/false, "reason": "簡短說明"}
-訊息內容：${message.content.slice(0, 200)}`;
+          const defaultPrompt = '判斷以下訊息是否為惡意或有害內容。僅回傳 JSON：{"harmful": true/false, "reason": "簡短說明"}';
+          const prompt = gs.autoMod.aiPrompt || defaultPrompt;
           const res = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-            { contents: [{ parts: [{ text: prompt }] }] }, { timeout: 5000 });
+            { contents: [{ parts: [{ text: `${prompt}\n訊息內容：${message.content.slice(0, 200)}` }] }] }, { timeout: 5000 });
           aiResult = res.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
           break;
         } catch (err) {
