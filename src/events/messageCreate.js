@@ -94,8 +94,13 @@ module.exports = {
       (gs.adminRoles?.modIds || []).some(id => message.member?.roles?.cache?.has(id));
     if (isMod) return;
 
-    const { words=[], regexWords=[], blockLinks, phishingProtection, logChannelId, punishment, timeoutMinutes, logLevel, strikes, strikeResetHours } = gs.autoMod;
+    const { words=[], allowedWords=[], regexWords=[], blockLinks, phishingProtection, logChannelId, punishment, timeoutMinutes, logLevel, strikes, strikeResetHours } = gs.autoMod;
     const normalized = message.content.toLowerCase().replace(/[\s\n\r\t]+/g, '').replace(/[^a-z0-9\u4e00-\u9fff]/g, '');
+
+    if (allowedWords.length > 0 && allowedWords.some(w => normalized.includes(w.toLowerCase().replace(/[\s\n\r\t]/g, '')))) {
+      return;
+    }
+
     let flagged = false;
     let reason = '';
     let foundWord = '';
