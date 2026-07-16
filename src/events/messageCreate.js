@@ -141,8 +141,11 @@ module.exports = {
 
     if (!flagged) return;
 
-    if (flagged && gs.autoMod.aiFilter && (process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY_2)) {
+    if (flagged && gs.autoMod.aiFilter) {
       const geminiKeys = [process.env.GEMINI_API_KEY, process.env.GEMINI_API_KEY_2].filter(Boolean);
+      if (geminiKeys.length === 0) {
+        logger.warn('[AI過濾] 已啟用但未設定 GEMINI_API_KEY');
+      }
       let aiResult = null;
       for (const apiKey of geminiKeys) {
         try {
