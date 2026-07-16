@@ -312,6 +312,11 @@ app.get('/privacy', (req, res) => {
   res.render('privacy');
 });
 
+app.get('/invite', (req, res) => {
+  const url = `https://discord.com/oauth2/authorize?client_id=${config.discord.clientId}&permissions=8&scope=bot%20applications.commands`;
+  res.redirect(url);
+});
+
 app.get('/up', (req, res) => {
   res.send('ok');
 });
