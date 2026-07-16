@@ -142,7 +142,7 @@ app.get('/', (req, res) => {
   const guildCount = client.guilds?.cache?.size || 0;
   const userCount = client.guilds?.cache ? [...client.guilds.cache.values()].reduce((s, g) => s + g.memberCount, 0) : 0;
   const ping = client.ws?.ping || 0;
-  res.render('landing', { guildCount, userCount, ping });
+  res.render('landing', { guildCount, userCount, ping, clientId: config.discord.clientId });
 });
 
 app.get('/login', (req, res) => {
