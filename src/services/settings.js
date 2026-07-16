@@ -25,7 +25,7 @@ function getDefaults() {
     roleGroups: [],
     autoVoice: { channelId: '', categoryId: '', nameTemplate: '', userLimit: 0, bitrate: 64000, rtcRegion: '', logging: false },
     ticket: { categoryId: '', roleIds: [], channelId: '' },
-    autoMod: { enabled: false, words: [], allowedWords: [], regexWords: [], blockLinks: false, phishingProtection: false, logChannelId: '', punishment: 'delete', timeoutMinutes: 10, logLevel: 'all', strikes: {}, strikeResetHours: 24, userStrikes: {} },
+    autoMod: { enabled: false, words: [], allowedWords: [], regexWords: [], blockLinks: false, phishingProtection: false, aiFilter: false, logChannelId: '', punishment: 'delete', timeoutMinutes: 10, logLevel: 'all', strikes: {}, strikeResetHours: 24, userStrikes: {} },
     roleGive: { channelId: '' },
     messageLog: { channelId: '' },
     messageLogAll: { enabled: false },

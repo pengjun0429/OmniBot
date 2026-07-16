@@ -554,6 +554,11 @@
             <input type="checkbox" name="phishingProtection" value="1" <%= guild.autoMod.phishingProtection ? 'checked' : '' %>>
             <label>釣魚/詐騙偵測（自動比對 OpenPhish 資料庫）</label>
           </div>
+          <div class="form-group checkbox">
+            <input type="hidden" name="aiFilter" value="0">
+            <input type="checkbox" name="aiFilter" value="1" <%= guild.autoMod.aiFilter ? "checked" : "" %>>
+            <label>AI 語意過濾（Gemini 判斷是否為惡意）</label>
+          </div>
           <div class="form-group">
             <label>違規懲罰</label>
             <select name="punishment">

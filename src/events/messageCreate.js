@@ -145,6 +145,25 @@ module.exports = {
 
     if (!flagged) return;
 
+    if (flagged && gs.autoMod.aiFilter && process.env.GEMINI_API_KEY) {
+      try {
+        const axios = require('axios');
+        const prompt = `判斷以下訊息是否為惡意或有害內容。僅回傳 JSON：{"harmful": true/false, "reason": "簡短說明"}
+訊息內容：${message.content.slice(0, 200)}`;
+        const res = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+          { contents: [{ parts: [{ text: prompt }] }] }, { timeout: 5000 });
+        const text = res.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        const json = JSON.parse(text.match(/\{[\s\S]*\}/)?.[0] || '{}');
+        if (!json.harmful) {
+          logger.info(`[AI過濾] ${message.author.tag} 的訊息被AI判定為安全，已放行`);
+          return;
+        }
+        reason += '（AI確認有害）';
+      } catch (err) {
+        logger.warn(`[AI過濾] 檢查失敗: ${err.message}`);
+      }
+    }
+
     let censored = message.content;
     if (foundWord) censored = censored.replace(new RegExp(foundWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), '****');
     if (regexWords?.length > 0) {
