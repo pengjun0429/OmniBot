@@ -96,7 +96,7 @@ module.exports = {
     const isMod = message.member?.permissions?.has('Administrator') ||
       (gs.adminRoles?.topIds || []).some(id => message.member?.roles?.cache?.has(id)) ||
       (gs.adminRoles?.modIds || []).some(id => message.member?.roles?.cache?.has(id));
-    if (isMod) { if (process.env.NODE_ENV !== 'production') logger.info(`[AutoMod] ${message.author.tag} 是管理員，跳過`); return; }
+    if (isMod) { logger.info(`[AutoMod] ${message.author.tag} 是管理員，跳過過濾`); return; }
 
     const { words=[], allowedWords=[], regexWords=[], blockLinks, phishingProtection, logChannelId, punishment, timeoutMinutes, logLevel, strikes, strikeResetHours } = gs.autoMod;
     const normalized = message.content.toLowerCase().replace(/[\s\n\r\t]+/g, '').replace(/[^a-z0-9\u4e00-\u9fff]/g, '');
