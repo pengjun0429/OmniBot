@@ -225,17 +225,17 @@ module.exports = {
       let punished = false;
 
       if (effectivePunishment === 'timeout') {
-        if (!message.member) return;
-        await message.member.timeout(effectiveDuration * 60 * 1000, `自動審核(${strikeCount}次)：${reason}`).catch(err => logger.error(`自動審核 timeout 失敗:`, err.message));
+        if (!message.member || message.member.id === message.guild.ownerId) return;
+        await message.member.timeout(effectiveDuration * 60 * 1000, `自動審核(${strikeCount}次)：${reason}`).catch(() => {});
         punished = true;
       } else if (effectivePunishment === 'warn') {
-        if (!message.member) return;
+        if (!message.member || message.member.id === message.guild.ownerId) return;
         const warnMsg = await message.channel.send(`⚠️ ${message.author}，請注意言詞！您已被系統警告 (${strikeCount}犯)。`).catch(err => logger.warn('messageCreate 操作失敗:', err.message));
         if (warnMsg) setTimeout(() => warnMsg.delete().catch(err => logger.warn('messageCreate 操作失敗:', err.message)), 5000);
         punished = true;
       } else if (effectivePunishment === 'kick') {
-        if (!message.member) return;
-        await message.member.kick(`自動審核(${strikeCount}次)：${reason}`).catch(err => logger.error(`自動審核 kick 失敗:`, err.message));
+        if (!message.member || message.member.id === message.guild.ownerId) return;
+        await message.member.kick(`自動審核(${strikeCount}次)：${reason}`).catch(() => {});
         punished = true;
       }
 
