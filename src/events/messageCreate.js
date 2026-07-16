@@ -168,6 +168,9 @@ module.exports = {
           }
           reason += '（AI確認有害）';
         } catch {}
+      } else {
+        logger.info(`[AI過濾] AI無法判斷，已放行（${message.author.tag}: ${message.content.slice(0, 50)}）`);
+        return;
       }
     }
 
