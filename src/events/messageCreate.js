@@ -3,8 +3,6 @@ const logger = require('../utils/logger');
 const { isTopAdmin } = require('../utils/permissions');
 const axios = require('axios');
 
-const GOOGLE_DB_URL = () => process.env.GOOGLE_DB_URL;
-
 module.exports = {
   async execute(message) {
     logger.info(`[Msg] ${message.author.tag}: ${message.content?.slice(0, 30) || '(空)'}`);
@@ -25,26 +23,6 @@ module.exports = {
         }
         return message.channel.send(gs.customCommands[cmdName]);
       }
-    }
-
-    const token = process.env.GOOGLE_DB_TOKEN || '';
-    if (gs.messageLogAll?.enabled && GOOGLE_DB_URL() && message.guild.id === process.env.DISCORD_GUILD_ID) {
-      logger.info(`[GSheet] 準備記錄 ${message.author.tag} 的訊息到 ${GOOGLE_DB_URL()}`);
-      const now = new Date();
-      const twTime = now.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false });
-      const entry = {
-        time: twTime,
-        guildId: message.guild.id,
-        channelId: message.channel.id,
-        channelName: message.channel.name,
-        authorId: message.author.id,
-        authorTag: message.author.tag,
-        content: message.content?.slice(0, 1000) || '',
-        url: message.url,
-      };
-      axios.post(GOOGLE_DB_URL(), { action: 'log', logEntry: entry, token }, { timeout: 5000 })
-        .then(() => logger.info(`[GSheet] ${message.author.tag} 的訊息已記錄`))
-        .catch(err => logger.error(`[GSheet] 記錄失敗:`, err.message));
     }
 
     if (gs.inviteGuard?.enabled) {
@@ -96,7 +74,7 @@ module.exports = {
     const isMod = message.member?.permissions?.has('Administrator') ||
       (gs.adminRoles?.topIds || []).some(id => message.member?.roles?.cache?.has(id)) ||
       (gs.adminRoles?.modIds || []).some(id => message.member?.roles?.cache?.has(id));
-    if (isMod) { logger.info(`[AutoMod] ${message.author.tag} 是管理員，跳過過濾`); return; }
+    if (isMod) { logger.info(`[AutoMod] ${message.author.tag} 是管理員，但仍進行過濾`); }
 
     const { words=[], allowedWords=[], regexWords=[], blockLinks, phishingProtection, logChannelId, punishment, timeoutMinutes, logLevel, strikes, strikeResetHours } = gs.autoMod;
     const normalized = message.content.toLowerCase().replace(/[\s\n\r\t]+/g, '').replace(/[^a-z0-9\u4e00-\u9fff]/g, '');
