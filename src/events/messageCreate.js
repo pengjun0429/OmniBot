@@ -116,7 +116,7 @@ module.exports = {
     if (!flagged && words.length > 0) {
       const found = words.find(w => normalized.includes(w.toLowerCase().replace(/[\s\n\r\t]/g, '')));
       if (found) {
-        if (process.env.NODE_ENV !== 'production') logger.info(`[AutoMod] ${message.author.tag} 觸發過濾詞：${found}（內容：${message.content.slice(0, 50)}）`);
+        logger.info(`[AutoMod] ${message.author.tag} 觸發過濾詞：${found}（內容：${message.content.slice(0, 50)}）`);
         flagged = true;
         reason = `使用了過濾詞：${found}`;
         foundWord = found;
