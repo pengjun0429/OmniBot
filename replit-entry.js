@@ -540,6 +540,7 @@ app.get('/server/:id', requireAuth, requireGuildAccess('mod'), async (req, res) 
     const userGuilds = client.guilds.cache.map(g => ({ id: g.id, name: g.name, icon: g.icon }));
     res.render('server', {
       userGuilds,
+      user: req.session.discordUser || null,
       adminLevel: req.session.adminLevel || null,
       guild: {
         id: guild.id, name: guild.name, icon: guild.icon || '',
@@ -847,6 +848,11 @@ app.post('/api/server/:id/send-panel', requireAuth, requireTopAdmin, async (req,
   } catch (err) {
     res.json({ success: false, error: err.message });
   }
+});
+
+app.use((err, req, res, next) => {
+  logger.error('未捕捉錯誤:', err.message);
+  res.status(500).send('伺服器內部錯誤');
 });
 
 app.listen(PORT, '0.0.0.0', () => {
