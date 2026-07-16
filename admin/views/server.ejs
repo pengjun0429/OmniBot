@@ -170,88 +170,88 @@
         <span class="user-badge">
           <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png?size=32">
           <%= user.global_name || user.username %>
-          <span class="role-badge <%= adminLevel %>"><%= adminLevel === 'top' ? '蝞∠??? : '蝞∠??? %></span>
+          <span class="role-badge <%= adminLevel %>"><%= adminLevel === 'top' ? '管理員' : '管理員' %></span>
         </span>
       <% } %>
-      <a href="/logs">?亥?</a>
-      <a href="/cmd">?誘</a>
-      <a href="/privacy">?梁?</a>
-      <a href="/appeal" target="_blank" style="color:#f59e0b;">?唾迄</a>
-      <a href="/logout" style="color:#e94560;">?餃</a>
+      <a href="/logs">日誌</a>
+      <a href="/cmd">指令</a>
+      <a href="/privacy">隱私</a>
+      <a href="/appeal" target="_blank" style="color:#f59e0b;">申訴</a>
+      <a href="/logout" style="color:#e94560;">登出</a>
     </div>
   </div>
 
   <div class="guild-header">
-    <div class="icon"><% if (guild.icon) { %><img src="https://cdn.discordapp.com/icons/<%= guild.id %>/<%= guild.icon %>.png?size=48" alt=""><% } else { %>??<% } %></div>
+    <div class="icon"><% if (guild.icon) { %><img src="https://cdn.discordapp.com/icons/<%= guild.id %>/<%= guild.icon %>.png?size=48" alt=""><% } else { %>🌐<% } %></div>
     <div class="info">
       <h1><%= guild.name %></h1>
-      <div class="meta">ID: <%= guild.id %> 繚 ???? <%= guild.ownerTag %></div>
+      <div class="meta">ID: <%= guild.id %> · 擁有者: <%= guild.ownerTag %></div>
     </div>
     <div class="stats">
-      <div class="stat"><div class="num"><%= guild.memberCount %></div><div class="label">?</div></div>
-      <div class="stat"><div class="num"><%= guild.channels.length %></div><div class="label">?駁?</div></div>
-      <div class="stat"><div class="num"><%= guild.roleCount || 0 %></div><div class="label">頨怠?蝯?/div></div>
+      <div class="stat"><div class="num"><%= guild.memberCount %></div><div class="label">成員</div></div>
+      <div class="stat"><div class="num"><%= guild.channels.length %></div><div class="label">頻道</div></div>
+      <div class="stat"><div class="num"><%= guild.roles ? guild.roles.length : 0 %></div><div class="label">身分組</div></div>
     </div>
   </div>
 
   <div class="tabs">
-    <a href="#" class="active" onclick="switchTab('channels', event)">?? ?駁?</a>
+    <a href="#" class="active" onclick="switchTab('channels', event)">📁 頻道</a>
     <% if (adminLevel === 'top') { %>
-      <a href="#" onclick="switchTab('welcome', event)">?? 甇∟?</a>
-      <a href="#" onclick="switchTab('farewell', event)">?? ?</a>
-      <a href="#" onclick="switchTab('roles', event)">? 頨怠?蝯?/a>
-      <a href="#" onclick="switchTab('voice', event)">?? 隤?</a>
-      <a href="#" onclick="switchTab('ticket', event)">? 撌亙</a>
-      <a href="#" onclick="switchTab('automod', event)">?? ?芸?撖拇</a>
-      <a href="#" onclick="switchTab('rolegive', event)">?? ?祇?瘣曄</a>
-      <a href="#" onclick="switchTab('inviteguard', event)">?? ???蝞∠?</a>
-      <a href="#" onclick="switchTab('appeal', event)">?? ?唾迄</a>
-      <a href="#" onclick="switchTab('antiraid', event)">? ?脰???/a>
-      <a href="#" onclick="switchTab('invitelog', event)">?? ?隢蕭頩?/a>
-      <a href="#" onclick="switchTab('messagelog', event)">?? 閮??亥?</a>
+      <a href="#" onclick="switchTab('welcome', event)">👋 歡迎</a>
+      <a href="#" onclick="switchTab('farewell', event)">👋 告別</a>
+      <a href="#" onclick="switchTab('roles', event)">🎭 身分組</a>
+      <a href="#" onclick="switchTab('voice', event)">🔊 語音包房</a>
+      <a href="#" onclick="switchTab('ticket', event)">🎫 工單</a>
+      <a href="#" onclick="switchTab('automod', event)">🤖 自動審核</a>
+      <a href="#" onclick="switchTab('rolegive', event)">🎁 公開派發</a>
+      <a href="#" onclick="switchTab('inviteguard', event)">🔗 連結管理</a>
+      <a href="#" onclick="switchTab('appeal', event)">📋 申訴</a>
+      <a href="#" onclick="switchTab('antiraid', event)">🚨 防轟炸</a>
+      <a href="#" onclick="switchTab('invitelog', event)">🔗 邀請追蹤</a>
+      <a href="#" onclick="switchTab('messagelog', event)">📝 記錄日誌</a>
     <% } %>
-    <a href="#" onclick="switchTab('announce', event)">? ?砍?</a>
+    <a href="#" onclick="switchTab('announce', event)">📢 公告</a>
   </div>
 
   <div class="tab-content">
     <div class="tab-pane active" id="tab-welcome">
       <div class="card">
-        <h2>?? 甇∟?閮</h2>
+        <h2>👋 歡迎訊息</h2>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
           <div>
             <form method="POST" action="/api/settings/<%= guild.id %>" id="welcomeForm">
-              <input type="hidden" name="type" value="welcome">
+                            <input type="hidden" name="type" value="welcome">
               <input type="hidden" name="_tab" value="welcome">
               <div class="form-group">
-                <label>?潮??/label>
+                <label>發送頻道</label>
                 <select name="channelId" onchange="updateWelcomePreview()">
-                  <option value="">銝???/option>
+                  <option value="">不啟用</option>
                   <% guild.channels.forEach(c => { %>
                     <option value="<%= c.id %>" <%= guild.welcome.channelId === c.id ? 'selected' : '' %>>#<%= c.name %></option>
                   <% }); %>
                 </select>
               </div>
               <div class="form-group">
-                <label>閮?批捆</label>
-                <textarea name="message" id="welcomeMsg" oninput="updateWelcomePreview()" placeholder='?? {mention}嚗迭餈???{server}嚗n?? ?桀?隡箸??函蜇鈭箸嚗count}鈭暝n隢???{channel} | ??頨怠?蝯?{role}\n蟡??予?翰嚗?><%= guild.welcome.message %></textarea>
-                <div class="hint"><code>{mention}</code> = @?? 繚 <code>{user}</code> = ??迂 繚 <code>{server}</code> = 隡箸??典?蝔?繚 <code>{count}</code> = ???繚 <code>{channel}</code> = ?駁???? 繚 <code>{role}</code> = 頨怠?蝯??</div>
+                <label>訊息內容</label>
+                <textarea name="message" id="welcomeMsg" oninput="updateWelcomePreview()" placeholder='哈囉 {mention}，歡迎來到 {server}！\n👋 目前伺服器總人數：{count}人\n請先去 {channel} | 領取身分組 {role}\n祝你聊天愉快！'><%= guild.welcome.message %></textarea>
+                <div class="hint"><code>{mention}</code> = @提及 · <code>{user}</code> = 成員名稱 · <code>{server}</code> = 伺服器名稱 · <code>{count}</code> = 成員數 · <code>{channel}</code> = 頻道連結 · <code>{role}</code> = 身分組連結</div>
               </div>
               <div class="form-group checkbox">
                 <input type="checkbox" name="enabled" value="1" <%= guild.welcome.enabled ? 'checked' : '' %>>
-                <label>?甇∟?閮</label>
+                <label>啟用歡迎訊息</label>
               </div>
               <div class="form-group">
-                <label>甇∟??? URL</label>
-                <input type="text" name="image" id="welcomeImg" value="<%= guild.welcome.image || '' %>" oninput="updateWelcomePreview()" placeholder="鞎潔???蝬脣?">
+                <label>歡迎圖片 URL</label>
+                <input type="text" name="image" id="welcomeImg" value="<%= guild.welcome.image || '' %>" oninput="updateWelcomePreview()" placeholder="貼上圖片網址">
               </div>
-              <button type="submit" class="btn">?脣?</button>
+              <button type="submit" class="btn">儲存</button>
             </form>
           </div>
           <div id="welcomePreview" style="background:#313338;border-radius:8px;padding:16px;min-height:200px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
             <div style="background:#2b2d31;border-radius:4px;padding:12px;border-left:4px solid #5865F2;">
-              <div style="font-size:12px;color:#888;margin-bottom:4px;">?? 甇∟??隡箸???/div>
-              <div id="welcomePreviewText" style="font-size:14px;color:#dbdee1;line-height:1.5;">?? @撠?嚗迭餈????ˊ?∪末瘣餌???</div>
-              <div style="font-size:11px;color:#888;margin-top:8px;">隞予 00:00</div>
+              <div style="font-size:12px;color:#888;margin-bottom:4px;">🎉 歡迎加入伺服器</div>
+              <div id="welcomePreviewText" style="font-size:14px;color:#dbdee1;line-height:1.5;">哈囉 @小明，歡迎來到 吃飽睡好活的老！</div>
+              <div style="font-size:11px;color:#888;margin-top:8px;">今天 00:00</div>
             </div>
           </div>
         </div>
@@ -263,7 +263,7 @@
         const img = document.getElementById('welcomeImg')?.value || '';
         const preview = document.getElementById('welcomePreviewText');
         if (preview) {
-          let text = msg.replace(/{mention}/g, '@撠?').replace(/{user}/g, '撠?#1234').replace(/{server}/g, '?ˊ?∪末瘣餌???).replace(/{count}/g, '42').replace(/{channel}/g, '#甇∟?').replace(/{role}/g, '@銝?祆???);
+          let text = msg.replace(/{mention}/g, '@小明').replace(/{user}/g, '小明#1234').replace(/{server}/g, '吃飽睡好活的老').replace(/{count}/g, '42').replace(/{channel}/g, '#歡迎').replace(/{role}/g, '@一般成員');
           preview.innerHTML = text.replace(/\n/g, '<br>');
         }
       }
@@ -271,41 +271,41 @@
 
     <div class="tab-pane" id="tab-farewell">
       <div class="card">
-        <h2>?? ?閮</h2>
+        <h2>👋 告別訊息</h2>
         <form method="POST" action="/api/settings/<%= guild.id %>">
-          <input type="hidden" name="type" value="farewell">
+                            <input type="hidden" name="type" value="farewell">
           <input type="hidden" name="_tab" value="farewell">
           <div class="form-group">
-            <label>?潮??/label>
+            <label>發送頻道</label>
             <select name="channelId">
-              <option value="">銝???/option>
+              <option value="">不啟用</option>
               <% guild.channels.forEach(c => { %>
                 <option value="<%= c.id %>" <%= guild.farewell.channelId === c.id ? 'selected' : '' %>>#<%= c.name %></option>
               <% }); %>
             </select>
           </div>
           <div class="form-group">
-            <label>閮?批捆</label>
-            <textarea name="message" placeholder='靘?嚗mention} ?ａ?鈭?{server}'><%= guild.farewell.message %></textarea>
-            <div class="hint"><code>{mention}</code> = @?? 繚 <code>{user}</code> = ??迂 繚 <code>{server}</code> = 隡箸??典?蝔?/div>
+            <label>訊息內容</label>
+            <textarea name="message" placeholder='例如：{mention} 離開了 {server}'><%= guild.farewell.message %></textarea>
+            <div class="hint"><code>{mention}</code> = @提及 · <code>{user}</code> = 成員名稱 · <code>{server}</code> = 伺服器名稱</div>
           </div>
           <div class="form-group checkbox">
             <input type="checkbox" name="enabled" value="1" <%= guild.farewell.enabled ? 'checked' : '' %>>
-            <label>??閮</label>
+            <label>啟用告別訊息</label>
           </div>
-          <button type="submit" class="btn">?脣?</button>
+          <button type="submit" class="btn">儲存</button>
         </form>
       </div>
     </div>
 
     <div class="tab-pane" id="tab-roles">
       <div class="card">
-        <h2>? ?芸??頨怠?蝯?/h2>
+        <h2>🎭 自助領取身分組</h2>
         <p style="font-size:13px;color:#888;margin-bottom:12px;">
-          ?暸隞乩?頨怠?蝯????Discord 頛詨 <code>/role</code> ?喳?芾???/蝘駁
+          勾選以下身分組，成員在 Discord 輸入 <code>/role</code> 即可自行領取/移除
         </p>
         <form method="POST" action="/api/settings/<%= guild.id %>/roles">
-          <div class="role-grid">
+                    <div class="role-grid">
             <% guild.roles.forEach(r => { %>
               <label class="role-item">
                 <input type="checkbox" name="roles" value="<%= r.id %>" <%= guild.selfRoles.includes(r.id) ? 'checked' : '' %>>
@@ -314,21 +314,22 @@
               </label>
             <% }); %>
           </div>
-          <button type="submit" class="btn">?脣?頨怠?蝯身摰?/button>
+          <button type="submit" class="btn">儲存身分組設定</button>
         </form>
 
         <div style="margin-top:20px;padding-top:20px;border-top:1px solid #232340;">
-          <h2 style="font-size:16px;color:#fff;margin-bottom:12px;">? ?潮澈?????Ｘ</h2>
+          <h2 style="font-size:16px;color:#fff;margin-bottom:12px;">📨 發送身分組領取面板</h2>
           <p style="font-size:13px;color:#888;margin-bottom:12px;">
-            ?豢?閬???駁?嚗ot ????偶銋???選??暺????喳??/蝘駁頨怠?蝯?          </p>
+            選擇要發送的頻道，Bot 會發送一個永久按鈕面板，成員點擊按鈕即可領取/移除身分組
+          </p>
           <form onsubmit="sendPanel(event)" style="display:flex;gap:8px;align-items:flex-start;">
             <select id="panelChannel" style="width:220px;padding:8px 12px;background:#1e1e3a;border:1px solid #333;border-radius:6px;color:#fff;font-size:13px;">
-              <option value="">?豢??駁?...</option>
+              <option value="">選擇頻道...</option>
               <% guild.channels.forEach(c => { %>
                 <option value="<%= c.id %>">#<%= c.name %></option>
               <% }); %>
             </select>
-            <button type="submit" class="btn">?潮??/button>
+            <button type="submit" class="btn">發送面板</button>
           </form>
           <div id="panelStatus" class="status-msg" style="margin-top:8px;font-size:13px;"></div>
         </div>
@@ -337,41 +338,42 @@
 
     <div class="tab-pane" id="tab-announce">
       <div class="card">
-        <h2>? ?潮??/h2>
+        <h2>📢 發送公告</h2>
         <p style="font-size:13px;color:#888;margin-bottom:16px;">
-          ?豢??駁?銝西撓?亙摰對?Bot ?誑 Embed ?澆??潮??        </p>
+          選擇頻道並輸入內容，Bot 會以 Embed 格式發送公告。
+        </p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
           <div>
             <div class="form-group">
-              <label>?潮??/label>
+              <label>發送頻道</label>
               <select id="announceChannel">
-                <option value="">?豢??駁?...</option>
+                <option value="">選擇頻道...</option>
                 <% guild.channels.forEach(c => { %>
                   <option value="<%= c.id %>">#<%= c.name %></option>
                 <% }); %>
               </select>
             </div>
             <div class="form-group">
-              <label>?砍?璅?嚗憛恬?</label>
-              <input type="text" id="announceTitle" placeholder="靘?嚗撩??砍?" style="width:100%;padding:10px 14px;background:rgba(12,12,24,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:#e0e0e0;font-size:13px;">
+              <label>公告標題（選填）</label>
+              <input type="text" id="announceTitle" placeholder="例如：伺服器公告" style="width:100%;padding:10px 14px;background:rgba(12,12,24,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:#e0e0e0;font-size:13px;">
             </div>
             <div class="form-group">
-              <label>?砍??批捆</label>
-              <textarea id="announceMsg" placeholder="頛詨?砍??批捆..." rows="5" style="width:100%;padding:10px 14px;background:rgba(12,12,24,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:#e0e0e0;font-size:13px;resize:vertical;"></textarea>
+              <label>公告內容</label>
+              <textarea id="announceMsg" placeholder="輸入公告內容..." rows="5" style="width:100%;padding:10px 14px;background:rgba(12,12,24,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:#e0e0e0;font-size:13px;resize:vertical;"></textarea>
             </div>
             <div class="form-group">
-              <label>憿嚗憛恬?</label>
+              <label>顏色（選填）</label>
               <input type="color" id="announceColor" value="#7c6ff0" style="width:60px;height:36px;border:none;border-radius:6px;cursor:pointer;background:transparent;">
             </div>
-            <button onclick="sendAnnounce(event)" class="btn" style="margin-top:4px;">? ?潮??/button>
+            <button onclick="sendAnnounce(event)" class="btn" style="margin-top:4px;">📨 發送公告</button>
             <div id="announceStatus" class="status-msg" style="margin-top:8px;"></div>
           </div>
           <div>
             <div style="background:rgba(22,22,42,0.6);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px;">
-              <div style="font-size:11px;color:#666;margin-bottom:8px;">?汗</div>
+              <div style="font-size:11px;color:#666;margin-bottom:8px;">預覽</div>
               <div id="previewBox" style="background:rgba(12,12,24,0.6);border-radius:8px;padding:16px;border-left:4px solid #7c6ff0;">
-                <div id="previewTitle" style="font-size:15px;font-weight:600;color:#fff;margin-bottom:6px;">?砍?璅?</div>
-                <div id="previewContent" style="font-size:13px;color:#ccc;line-height:1.6;">?砍??批捆撠＊蝷箏?ㄐ</div>
+                <div id="previewTitle" style="font-size:15px;font-weight:600;color:#fff;margin-bottom:6px;">公告標題</div>
+                <div id="previewContent" style="font-size:13px;color:#ccc;line-height:1.6;">公告內容將顯示在這裡</div>
               </div>
             </div>
           </div>
@@ -383,8 +385,8 @@
       document.getElementById('announceMsg')?.addEventListener('input', updatePreview);
       document.getElementById('announceColor')?.addEventListener('input', updatePreview);
       function updatePreview() {
-        const title = document.getElementById('announceTitle').value || '?砍?璅?';
-        const msg = document.getElementById('announceMsg').value || '?砍??批捆撠＊蝷箏?ㄐ';
+        const title = document.getElementById('announceTitle').value || '公告標題';
+        const msg = document.getElementById('announceMsg').value || '公告內容將顯示在這裡';
         const color = document.getElementById('announceColor').value;
         document.getElementById('previewTitle').textContent = title;
         document.getElementById('previewContent').textContent = msg;
@@ -393,20 +395,20 @@
       async function sendAnnounce(e) {
         if (e) e.preventDefault();
         const channelId = document.getElementById('announceChannel').value;
-        const title = document.getElementById('announceTitle').value.trim() || '? ?砍?';
+        const title = document.getElementById('announceTitle').value.trim() || '📢 公告';
         const msg = document.getElementById('announceMsg').value.trim();
         const color = document.getElementById('announceColor').value || '#7c6ff0';
-        if (!channelId) { document.getElementById('announceStatus').textContent = '隢???; document.getElementById('announceStatus').className = 'status-msg err'; return; }
-        if (!msg) { document.getElementById('announceStatus').textContent = '隢撓?亙摰?; document.getElementById('announceStatus').className = 'status-msg err'; return; }
+        if (!channelId) { document.getElementById('announceStatus').textContent = '請選擇頻道'; document.getElementById('announceStatus').className = 'status-msg err'; return; }
+        if (!msg) { document.getElementById('announceStatus').textContent = '請輸入內容'; document.getElementById('announceStatus').className = 'status-msg err'; return; }
         const status = document.getElementById('announceStatus');
-        status.textContent = '?潮葉...'; status.className = 'status-msg';
+        status.textContent = '發送中...'; status.className = 'status-msg';
         const res = await fetch('/api/announce/send', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF_TOKEN },
           body: JSON.stringify({ channelId, title, message: msg, color }),
         });
         const data = await res.json();
-        status.textContent = data.success ? '??撌脩?? : '??' + data.error;
+        status.textContent = data.success ? '✅ 已發送' : '❌ ' + data.error;
         status.className = 'status-msg ' + (data.success ? 'ok' : 'err');
         if (data.success) { document.getElementById('announceMsg').value = ''; document.getElementById('announceTitle').value = ''; updatePreview(); }
       }
@@ -414,7 +416,7 @@
 
     <div class="tab-pane" id="tab-channels">
       <div class="card">
-        <h2>?? ?駁??” (<%= guild.channels.length %>)</h2>
+        <h2>📁 頻道列表 (<%= guild.channels.length %>)</h2>
         <div class="channel-grid">
           <% guild.channels.forEach(c => { %>
             <div class="channel-item">#<%= c.name %></div>
@@ -425,65 +427,67 @@
 
     <div class="tab-pane" id="tab-voice">
       <div class="card">
-        <h2>?? ?芸?隤?</h2>
+        <h2>🔊 自動語音包房</h2>
         <p style="font-size:13px;color:#888;margin-bottom:12px;">
-          閮剖?銝???喲???箝撱粹????敺?Bot ??撱箏?撅砍??蹂蒂頧宏???br>
-          ??萄遣鈭箏雿輻 <code>/voice</code> ?誘蝞∠?嚗??啣??摰腺鈭箝?蝘餅???嚗?        </p>
+          設定一個語音頻道作為「創建頻道」，成員加入後 Bot 會自動創建專屬包房並轉移過去。<br>
+          包房創建人可使用 <code>/voice</code> 指令管理（重新命名、鎖定、踢人、轉移所有權）。
+        </p>
         <form method="POST" action="/api/settings/<%= guild.id %>/autovoice">
-          <div class="form-group">
-            <label>?萄遣?駁?</label>
+                    <div class="form-group">
+            <label>創建頻道</label>
             <select name="channelId">
-              <option value="">銝???/option>
+              <option value="">不啟用</option>
               <% guild.voiceChannels.forEach(c => { %>
-                <option value="<%= c.id %>" <%= guild.autoVoice.channelId === c.id ? 'selected' : '' %>>?? <%= c.name %></option>
+                <option value="<%= c.id %>" <%= guild.autoVoice.channelId === c.id ? 'selected' : '' %>>🔊 <%= c.name %></option>
               <% }); %>
             </select>
           </div>
           <div class="form-group">
-            <label>???</label>
+            <label>包房分類</label>
             <select name="categoryId">
-              <option value="">銝?摰?/option>
+              <option value="">不指定</option>
               <% guild.categories.forEach(c => { %>
-                <option value="<%= c.id %>" <%= guild.autoVoice.categoryId === c.id ? 'selected' : '' %>>?? <%= c.name %></option>
+                <option value="<%= c.id %>" <%= guild.autoVoice.categoryId === c.id ? 'selected' : '' %>>📁 <%= c.name %></option>
               <% }); %>
             </select>
           </div>
           <div class="form-group">
-            <label>?身?迂蝭嚗??{user} / {server}嚗?/label>
-            <input type="text" name="nameTemplate" value="<%= guild.autoVoice.nameTemplate || '' %>" placeholder="??儭?{user} ????>
+            <label>預設名稱範本（支援 {user} / {server}）</label>
+            <input type="text" name="nameTemplate" value="<%= guild.autoVoice.nameTemplate || '' %>" placeholder="🛋️ {user} 的包房">
           </div>
           <div style="display:flex;gap:12px;">
             <div class="form-group" style="flex:1;">
-              <label>鈭箸銝?嚗?=銝??塚?</label>
+              <label>人數上限（0=不限制）</label>
               <input type="number" name="userLimit" value="<%= guild.autoVoice.userLimit || 0 %>" min="0" max="99">
             </div>
             <div class="form-group" style="flex:1;">
-              <label>雿???(kbps)</label>
+              <label>位元率 (kbps)</label>
               <input type="number" name="bitrate" value="<%= guild.autoVoice.bitrate || 64000 %>" min="8000" max="384000" step="1000">
             </div>
           </div>
-          <button type="submit" class="btn">?脣?閮剖?</button>
+          <button type="submit" class="btn">儲存設定</button>
         </form>
       </div>
     </div>
 
     <div class="tab-pane" id="tab-ticket">
       <div class="card">
-        <h2>? 撌亙蝟餌絞</h2>
+        <h2>🎫 工單系統</h2>
         <p style="font-size:13px;color:#888;margin-bottom:12px;">
-          ?暺??遣蝡極?柴???嚗ot ??撱箇?鈭粹???芣?蝞∠??∪?閰脫??∠?敺??        </p>
+          成員點擊「建立工單」按鈕後，Bot 會自動創建私人頻道，只有管理員和該成員看得到。
+        </p>
         <form method="POST" action="/api/settings/<%= guild.id %>/ticket">
-          <div class="form-group">
-            <label>撌亙??嚗憛恬?</label>
+                    <div class="form-group">
+            <label>工單分類（選填）</label>
             <select name="categoryId">
-              <option value="">銝?摰?/option>
+              <option value="">不指定</option>
               <% guild.categories.forEach(c => { %>
-                <option value="<%= c.id %>" <%= guild.ticket.categoryId === c.id ? 'selected' : '' %>>?? <%= c.name %></option>
+                <option value="<%= c.id %>" <%= guild.ticket.categoryId === c.id ? 'selected' : '' %>>📁 <%= c.name %></option>
               <% }); %>
             </select>
           </div>
           <div class="form-group">
-            <label>?舀?極?桃?頨怠?蝯??? Ctrl ?詨???</label>
+            <label>可查看工單的身分組（按住 Ctrl 選多個）</label>
             <select name="roleIds" multiple style="height:120px;">
               <% guild.roles.forEach(r => { %>
                 <option value="<%= r.id %>" <%= guild.ticket.roleIds.includes(r.id) ? 'selected' : '' %>><%= r.name %></option>
@@ -491,26 +495,26 @@
             </select>
           </div>
           <div class="form-group">
-            <label>?遢?駁?嚗??極?格??芸?銝撠店閮?嚗?/label>
+            <label>備份頻道（關閉工單時自動上傳對話記錄）</label>
             <select name="channelId">
-              <option value="">銝?隞?/option>
+              <option value="">不備份</option>
               <% guild.channels.forEach(c => { %>
                 <option value="<%= c.id %>" <%= guild.ticket.channelId === c.id ? 'selected' : '' %>>#<%= c.name %></option>
               <% }); %>
             </select>
           </div>
-          <button type="submit" class="btn">?脣?閮剖?</button>
+          <button type="submit" class="btn">儲存設定</button>
         </form>
         <div style="margin-top:16px;padding-top:16px;border-top:1px solid #232340;">
-          <p style="font-size:13px;color:#888;margin-bottom:8px;">?潮??桅?踹???駁?嚗?/p>
+          <p style="font-size:13px;color:#888;margin-bottom:8px;">發送開單面板到指定頻道：</p>
           <form onsubmit="sendTicketPanel(event)" style="display:flex;gap:8px;">
             <select id="ticketPanelChannel" style="width:220px;padding:8px 12px;background:#1e1e3a;border:1px solid #333;border-radius:6px;color:#fff;font-size:13px;">
-              <option value="">?豢??駁?...</option>
+              <option value="">選擇頻道...</option>
               <% guild.channels.forEach(c => { %>
                 <option value="<%= c.id %>">#<%= c.name %></option>
               <% }); %>
             </select>
-            <button type="submit" class="btn">?潮??/button>
+            <button type="submit" class="btn">發送面板</button>
           </form>
           <div id="ticketPanelStatus" class="status-msg" style="margin-top:8px;font-size:13px;"></div>
         </div>
@@ -519,298 +523,305 @@
 
     <div class="tab-pane" id="tab-automod">
       <div class="card">
-        <h2>?? ?芸?撖拇</h2>
+        <h2>🤖 自動審核</h2>
         <form method="POST" action="/api/settings/<%= guild.id %>/automod">
-          <input type="hidden" name="_tab" value="automod">
+                    <input type="hidden" name="_tab" value="automod">
           <div class="form-group checkbox">
             <input type="hidden" name="enabled" value="0">
             <input type="checkbox" name="enabled" value="1" <%= guild.autoMod.enabled ? 'checked' : '' %>>
-            <label>??芸?撖拇</label>
+            <label>啟用自動審核</label>
           </div>
           <div class="form-group">
-            <label>?蕪閰??券???嚗?/label>
-            <textarea name="words" placeholder="靘?嚗?閰?,擃店2,撱??閰?><%= (guild.autoMod.words || []).join(',') %></textarea>
+            <label>過濾詞（用逗號分隔）</label>
+            <textarea name="words" placeholder="例如：髒話1,髒話2,廣告詞"><%= (guild.autoMod.words || []).join(',') %></textarea>
           </div>
           <div class="form-group">
-            <label>甇??銵券?撘?銝銵?璇?</label>
-            <textarea name="regexWords" placeholder="靘?嚗??:撟頌??雿fuck\d*" rows="3"><%= (guild.autoMod.regexWords || []).join('\n') %></textarea>
-            <div class="hint">?舀 JS 甇??隤?嚗?撠????撠神?蝛箇?蝚西?</div>
+            <label>正則表達式（一行一條）</label>
+            <textarea name="regexWords" placeholder="例如：(?:幹|靠)你|fuck\d*" rows="3"><%= (guild.autoMod.regexWords || []).join('\n') %></textarea>
+            <div class="hint">支援 JS 正則語法，比對前會自動轉小寫、去空白、去符號</div>
           </div>
           <div class="form-group checkbox">
             <input type="hidden" name="blockLinks" value="0">
             <input type="checkbox" name="blockLinks" value="1" <%= guild.autoMod.blockLinks ? 'checked' : '' %>>
-            <label>撠????</label>
+            <label>封鎖連結</label>
           </div>
           <div class="form-group checkbox">
             <input type="hidden" name="phishingProtection" value="0">
             <input type="checkbox" name="phishingProtection" value="1" <%= guild.autoMod.phishingProtection ? 'checked' : '' %>>
-            <label>???/閰??菜葫嚗??撠?OpenPhish 鞈?摨恬?</label>
+            <label>釣魚/詐騙偵測（自動比對 OpenPhish 資料庫）</label>
           </div>
           <div class="form-group">
-            <label>???脩蔑</label>
+            <label>違規懲罰</label>
             <select name="punishment">
-              <option value="delete" <%= guild.autoMod.punishment === 'delete' ? 'selected' : '' %>>?芷閮</option>
-              <option value="timeout" <%= guild.autoMod.punishment === 'timeout' ? 'selected' : '' %>>?芷+蝳?</option>
-              <option value="kick" <%= guild.autoMod.punishment === 'kick' ? 'selected' : '' %>>?芷+頦Ｗ</option>
+              <option value="delete" <%= guild.autoMod.punishment === 'delete' ? 'selected' : '' %>>刪除訊息</option>
+              <option value="timeout" <%= guild.autoMod.punishment === 'timeout' ? 'selected' : '' %>>刪除+禁言</option>
+              <option value="kick" <%= guild.autoMod.punishment === 'kick' ? 'selected' : '' %>>刪除+踢出</option>
             </select>
           </div>
           <div class="form-group">
-            <label>蝳???嚗?蝳???嚗?/label>
+            <label>禁言分鐘（僅禁言有效）</label>
             <input type="number" name="timeoutMinutes" value="<%= guild.autoMod.timeoutMinutes || 10 %>" min="1" style="width:100px;">
           </div>
           <div class="form-group">
-            <label>?砍?蝝</label>
+            <label>公告級別</label>
             <select name="logLevel">
-              <option value="all" <%= guild.autoMod.logLevel === 'all' ? 'selected' : '' %>>?券蝝??/option>
-              <option value="punish_only" <%= guild.autoMod.logLevel === 'punish_only' ? 'selected' : '' %>>?蝵啁???/option>
-              <option value="off" <%= guild.autoMod.logLevel === 'off' ? 'selected' : '' %>>銝???/option>
+              <option value="all" <%= guild.autoMod.logLevel === 'all' ? 'selected' : '' %>>全部紀錄</option>
+              <option value="punish_only" <%= guild.autoMod.logLevel === 'punish_only' ? 'selected' : '' %>>僅懲罰紀錄</option>
+              <option value="off" <%= guild.autoMod.logLevel === 'off' ? 'selected' : '' %>>不紀錄</option>
             </select>
           </div>
           <div class="form-group">
-            <label>蝝???/label>
+            <label>紀錄頻道</label>
             <select name="logChannelId">
-              <option value="">銝身摰?/option>
+              <option value="">不設定</option>
               <% guild.channels.forEach(c => { %>
                 <option value="<%= c.id %>" <%= guild.autoMod.logChannelId === c.id ? 'selected' : '' %>>#<%= c.name %></option>
               <% }); %>
             </select>
           </div>
           <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.06);">
-            <h2 style="font-size:14px;color:#fff;margin-bottom:12px;">?? 蝝舐?瑼?/h2>
-            <p style="font-size:12px;color:#888;margin-bottom:12px;">?航身摰??挾銝??蝵唳撘?蝳???</p>
+            <h2 style="font-size:14px;color:#fff;margin-bottom:12px;">📊 累犯門檻</h2>
+            <p style="font-size:12px;color:#888;margin-bottom:12px;">可設定每階段不同的懲罰方式和禁言時間</p>
             <% for (let i = 2; i <= 5; i++) {
               const s = guild.autoMod.strikes?.[i] || {};
               const action = typeof s === 'object' ? (s.action || '') : s;
               const dur = typeof s === 'object' ? (s.duration || guild.autoMod.timeoutMinutes || 10) : guild.autoMod.timeoutMinutes || 10;
             %>
             <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
-              <span style="font-size:13px;color:#aaa;width:120px;">蝚?%= i %>甈⊿?閬?/span>
+              <span style="font-size:13px;color:#aaa;width:120px;">第<%= i %>次違規</span>
               <select name="strike_action_<%= i %>" style="flex:1;padding:8px 12px;background:rgba(12,12,24,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:#e0e0e0;font-size:13px;">
-                <option value="">頝?銝甈∩?璅?/option>
-                <option value="delete" <%= action === 'delete' ? 'selected' : '' %>>???/option>
-                <option value="timeout" <%= action === 'timeout' ? 'selected' : '' %>>蝳?</option>
-                <option value="kick" <%= action === 'kick' ? 'selected' : '' %>>頦Ｗ</option>
+                <option value="">跟前一次一樣</option>
+                <option value="delete" <%= action === 'delete' ? 'selected' : '' %>>僅刪除</option>
+                <option value="timeout" <%= action === 'timeout' ? 'selected' : '' %>>禁言</option>
+                <option value="kick" <%= action === 'kick' ? 'selected' : '' %>>踢出</option>
               </select>
-              <input type="number" name="strike_duration_<%= i %>" value="<%= dur %>" min="1" style="width:80px;padding:8px 12px;background:rgba(12,12,24,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:#e0e0e0;font-size:13px;" placeholder="??">
-              <span style="font-size:12px;color:#888;">??</span>
+              <input type="number" name="strike_duration_<%= i %>" value="<%= dur %>" min="1" style="width:80px;padding:8px 12px;background:rgba(12,12,24,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:#e0e0e0;font-size:13px;" placeholder="分鐘">
+              <span style="font-size:12px;color:#888;">分鐘</span>
             </div>
             <% } %>
             <div class="form-group" style="margin-top:12px;">
-              <label>?蔭??嚗???</label>
+              <label>重置時間（小時）</label>
               <input type="number" name="strikeResetHours" value="<%= guild.autoMod.strikeResetHours || 24 %>" min="1" style="width:100px;">
             </div>
           </div>
-          <button type="submit" class="btn" style="margin-top:16px;">?脣?閮剖?</button>
+          <button type="submit" class="btn" style="margin-top:16px;">儲存設定</button>
         </form>
       </div>
     </div>
 
     <div class="tab-pane" id="tab-rolegive">
       <div class="card">
-        <h2>?? ?祇?瘣曄?砍?</h2>
+        <h2>🎁 公開派發公告</h2>
         <p style="font-size:13px;color:#888;margin-bottom:12px;">
-          雿輻 <code>/give @? @頨怠?蝯?/code> 瘣曄頨怠?蝯?嚗???????        </p>
+          使用 <code>/give @成員 @身分組</code> 派發身分組時，選擇一個頻道自動公告。
+        </p>
         <form method="POST" action="/api/settings/<%= guild.id %>/rolegive">
-          <div class="form-group">
-            <label>?砍??駁?嚗??詨??芰?閮??砍?嚗?/label>
+                    <div class="form-group">
+            <label>公告頻道（不選則只私訊不公告）</label>
             <select name="channelId">
-              <option value="">銝??/option>
+              <option value="">不公告</option>
               <% guild.channels.forEach(c => { %>
                 <option value="<%= c.id %>" <%= guild.roleGive.channelId === c.id ? 'selected' : '' %>>#<%= c.name %></option>
               <% }); %>
             </select>
           </div>
-          <button type="submit" class="btn">?脣?閮剖?</button>
+          <button type="submit" class="btn">儲存設定</button>
         </form>
       </div>
     </div>
 
     <div class="tab-pane" id="tab-inviteguard">
       <div class="card">
-        <h2>?? ?隢??蝞∠?</h2>
+        <h2>🔗 邀請連結管理</h2>
         <p style="font-size:13px;color:#888;margin-bottom:12px;">
-          ?敺??賢??桃? Discord ?隢?????扎?        </p>
+          啟用後非白名單的 Discord 邀請連結會自動刪除。
+        </p>
         <form method="POST" action="/api/settings/<%= guild.id %>/inviteguard">
-          <div class="form-group checkbox">
+                    <div class="form-group checkbox">
             <input type="hidden" name="enabled" value="0">
             <input type="checkbox" name="enabled" value="1" <%= guild.inviteGuard.enabled ? 'checked' : '' %>>
-            <label>??隢?瞈?/label>
+            <label>啟用邀請過濾</label>
           </div>
           <div class="form-group">
-            <label>?賢??桅?隢Ⅳ嚗???嚗?/label>
-            <textarea name="whitelist" placeholder="靘?嚗bc123,def456"><%= (guild.inviteGuard.whitelist || []).join(',') %></textarea>
+            <label>白名單邀請碼（逗號分隔）</label>
+            <textarea name="whitelist" placeholder="例如：abc123,def456"><%= (guild.inviteGuard.whitelist || []).join(',') %></textarea>
           </div>
           <div class="form-group">
-            <label>?亥??駁?</label>
+            <label>日誌頻道</label>
             <select name="logChannelId">
-              <option value="">銝身摰?/option>
+              <option value="">不設定</option>
               <% guild.channels.forEach(c => { %>
                 <option value="<%= c.id %>" <%= guild.inviteGuard.logChannelId === c.id ? 'selected' : '' %>>#<%= c.name %></option>
               <% }); %>
             </select>
           </div>
-          <button type="submit" class="btn">?脣?閮剖?</button>
+          <button type="submit" class="btn">儲存設定</button>
         </form>
       </div>
     </div>
 
     <div class="tab-pane" id="tab-appeal">
       <div class="card">
-        <h2>?? 撠??唾迄</h2>
+        <h2>📋 封禁申訴</h2>
         <p style="font-size:13px;color:#888;margin-bottom:12px;">
-          雿輻???<code>/appeal</code> 憛怠神?唾迄銵典??br>
-          ?豢?銝???嗥閮湧??        </p>
+          使用者可到 <code>/appeal</code> 填寫申訴表單。<br>
+          選擇一個頻道接收申訴通知。
+        </p>
         <form method="POST" action="/api/settings/<%= guild.id %>/appeal">
-          <div class="form-group">
-            <label>?唾迄??駁?</label>
+                    <div class="form-group">
+            <label>申訴通知頻道</label>
             <select name="channelId">
-              <option value="">銝???/option>
+              <option value="">不啟用</option>
               <% guild.channels.forEach(c => { %>
                 <option value="<%= c.id %>" <%= guild.appeal.channelId === c.id ? 'selected' : '' %>>#<%= c.name %></option>
               <% }); %>
             </select>
           </div>
-          <button type="submit" class="btn">?脣?閮剖?</button>
+          <button type="submit" class="btn">儲存設定</button>
         </form>
       </div>
     </div>
 
     <div class="tab-pane" id="tab-antiraid">
       <div class="card">
-        <h2>? ?脰???/h2>
+        <h2>🚨 防轟炸</h2>
         <p style="font-size:13px;color:#888;margin-bottom:12px;">
-          ?菜葫?剜??之???交?憭折?閮嚗????暑??        </p>
+          偵測短時間大量加入或大量訊息，自動處理可疑活動。
+        </p>
         <form method="POST" action="/api/settings/<%= guild.id %>/antiraid">
-          <div class="form-group checkbox">
+                    <div class="form-group checkbox">
             <input type="hidden" name="enabled" value="0">
             <input type="checkbox" name="enabled" value="1" <%= guild.antiRaid.enabled ? 'checked' : '' %>>
-            <label>??脰???/label>
+            <label>啟用防轟炸</label>
           </div>
           <div class="form-group">
-            <label>?脰風璅∪?</label>
+            <label>防護模式</label>
             <select id="raidPreset" onchange="applyPreset(this.value)">
-              <option value="">?芾?閮剖?</option>
-              <option value="strict">? ?湔?脰風 (5鈭?10蝘?</option>
-              <option value="medium">? 銝剔??脰風 (15鈭?10蝘?</option>
-              <option value="standard">? 璅??脰風 (30鈭?20蝘?</option>
+              <option value="">自訂設定</option>
+              <option value="strict">🔴 嚴格防護 (5人/10秒)</option>
+              <option value="medium">🟡 中等防護 (15人/10秒)</option>
+              <option value="standard">🟢 標準防護 (30人/20秒)</option>
             </select>
           </div>
           <div style="display:flex;gap:12px;">
             <div class="form-group" style="flex:1;">
-              <label>憭折???瑼鳴?甈⊥嚗?/label>
+              <label>大量加入門檻（次數）</label>
               <input type="number" name="joinThreshold" id="joinThreshold" value="<%= guild.antiRaid.joinThreshold || 5 %>" min="1" max="100">
             </div>
             <div class="form-group" style="flex:1;">
-              <label>??蝭?嚗?嚗?/label>
+              <label>時間範圍（秒）</label>
               <input type="number" name="joinWindow" id="joinWindow" value="<%= guild.antiRaid.joinWindow || 10 %>" min="2" max="300">
             </div>
           </div>
           <div style="display:flex;gap:12px;">
             <div class="form-group" style="flex:1;">
-              <label>憭折?閮?瑼鳴??嚗?/label>
+              <label>大量訊息門檻（則數）</label>
               <input type="number" name="spamThreshold" id="spamThreshold" value="<%= guild.antiRaid.spamThreshold || 5 %>" min="1" max="100">
             </div>
             <div class="form-group" style="flex:1;">
-              <label>??蝭?嚗?嚗?/label>
+              <label>時間範圍（秒）</label>
               <input type="number" name="spamWindow" id="spamWindow" value="<%= guild.antiRaid.spamWindow || 5 %>" min="2" max="300">
             </div>
             <div class="form-group" style="flex:1;">
-              <label>蝳???</label>
+              <label>禁言分鐘</label>
               <input type="number" name="spamTimeout" id="spamTimeout" value="<%= guild.antiRaid.spamTimeout || 1 %>" min="1" max="1440">
             </div>
           </div>
           <div class="form-group">
-            <label>閫貊??</label>
+            <label>觸發動作</label>
             <select name="action">
-              <option value="kick" <%= guild.antiRaid.action === 'kick' ? 'selected' : '' %>>頦Ｗ</option>
-              <option value="log" <%= guild.antiRaid.action === 'log' ? 'selected' : '' %>>????/option>
+              <option value="kick" <%= guild.antiRaid.action === 'kick' ? 'selected' : '' %>>踢出</option>
+              <option value="log" <%= guild.antiRaid.action === 'log' ? 'selected' : '' %>>僅記錄</option>
             </select>
           </div>
           <div class="form-group">
-            <label>?亥??駁?</label>
+            <label>日誌頻道</label>
             <select name="logChannelId">
-              <option value="">銝身摰?/option>
+              <option value="">不設定</option>
               <% guild.channels.forEach(c => { %>
                 <option value="<%= c.id %>" <%= guild.antiRaid.logChannelId === c.id ? 'selected' : '' %>>#<%= c.name %></option>
               <% }); %>
             </select>
           </div>
-          <button type="submit" class="btn">?脣?閮剖?</button>
+          <button type="submit" class="btn">儲存設定</button>
         </form>
       </div>
     </div>
 
     <div class="tab-pane" id="tab-invitelog">
       <div class="card">
-        <h2>?? ?隢蕭頩?/h2>
+        <h2>🔗 邀請追蹤</h2>
         <p style="font-size:13px;color:#888;margin-bottom:12px;">
-          ?????Bot ?????乩?皞?隢Ⅳ??隢?蝯梯?鞈???        </p>
+          有新成員加入時，Bot 會自動發送加入來源、邀請碼、邀請者和統計資料。
+        </p>
         <form method="POST" action="/api/settings/<%= guild.id %>/invitelog">
-          <div class="form-group">
-            <label>餈質馱?駁?</label>
+                    <div class="form-group">
+            <label>追蹤頻道</label>
             <select name="channelId">
-              <option value="">銝???/option>
+              <option value="">不啟用</option>
               <% guild.channels.forEach(c => { %>
                 <option value="<%= c.id %>" <%= guild.inviteLog.channelId === c.id ? 'selected' : '' %>>#<%= c.name %></option>
               <% }); %>
             </select>
           </div>
-          <button type="submit" class="btn">?脣?閮剖?</button>
+          <button type="submit" class="btn">儲存設定</button>
         </form>
       </div>
     </div>
 
     <div class="tab-pane" id="tab-messagelog">
       <div class="card">
-        <h2>??儭?蝺刻摩/?芷蝝??/h2>
+        <h2>🗑️ 編輯/刪除紀錄</h2>
         <p style="font-size:13px;color:#888;margin-bottom:12px;">
-          閮剖?銝???Bot ??????∠?閮蝺刻摩??扎?        </p>
+          設定一個頻道，Bot 會自動記錄成員的訊息編輯和刪除。
+        </p>
         <form method="POST" action="/api/settings/<%= guild.id %>/messagelog">
-          <input type="hidden" name="_tab" value="messagelog">
+                    <input type="hidden" name="_tab" value="messagelog">
           <div class="form-group">
-            <label>蝝???/label>
+            <label>紀錄頻道</label>
             <select name="channelId">
-              <option value="">銝???/option>
+              <option value="">不啟用</option>
               <% guild.channels.forEach(c => { %>
                 <option value="<%= c.id %>" <%= guild.messageLog.channelId === c.id ? 'selected' : '' %>>#<%= c.name %></option>
               <% }); %>
             </select>
           </div>
-          <button type="submit" class="btn">?脣?閮剖?</button>
+          <button type="submit" class="btn">儲存設定</button>
         </form>
       </div>
       <div class="card">
-        <h2>?? ?券閮蝝????Google Sheets</h2>
+        <h2>📝 全部訊息紀錄 → Google Sheets</h2>
         <p style="font-size:13px;color:#888;margin-bottom:12px;">
-          ?敺?????∠?瘥?閮??神??Google Sheets ??MessageLog 撌乩?銵具?br>
-          嚗?閬?閮剖? <code>GOOGLE_DB_URL</code> ?啣?霈嚗?        </p>
+          啟用後，所有成員的每則訊息會自動寫入 Google Sheets 的 MessageLog 工作表。<br>
+          （需要先設定 <code>GOOGLE_DB_URL</code> 環境變數）
+        </p>
         <form method="POST" action="/api/settings/<%= guild.id %>/messagelog">
-          <input type="hidden" name="_tab" value="messagelog">
+                    <input type="hidden" name="_tab" value="messagelog">
           <div class="form-group checkbox">
             <input type="hidden" name="messageLogAllEnabled" value="0">
             <input type="checkbox" name="messageLogAllEnabled" value="1" <%= guild.messageLogAll.enabled ? 'checked' : '' %>>
-            <label>? Google Sheets 閮蝝??/label>
+            <label>啟用 Google Sheets 訊息紀錄</label>
           </div>
-          <button type="submit" class="btn">?脣?閮剖?</button>
+          <button type="submit" class="btn">儲存設定</button>
         </form>
       </div>
     </div>
   </div>
 
   <script>
-    async function sendTicketPanel(e) {
+        async function sendTicketPanel(e) {
       e.preventDefault();
       const channelId = document.getElementById('ticketPanelChannel').value;
       if (!channelId) return;
       const status = document.getElementById('ticketPanelStatus');
-      status.textContent = '?潮葉...'; status.className = 'status-msg';
+      status.textContent = '發送中...'; status.className = 'status-msg';
       const res = await fetch('/api/server/<%= guild.id %>/send-ticket-panel', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF_TOKEN },
         body: JSON.stringify({ channelId }),
       });
       const data = await res.json();
-      status.textContent = data.success ? '???Ｘ撌脩?? : '??' + data.error;
+      status.textContent = data.success ? '✅ 面板已發送' : '❌ ' + data.error;
       status.className = 'status-msg ' + (data.success ? 'ok' : 'err');
     }
 
@@ -819,14 +830,14 @@
       const channelId = document.getElementById('panelChannel').value;
       if (!channelId) return;
       const status = document.getElementById('panelStatus');
-      status.textContent = '?潮葉...'; status.className = 'status-msg';
+      status.textContent = '發送中...'; status.className = 'status-msg';
       const res = await fetch('/api/server/<%= guild.id %>/send-panel', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF_TOKEN },
         body: JSON.stringify({ channelId }),
       });
       const data = await res.json();
-      status.textContent = data.success ? '???Ｘ撌脩?? : '??' + data.error;
+      status.textContent = data.success ? '✅ 面板已發送' : '❌ ' + data.error;
       status.className = 'status-msg ' + (data.success ? 'ok' : 'err');
     }
 
