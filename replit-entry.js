@@ -139,9 +139,10 @@ function requireSystemAdmin(req, res, next) {
 
 app.get('/', (req, res) => {
   if (req.session.authenticated) return res.redirect('/dashboard');
-  const guildCount = client.guilds.cache.size;
-  const userCount = client.guilds.cache.reduce((s, g) => s + g.memberCount, 0);
-  res.render('landing', { guildCount, userCount, ping: client.ws.ping });
+  const guildCount = client.guilds?.cache?.size || 0;
+  const userCount = client.guilds?.cache ? [...client.guilds.cache.values()].reduce((s, g) => s + g.memberCount, 0) : 0;
+  const ping = client.ws?.ping || 0;
+  res.render('landing', { guildCount, userCount, ping });
 });
 
 app.get('/login', (req, res) => {
