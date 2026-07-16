@@ -5,7 +5,6 @@ const axios = require('axios');
 
 module.exports = {
   async execute(message) {
-    logger.info(`[Msg] ${message.author.tag}: ${message.content?.slice(0, 30) || '(空)'}`);
     if (message.author.bot) return;
     if (!message.guild) return;
 
@@ -23,6 +22,20 @@ module.exports = {
         }
         return message.channel.send(gs.customCommands[cmdName]);
       }
+    }
+
+    const GOOGLE_DB_URL = process.env.GOOGLE_DB_URL;
+    if (gs.messageLogAll?.enabled && GOOGLE_DB_URL && message.guild.id === process.env.DISCORD_GUILD_ID) {
+      const now = new Date();
+      const entry = {
+        time: now.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false }),
+        guildId: message.guild.id,
+        channelId: message.channel.id, channelName: message.channel.name,
+        authorId: message.author.id, authorTag: message.author.tag,
+        content: message.content?.slice(0, 1000) || '',
+        url: message.url,
+      };
+      axios.post(GOOGLE_DB_URL, { action: 'log', logEntry: entry }, { timeout: 5000 }).catch(() => {});
     }
 
     if (gs.inviteGuard?.enabled) {
