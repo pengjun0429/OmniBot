@@ -7,6 +7,7 @@ const GOOGLE_DB_URL = () => process.env.GOOGLE_DB_URL;
 
 module.exports = {
   async execute(message) {
+    logger.info(`[Msg] ${message.author.tag}: ${message.content?.slice(0, 30) || '(空)'}`);
     if (message.author.bot) return;
     if (!message.guild) return;
 
@@ -88,7 +89,7 @@ module.exports = {
     }
 
     if (!gs.autoMod || !gs.autoMod.enabled) {
-      if (process.env.NODE_ENV !== 'production') logger.info(`[AutoMod] 未啟用 (guild=${message.guild.id})`);
+      logger.info(`[AutoMod] 未啟用 (guild=${message.guild.id})`);
       return;
     }
 
